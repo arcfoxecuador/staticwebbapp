@@ -22,6 +22,7 @@ import { Image } from 'astro:assets';
 import Teaser from '../layouts/Teaser.astro';
 import Marca from '../components/ui/Marca.astro';
 import IoZen from '../components/ui/IoZen.astro';
+import CuentaAtras from '../components/ui/CuentaAtras.astro';
 import { ORG, TEASER } from '../lib/site';
 import { grafo, organizacion, pagina, sitioWeb } from '../lib/schema';
 
@@ -100,36 +101,16 @@ const REDES = ORG.redes.map((url) => ({
 
         <p class="entra entra-2 mt-6 max-w-[48ch] text-lead text-white/75">{TEASER.bajada}</p>
 
-        {/* 3. LA CUENTA ATRÁS. El HTML sale con la fecha en texto; el reloj está
-            oculto hasta que el script lo enciende. Sin JavaScript la página
-            sigue diciendo lo que tiene que decir. */}
-        <div
-          class="cuenta entra entra-3 mt-10"
-          data-cuenta-atras
-          data-destino={TEASER.destinoISO}
-          data-llegada={TEASER.llegada}
-        >
-          <div class="regla" aria-hidden="true"></div>
-
-          <p class="cuenta-fecha" data-fecha>
-            <time datetime={TEASER.destinoISO}>{TEASER.fechaVisible}</time>
-          </p>
-
-          <div class="cuenta-reloj">
-            {
-              TEASER.unidades.map((unidad) => (
-                <div class="cuenta-celda">
-                  {/* «--» y no un cero: si el script no llegara a correr, un
-                      contador a cero anunciaría que el lanzamiento ya pasó. */}
-                  <span class="cuenta-numero" data-unidad={unidad.clave}>
-                    --
-                  </span>
-                  <span class="cuenta-etiqueta">{unidad.etiqueta}</span>
-                </div>
-              ))
-            }
-          </div>
-        </div>
+        {/* 3. LA CUENTA ATRÁS. Maqueta, estilos y el script viven en el
+            componente: la puerta de lanzamiento cuenta hacia el mismo instante
+            y dos copias del `setInterval` eran dos sitios que arreglar. */}
+        <CuentaAtras
+          class="entra entra-3 mt-10"
+          destinoISO={TEASER.destinoISO}
+          fechaVisible={TEASER.fechaVisible}
+          llegada={TEASER.llegada}
+          unidades={TEASER.unidades}
+        />
 
         {
           TEASER.iozen && (
@@ -177,66 +158,6 @@ const REDES = ORG.redes.map((url) => ({
     </div>
   </section>
 
-  {/* ── LA ÚNICA ISLA DE JAVASCRIPT DEL SITIO ────────────────────────────────
-      Y está justificada por lo que no puede hacer el build: un contador
-      renderizado en construcción se congela en la fecha del despliegue. A la
-      semana diría «faltan 19 días» para siempre, que es peor que no contar.
-
-      El `<script>` va A NIVEL DE PLANTILLA y NUNCA dentro de `{condición && (…)}`:
-      escrito dentro de una expresión, Astro lo parsea como JSX y el cuerpo llega
-      al HTML como una CADENA que el navegador no ejecuta jamás. El marcado se ve
-      perfecto y no hay error en ninguna consola. `npm run verificar` lo detecta.
-
-      `is:inline` para que Astro no lo procese ni lo mueva a un archivo aparte:
-      son veinte líneas, y una petición de red para eso cuesta más que el código.
-      Por eso mismo no hay expresiones aquí dentro —Astro no las evalúa en un
-      script en línea—: la fecha destino y el texto de llegada llegan por
-      `data-*` desde `site.ts`, que sigue siendo la única fuente.
-
-      `prefers-reduced-motion` no lo apaga: unos números que cambian una vez por
-      segundo son información, no movimiento. */}
-  <script is:inline>
-    (() => {
-      const caja = document.querySelector('[data-cuenta-atras]');
-      if (!caja) return;
-
-      const destino = Date.parse(caja.dataset.destino);
-      const celdas = caja.querySelectorAll('[data-unidad]');
-      const dos = (n) => String(n).padStart(2, '0');
-
-      /* Devuelve true cuando ya no queda nada que contar. */
-      const pinta = () => {
-        const resta = destino - Date.now();
-
-        if (!Number.isFinite(destino) || resta <= 0) {
-          caja.removeAttribute('data-viva');
-          if (resta <= 0) caja.querySelector('[data-fecha]').textContent = caja.dataset.llegada;
-          return true;
-        }
-
-        const s = Math.floor(resta / 1000);
-        const valores = {
-          dias: Math.floor(s / 86400),
-          horas: Math.floor((s % 86400) / 3600),
-          minutos: Math.floor((s % 3600) / 60),
-          segundos: s % 60,
-        };
-        for (const celda of celdas) celda.textContent = dos(valores[celda.dataset.unidad]);
-
-        /* El atributo enciende el reloj y apaga la fecha en texto. El cambio de
-           visibilidad lo hace el CSS: así el estado sin JavaScript es el que
-           está escrito en la hoja de estilos, no el que deja un `style` inline. */
-        caja.setAttribute('data-viva', '');
-        return false;
-      };
-
-      if (!pinta()) {
-        const reloj = setInterval(() => {
-          if (pinta()) clearInterval(reloj);
-        }, 1000);
-      }
-    })();
-  </script>
 </Teaser>
 
 <style>
@@ -259,87 +180,4 @@ const REDES = ORG.redes.map((url) => ({
     );
   }
 
-  /* La regla de 2px que abre el bloque de la fecha: es `.traza` del sistema,
-     pero disparada POR TIEMPO. `.traza` se mide con `animation-timeline: view()`,
-     y en una página de una sola pantalla no hay scroll que la avance: se
-     quedaría congelada a medio dibujar. Mismo grosor, misma dirección, mismo
-     keyframe —`trazar` vive en motion.css— y aquí en `currentColor`, porque
-     `marca` sobre `marca` sería invisible. */
-  .regla {
-    width: 84px;
-    height: 2px;
-    background: currentColor;
-    color: var(--color-marca-clara);
-    transform-origin: left;
-    animation: trazar 700ms var(--ease-out) 320ms both;
-  }
-
-  .cuenta-fecha {
-    margin-block-start: 1.25rem;
-    font-family: var(--font-display);
-    font-size: var(--text-h2);
-    line-height: var(--text-h2--line-height);
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: white;
-  }
-
-  /* El reloj nace oculto: el estado por defecto del documento es el que
-     funciona sin JavaScript. `data-viva` lo pone el script. */
-  .cuenta-reloj {
-    display: none;
-    margin-block-start: 1.25rem;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    max-width: 26rem;
-  }
-  .cuenta[data-viva] .cuenta-fecha {
-    display: none;
-  }
-  .cuenta[data-viva] .cuenta-reloj {
-    display: grid;
-  }
-
-  .cuenta-celda {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding-inline: 14px;
-    /* El filete separa sin encerrar. `white 18%` da 3:1 contra el campo, que es
-       el mínimo de WCAG 1.4.11 para el límite de un componente. */
-    border-inline-start: 1px solid color-mix(in oklab, white 18%, transparent);
-  }
-  .cuenta-celda:first-child {
-    padding-inline-start: 0;
-    border-inline-start: 0;
-  }
-
-  .cuenta-numero {
-    font-family: var(--font-display);
-    font-size: var(--text-stat);
-    line-height: var(--text-stat--line-height);
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    color: white;
-    /* Cifras de ancho fijo: sin esto, cada segundo que pasa de 1 a 8 mueve las
-       cuatro columnas del reloj. */
-    font-variant-numeric: tabular-nums;
-  }
-
-  .cuenta-etiqueta {
-    font-size: var(--text-eyebrow);
-    line-height: var(--text-eyebrow--line-height);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    /* Secundario teñido del propio campo y no un gris de sistema: 60% de blanco
-       sobre `marca` da ~7:1, de sobra para 13px. */
-    color: color-mix(in oklab, white 60%, transparent);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .regla {
-      animation: none;
-      transform: none;
-    }
-  }
 </style>

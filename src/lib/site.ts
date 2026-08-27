@@ -221,6 +221,31 @@ const CAMPAÑA = {
     'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad, con ARCFOX en Ecuador.',
   cta: 'Continuar',
   chatEtiqueta: 'Abrir las preguntas y el chat de ARCFOX',
+
+  /* LA FECHA, y vive en CAMPAÑA y no en TEASER desde que el contador se pinta en
+     las DOS superficies. Escrita en cada página, la primera corrección —un
+     lanzamiento que se mueve una semana, que es lo que siempre pasa— se aplica
+     en una y se olvida en la otra: el teaser contaría hacia un día y la puerta
+     hacia otro, en la misma campaña y con el mismo logo arriba. */
+  /** Lo que dice el HTML cuando el JavaScript no llega. Sin esto, la pieza
+      central de la página sería un hueco. */
+  fechaVisible: '15 de septiembre',
+  /** El instante del lanzamiento, en UTC: medianoche del 15 de septiembre en
+      Ecuador (UTC-5). En ISO y con la Z explícita para que ni el navegador ni
+      `datetime` tengan que adivinar la zona del visitante. */
+  destinoISO: '2026-09-15T05:00:00.000Z',
+  /** Al llegar a cero. No enlaza a arcfox.com.ec: el sitio oficial puede no
+      estar público ese día, y una campaña que promete un destino muerto es peor
+      que una campaña que sólo anuncia. */
+  llegada: 'Ya está aquí',
+  /** Las cuatro unidades del contador. `clave` es el nombre que busca el script
+      en `data-unidad`; la etiqueta se pinta en versales por CSS. */
+  unidades: [
+    { clave: 'dias', etiqueta: 'Días' },
+    { clave: 'horas', etiqueta: 'Horas' },
+    { clave: 'minutos', etiqueta: 'Min' },
+    { clave: 'segundos', etiqueta: 'Seg' },
+  ],
 } as const;
 
 // ── Landing de expectativa (followdafox.com) ────────────────────────────────
@@ -235,8 +260,8 @@ const CAMPAÑA = {
    Escritas en la página, la primera divergencia es silenciosa: el texto dice un
    día y el contador cuenta hacia otro.
 
-   Titular, bajada y CTA no se reescriben aquí: salen de `CAMPAÑA`. Lo que es
-   propio del teaser es la fecha y el contador.
+   Titular, bajada, CTA y la fecha no se reescriben aquí: salen de `CAMPAÑA`.
+   Lo propio del teaser es el cierre con las redes.
 
    `soloLanding` y `path` son la MISMA decisión que toma `rutas.mjs` con
    `RUTAS_NO_INDEXABLES`, leída desde el mismo interruptor. En el sitio completo
@@ -259,25 +284,10 @@ export const TEASER = {
   titular: CAMPAÑA.titular,
   bajada: CAMPAÑA.bajada,
 
-  /** Lo que dice el HTML cuando el JavaScript no llega. Sin esto, la pieza
-      central de la página sería un hueco. */
-  fechaVisible: '15 de septiembre',
-  /** El instante del lanzamiento, en UTC: medianoche del 15 de septiembre en
-      Ecuador (UTC-5). En ISO y con la Z explícita para que ni el navegador ni
-      `datetime` tengan que adivinar la zona del visitante. */
-  destinoISO: '2026-09-15T05:00:00.000Z',
-  /** Al llegar a cero. No enlaza a arcfox.com.ec: el sitio oficial puede no
-      estar público ese día, y un teaser que promete un destino muerto es peor
-      que un teaser que sólo anuncia. */
-  llegada: 'Ya está aquí',
-  /** Las cuatro unidades del contador. `clave` es el nombre que busca el script
-      en `data-unidad`; la etiqueta se pinta en versales por CSS. */
-  unidades: [
-    { clave: 'dias', etiqueta: 'Días' },
-    { clave: 'horas', etiqueta: 'Horas' },
-    { clave: 'minutos', etiqueta: 'Min' },
-    { clave: 'segundos', etiqueta: 'Seg' },
-  ],
+  fechaVisible: CAMPAÑA.fechaVisible,
+  destinoISO: CAMPAÑA.destinoISO,
+  llegada: CAMPAÑA.llegada,
+  unidades: CAMPAÑA.unidades,
 
   /** El cierre. Las redes se pintan siempre: el dominio se llama followdafox
       y el chat, cuando llega, no las sustituye. */
@@ -328,6 +338,16 @@ export const LANZAMIENTO = {
   titular: CAMPAÑA.titular,
   bajada: CAMPAÑA.bajada,
   cta: CAMPAÑA.cta,
+
+  /* EL MISMO CONTADOR QUE EL TEASER, y por eso sale de `CAMPAÑA` y no se
+     escribe otra vez. Las dos superficies cuentan hacia el mismo instante: si
+     alguien llega por followdafox y luego por el enlace de campaña, ver dos
+     cifras distintas es la clase de detalle que descalifica el lanzamiento
+     entero. */
+  fechaVisible: CAMPAÑA.fechaVisible,
+  destinoISO: CAMPAÑA.destinoISO,
+  llegada: CAMPAÑA.llegada,
+  unidades: CAMPAÑA.unidades,
 
   /* EL CHAT. Mismo bot que el teaser: un id, no una URL. El botón visible
      dice Continuar; el aria dice qué abre, porque «Continuar» solo no basta

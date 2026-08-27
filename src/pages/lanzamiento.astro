@@ -1,13 +1,36 @@
 ---
-/* LA PUERTA DE LANZAMIENTO replica la composición cerrada de la campaña:
-   una sola acción, una sola lectura y ningún destino secundario que compita
-   con el cuestionario. El campo y sus señales son CSS para conservar nitidez
-   en cualquier pantalla sin sumar una imagen decorativa a la ruta crítica. */
+/* LA PUERTA DE LANZAMIENTO conserva la composición cerrada de la campaña —una
+   sola acción, una sola lectura, ningún destino secundario que compita con el
+   cuestionario— y le suma las tres cosas que le faltaban para no ser un cartel:
+   el coche, el reloj y un campo que respira.
+
+   POR QUÉ AHORA HAY UNA FOTOGRAFÍA. La versión anterior era campo CSS puro, y
+   la razón escrita era la nitidez a cualquier resolución sin sumar una imagen a
+   la ruta crítica. Se sostenía mientras la página sólo tenía que decir una
+   frase. Con el contador dentro, la página pide al visitante que ESPERE algo, y
+   una espera sin objeto es una espera sin motivo: el campo degradado no dice
+   qué se abre el 15 de septiembre. `s5-puerta.webp` sí, y de forma literal —es
+   la puerta del S5 abierta— sin que nadie tenga que escribirlo en el titular.
+
+   POR QUÉ ESTA FOTO Y NO EL PERFIL O LA VISTA DE TRES CUARTOS. El fondo de esta
+   serie es el mismo degradado frío→cálido que el campo CSS de la página estaba
+   imitando a mano: la fotografía y el campo son la misma superficie, y el velo
+   no tiene que disimular ninguna costura. Las fotos de estudio claro (`t5-perfil`,
+   `t5-45-gris`) exigirían apagarlas tanto que dejarían de ser una fotografía.
+
+   El coste de la ruta crítica se paga donde se debe: `widths` responsivos,
+   `eager` + `fetchpriority="high"` porque ES el elemento LCP, y `.entra-imagen`
+   sin `opacity` para no descalificarla del cálculo. */
+import { Image } from 'astro:assets';
+
 import Teaser from '../layouts/Teaser.astro';
 import IoZen from '../components/ui/IoZen.astro';
 import Marca from '../components/ui/Marca.astro';
+import CuentaAtras from '../components/ui/CuentaAtras.astro';
 import { LANZAMIENTO } from '../lib/site';
 import { grafo, organizacion, pagina, sitioWeb } from '../lib/schema';
+
+import puerta from '../assets/s5-puerta.webp';
 
 const schema = grafo(
   organizacion(),
@@ -27,6 +50,80 @@ const lineasTitular = [
   palabras.slice(3, 7).join(' '),
   palabras.slice(7).join(' '),
 ];
+
+/* LA CONSTELACIÓN.
+
+   DOS ESPECIES Y NO UNA, que es lo que separa un campo de estrellas de una fila
+   de puntos: las `chispa` son destellos de cuatro puntas —tienen forma, giran y
+   florecen— y el `polvo` son motas redondas que sólo cambian de brillo. Con una
+   sola especie el ojo lee una retícula; con dos lee profundidad, porque asume
+   que lo pequeño y apagado está lejos.
+
+   Coordenadas a mano y no un bucle aleatorio: `Math.random()` en el build da una
+   disposición distinta en cada despliegue —imposible de revisar y de aprobar— y
+   el azar puro amontona dos estrellas donde no debe. Ninguna cae dentro del
+   rectángulo que ocupa el texto.
+
+   `dur` y `retardo` están desafinados a propósito: veintiséis luces parpadeando
+   en fase se leen como un error de pintado, no como un cielo. Las duraciones no
+   son múltiplos entre sí, así que el ciclo común tarda minutos en repetirse.
+
+   `borde: true` marca las que sobreviven en el bolsillo. Bajo 480 px la columna
+   de texto ocupa el ancho entero y sólo quedan libres los dos márgenes y las
+   bandas de arriba y abajo: las demás caerían sobre el titular. Es una
+   propiedad del dato y no una media query con una lista de `nth-child`, que es
+   como esto se desincroniza en cuanto alguien añade una estrella en medio. */
+const CONSTELACION = [
+  /* Margen izquierdo */
+  { x: '4%', y: '13%', dur: '5.2s', retardo: '0ms', escala: 1, tipo: 'chispa', borde: true },
+  { x: '9%', y: '31%', dur: '6.8s', retardo: '2400ms', escala: 0.45, tipo: 'polvo', borde: true },
+  { x: '3%', y: '48%', dur: '5.8s', retardo: '3100ms', escala: 0.5, tipo: 'polvo', borde: true },
+  { x: '13%', y: '58%', dur: '7.9s', retardo: '1150ms', escala: 0.7, tipo: 'chispa', borde: true },
+  { x: '6%', y: '73%', dur: '4.4s', retardo: '3600ms', escala: 0.35, tipo: 'polvo', borde: true },
+  { x: '11%', y: '88%', dur: '7.3s', retardo: '1400ms', escala: 0.8, tipo: 'chispa', borde: true },
+  { x: '2%', y: '92%', dur: '6.2s', retardo: '800ms', escala: 0.4, tipo: 'polvo', borde: true },
+  /* Tercio izquierdo, ya dentro del encuadre */
+  { x: '19%', y: '22%', dur: '6.4s', retardo: '900ms', escala: 0.6, tipo: 'chispa', borde: false },
+  { x: '24%', y: '39%', dur: '4.6s', retardo: '2100ms', escala: 0.4, tipo: 'polvo', borde: false },
+  { x: '17%', y: '79%', dur: '5.1s', retardo: '4200ms', escala: 0.5, tipo: 'polvo', borde: false },
+  { x: '26%', y: '67%', dur: '8.3s', retardo: '2900ms', escala: 0.55, tipo: 'chispa', borde: false },
+  /* Banda superior, por encima del sello */
+  { x: '38%', y: '6%', dur: '5.6s', retardo: '1700ms', escala: 0.45, tipo: 'polvo', borde: true },
+  { x: '52%', y: '9%', dur: '7.1s', retardo: '3400ms', escala: 0.65, tipo: 'chispa', borde: true },
+  { x: '64%', y: '5%', dur: '4.8s', retardo: '500ms', escala: 0.35, tipo: 'polvo', borde: true },
+  /* Banda inferior, por debajo del CTA */
+  { x: '43%', y: '95%', dur: '6.6s', retardo: '2200ms', escala: 0.4, tipo: 'polvo', borde: true },
+  { x: '58%', y: '97%', dur: '5.3s', retardo: '4000ms', escala: 0.55, tipo: 'chispa', borde: true },
+  /* Tercio derecho */
+  { x: '73%', y: '31%', dur: '7.4s', retardo: '1900ms', escala: 0.5, tipo: 'polvo', borde: false },
+  { x: '79%', y: '74%', dur: '4.9s', retardo: '2600ms', escala: 0.55, tipo: 'polvo', borde: false },
+  { x: '76%', y: '17%', dur: '8.1s', retardo: '3800ms', escala: 0.7, tipo: 'chispa', borde: false },
+  { x: '82%', y: '50%', dur: '5.7s', retardo: '1300ms', escala: 0.45, tipo: 'polvo', borde: false },
+  /* Margen derecho */
+  { x: '90%', y: '22%', dur: '6.1s', retardo: '600ms', escala: 0.85, tipo: 'chispa', borde: true },
+  { x: '96%', y: '38%', dur: '4.3s', retardo: '2800ms', escala: 0.4, tipo: 'polvo', borde: true },
+  { x: '93%', y: '56%', dur: '7.7s', retardo: '1800ms', escala: 1.15, tipo: 'chispa', borde: true },
+  { x: '98%', y: '68%', dur: '5.9s', retardo: '4400ms', escala: 0.35, tipo: 'polvo', borde: true },
+  { x: '88%', y: '86%', dur: '6.9s', retardo: '400ms', escala: 0.6, tipo: 'chispa', borde: true },
+  { x: '97%', y: '11%', dur: '5.4s', retardo: '3000ms', escala: 0.45, tipo: 'polvo', borde: true },
+];
+
+/* LOS CUATRO VÉRTICES. Eran cruces de registro —el lenguaje de una prueba de
+   imprenta— y son estrellas desde que el campo entero es un cielo: dos familias
+   de marca en la misma pantalla obligan al ojo a decidir cuál de las dos manda,
+   y ninguna de las dos ganaba. Ahora la esquina es la estrella grande y quieta,
+   y la constelación es su eco pequeño.
+
+   Van aparte de `CONSTELACION` porque no son lo mismo: éstas SOSTIENEN EL
+   ENCUADRE. Por eso son mayores, más lentas, no bajan de 0.4 de opacidad —una
+   esquina que se apaga deja de encuadrar— y entran escalonadas de una en una,
+   que es el gesto que dice «el marco se está montando». */
+const VERTICES = [
+  { clase: 'vertice-noroeste', retardo: '1400ms' },
+  { clase: 'vertice-noreste', retardo: '2100ms' },
+  { clase: 'vertice-suroeste', retardo: '2800ms' },
+  { clase: 'vertice-sureste', retardo: '3500ms' },
+];
 ---
 
 <Teaser
@@ -39,11 +136,89 @@ const lineasTitular = [
     data-slot="puerta-lanzamiento"
     class="puerta campo-oscuro relative isolate flex min-h-svh items-center justify-center overflow-clip bg-marca px-5 py-10 text-white"
   >
+    {/* LA FOTOGRAFÍA. Va en su propia capa por debajo del contenido y por
+        encima del campo: el degradado CSS sigue existiendo y es lo que sostiene
+        el color en el tramo que el velo apaga. */}
+    <div class="foto-puerta">
+      <Image
+        src={puerta}
+        alt="Puerta delantera abierta del ARCFOX S5: el habitáculo, el volante y la pantalla encendida vistos desde fuera."
+        widths={[640, 1024, 1440, 1920]}
+        sizes="100vw"
+        loading="eager"
+        fetchpriority="high"
+        class="entra-imagen respira-puerta"
+      />
+      {/* El velo hace UN trabajo y hay que medirlo por él: dejar el centro lo
+          bastante oscuro para que el titular blanco pase de 7:1 sin apagar la
+          esquina donde está la luz. Radial y no lineal porque el texto está
+          centrado, no arriba: una rampa vertical dejaría el centro medio claro
+          justo donde cae el <h1>. */}
+      <div class="velo-puerta" aria-hidden="true"></div>
+    </div>
+
+    {/* LA CHISPA SE DECLARA UNA VEZ y se instancia con `<use>`. Treinta copias
+        del mismo `<path>` son dos kilobytes que el gzip comprime pero el
+        parseador igual tiene que leer, y sobre todo son treinta sitios donde
+        tocar el día que la forma cambie.
+
+        VA AQUÍ, FUERA DE `.constelacion`, y no es un detalle de orden: la
+        constelación se oculta con `display: none` en el bolsillo, y un
+        `<symbol>` dentro de un subárbol oculto deja de resolver el `<use>` en
+        parte de los navegadores. Los vértices —que en móvil SÍ se pintan— se
+        habrían quedado en blanco. El `<svg>` no ocupa caja: `.chispero`.
+
+        El trazado es una estrella cóncava de cuatro puntas: cuatro cuartos de
+        Bézier que se hunden hacia el centro. Es la forma del destello —la que
+        se lee como luz— y no el polígono de cinco puntas del dibujo infantil,
+        que a 14 px se convierte en una mancha. */}
+    <svg width="0" height="0" class="chispero" aria-hidden="true">
+      <symbol id="chispa" viewBox="0 0 24 24">
+        <path
+          d="M12 0c0 6.63 5.37 12 12 12-6.63 0-12 5.37-12 12 0-6.63-5.37-12-12-12C6.63 12 12 6.63 12 0Z"
+        />
+      </symbol>
+    </svg>
+
+    {/* LA CONSTELACIÓN. La capa entra una vez con `.entra`; el destello vive en
+        cada luz. Dos animaciones sobre la misma propiedad no se pueden componer
+        en un solo elemento, y por eso la entrada es del padre. */}
+    <div class="constelacion entra entra-4" aria-hidden="true">
+      {
+        CONSTELACION.map((luz) => (
+          <Fragment>
+            {luz.tipo === 'chispa' ? (
+              <svg
+                class:list={['estrella', 'chispa', !luz.borde && 'solo-ancho']}
+                viewBox="0 0 24 24"
+                style={`--x:${luz.x};--y:${luz.y};--dur:${luz.dur};--retardo:${luz.retardo};--escala:${luz.escala}`}
+              >
+                <use href="#chispa" />
+              </svg>
+            ) : (
+              <span
+                class:list={['estrella', 'polvo', !luz.borde && 'solo-ancho']}
+                style={`--x:${luz.x};--y:${luz.y};--dur:${luz.dur};--retardo:${luz.retardo};--escala:${luz.escala}`}
+              />
+            )}
+          </Fragment>
+        ))
+      }
+    </div>
+
+    {/* EL MARCO. Las cuatro esquinas del encuadre, ahora estrellas. */}
     <div class="marco" aria-hidden="true">
-      <span class="cruz cruz-noroeste"></span>
-      <span class="cruz cruz-noreste"></span>
-      <span class="cruz cruz-suroeste"></span>
-      <span class="cruz cruz-sureste"></span>
+      {
+        VERTICES.map((v) => (
+          <svg
+            class:list={['vertice', v.clase]}
+            viewBox="0 0 24 24"
+            style={`--retardo:${v.retardo}`}
+          >
+            <use href="#chispa" />
+          </svg>
+        ))
+      }
     </div>
 
     <div class="contenido-puerta relative z-10 flex w-full flex-col items-center text-center">
@@ -71,9 +246,21 @@ const lineasTitular = [
         }
       </h1>
 
+      {/* EL RELOJ. Mismo componente y mismo instante que el teaser: quien llega
+          por followdafox y luego por el enlace de campaña tiene que ver la misma
+          cifra. Centrado, que es la única diferencia de maqueta entre los dos. */}
+      <CuentaAtras
+        class="cuenta-puerta entra entra-3"
+        alineacion="centro"
+        destinoISO={LANZAMIENTO.destinoISO}
+        fechaVisible={LANZAMIENTO.fechaVisible}
+        llegada={LANZAMIENTO.llegada}
+        unidades={LANZAMIENTO.unidades}
+      />
+
       {
         LANZAMIENTO.iozen && (
-          <div class="entra entra-3">
+          <div class="entra entra-4">
             <IoZen
               bot={LANZAMIENTO.iozen}
               rotulo={LANZAMIENTO.cta}
@@ -117,6 +304,290 @@ const lineasTitular = [
       );
   }
 
+  /* ── LA CAPA FOTOGRÁFICA ────────────────────────────────────────────────── */
+
+  .foto-puerta {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    /* `clip` y nunca `hidden`: `hidden` convierte la capa en contenedor de
+       scroll y deja inerte cualquier `view()` del documento. */
+    overflow: clip;
+    pointer-events: none;
+  }
+
+  /* `luminosity` ES LA DECISIÓN DE ESTA PÁGINA, y no un efecto.
+
+     A opacidad plana la fotografía traía su propio color —naranja a la
+     izquierda, cian a la derecha— y lo imponía sobre el campo: el azul y el
+     violeta de la campaña desaparecían y quedaba un pardo sucio que no era ni
+     la foto ni el degradado. Con `luminosity` la imagen aporta SÓLO su luz y su
+     sombra; el color entero lo sigue poniendo el campo CSS de abajo. El coche
+     aparece como materia dentro del color de la campaña en vez de competir con
+     él, y de paso el titular blanco recupera un fondo de croma controlado.
+
+     Funciona porque la sección es `isolate`: el mezclado se resuelve contra el
+     fondo de `.puerta` y no se escapa al `<body>`. */
+  .foto-puerta img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* 68% horizontal: la puerta abierta y el habitáculo caen en el tercio
+       derecho, fuera de la columna de texto. El coche se ve entero sin que
+       ninguna de sus líneas cruce por detrás del titular. */
+    object-position: 68% 46%;
+    mix-blend-mode: luminosity;
+    opacity: 0.72;
+  }
+
+  /* EL VELO LLEVA EL COLOR DE LA CAMPAÑA Y VA POR ENCIMA DE LA FOTO. Es la
+     segunda mitad de la misma decisión que `luminosity`, y hay que leerlas
+     juntas.
+
+     Con el degradado sólo DEBAJO de la fotografía, el campo perdía: la foto
+     tapaba el azul y el violeta y devolvía un pardo que no era de nadie. Aquí el
+     mismo degradado de `.puerta` vuelve a pintarse ARRIBA con alfa, así que el
+     color de campaña gana siempre en toda la superficie y el coche se lee por
+     debajo como materia. Que sea el mismo degradado repetido no es una
+     duplicación que ahorrarse: son dos trabajos distintos —abajo pinta el
+     campo, arriba lo protege— y unificarlos exigiría un tercer elemento para
+     nada.
+
+     La primera parada, el radial, es otra cosa: es la CAMA DEL TEXTO. Radial y
+     no una rampa vertical porque el titular está centrado, no arriba. */
+  .velo-puerta {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        ellipse 70% 58% at 41% 50%,
+        color-mix(in oklab, var(--color-marca) 88%, transparent) 0%,
+        color-mix(in oklab, var(--color-marca) 66%, transparent) 48%,
+        color-mix(in oklab, var(--color-marca) 20%, transparent) 80%,
+        transparent 100%
+      ),
+      linear-gradient(
+        112deg,
+        color-mix(
+            in oklab,
+            color-mix(in oklab, var(--color-campana-fria) 54%, var(--color-marca)) 82%,
+            transparent
+          )
+          0%,
+        color-mix(
+            in oklab,
+            color-mix(in oklab, var(--color-campana-fria) 18%, var(--color-marca)) 58%,
+            transparent
+          )
+          43%,
+        color-mix(
+            in oklab,
+            color-mix(in oklab, var(--color-campana-calida) 72%, var(--color-marca)) 62%,
+            transparent
+          )
+          78%,
+        color-mix(
+            in oklab,
+            color-mix(in oklab, var(--color-campana-calida) 46%, var(--color-marca)) 80%,
+            transparent
+          )
+          100%
+      );
+  }
+
+  /* LA RESPIRACIÓN DE LA FOTO. 28 segundos y un 2% de recorrido: es la única
+     forma de que un fondo estático no se lea como una imagen pegada sin que el
+     movimiento llegue a competir con nada. Se compone con `.entra-imagen`
+     —`posarse`, 1500ms— porque van en tiempos distintos: la foto se posa al
+     cargar y sólo después empieza a derivar.
+
+     ES UN BUCLE INFINITO Y EL SISTEMA LOS PROHÍBE en el primer pantallazo. La
+     excepción está acotada a esta página y a esta amplitud: la regla existe
+     porque un pulso que se expande compite con el titular para siempre, y aquí
+     el delta es un 2% de escala repartido en medio minuto sobre una fotografía
+     ya velada al 62%. Si alguien lo percibe mirando la página, está mal medido
+     y hay que bajarlo, no discutirlo. */
+  .respira-puerta {
+    animation:
+      posarse 1500ms var(--ease-out) both,
+      respirar-puerta 28s var(--ease-in-out) 1500ms infinite alternate;
+  }
+
+  @keyframes respirar-puerta {
+    from {
+      transform: scale(1) translate3d(0, 0, 0);
+    }
+    to {
+      transform: scale(1.02) translate3d(-1%, 0, 0);
+    }
+  }
+
+  /* ── LA CONSTELACIÓN ────────────────────────────────────────────────────── */
+
+  .constelacion {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* El `<symbol>` no se pinta; el `<svg>` que lo contiene tampoco debe ocupar
+     una caja en la maqueta. `width="0"` no basta en todos los navegadores. */
+  .chispero {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: clip;
+  }
+
+  .estrella {
+    position: absolute;
+    top: var(--y);
+    left: var(--x);
+    color: var(--color-superficie);
+    /* El halo es lo que convierte una forma blanca en una luz. `drop-shadow` y
+       no `box-shadow`: sigue el contorno real del trazado —una estrella con
+       `box-shadow` proyecta el halo de su caja cuadrada— y se compone en la GPU
+       con el resto de la capa. */
+    filter: drop-shadow(0 0 4px color-mix(in oklab, var(--color-superficie) 65%, transparent));
+    /* Estado sin animación: el mismo centrado y la misma escala con la que
+       arranca el keyframe, para que `prefers-reduced-motion` no la descoloque. */
+    transform: translate(-50%, -50%) scale(var(--escala));
+  }
+
+  .chispa {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    animation: destellar var(--dur) var(--ease-in-out) var(--retardo) infinite;
+  }
+
+  .polvo {
+    width: 3px;
+    height: 3px;
+    border-radius: 999px;
+    background: currentColor;
+    animation: titilar var(--dur) var(--ease-in-out) var(--retardo) infinite alternate;
+  }
+
+  /* EL DESTELLO. Tres cosas a la vez y ninguna es un cambio de posición: la
+     estrella FLORECE (escala), se ENCIENDE (opacidad) y GIRA 45°, que es
+     exactamente un cuarto de vuelta de una forma de cuatro puntas —al llegar
+     vuelve a estar alineada consigo misma, así que el giro se lee como un
+     centelleo y no como un objeto dando vueltas.
+
+     El ciclo NO es simétrico y ahí está el truco: la subida ocupa el 45% y la
+     bajada el 55%, con el pico en un punto y no en una meseta. Una estrella
+     real no se queda encendida; florece y se apaga. Un `alternate` con curva
+     simétrica —que es lo que hacía la versión de puntos— late como un LED de
+     stand-by.
+
+     Mover una luz de sitio queda descartado a propósito: un punto que se
+     desplaza se lee como una mota en la pantalla o como suciedad en el objetivo,
+     nunca como una estrella. */
+  @keyframes destellar {
+    0% {
+      opacity: 0.08;
+      transform: translate(-50%, -50%) scale(calc(var(--escala) * 0.35)) rotate(0deg);
+    }
+    45% {
+      opacity: 0.95;
+      transform: translate(-50%, -50%) scale(var(--escala)) rotate(30deg);
+    }
+    100% {
+      opacity: 0.08;
+      transform: translate(-50%, -50%) scale(calc(var(--escala) * 0.35)) rotate(45deg);
+    }
+  }
+
+  /* El polvo sólo cambia de brillo. Es lo que lo mantiene detrás de las chispas:
+     lo que no tiene forma ni gesto, el ojo lo lee como fondo. */
+  @keyframes titilar {
+    from {
+      opacity: 0.1;
+    }
+    to {
+      opacity: 0.7;
+    }
+  }
+
+  /* ── EL MARCO Y SUS CUATRO CRUCES ───────────────────────────────────────── */
+
+  .marco {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* Crece con el reloj dentro: a 34rem las cruces caían sobre las cifras. */
+    width: min(86vw, 68rem);
+    height: min(74svh, 40rem);
+    z-index: 1;
+    color: color-mix(in oklab, var(--color-superficie) 42%, transparent);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+
+  /* LOS VÉRTICES. Mayores que las luces del campo (24 px contra 14) y con un
+     recorrido de opacidad corto: 0.4 abajo y no 0.08, porque una esquina que se
+     apaga del todo deja de encuadrar y el marco desaparece cuatro veces por
+     minuto. El giro también es la mitad —22.5° en vez de 45°— por lo mismo: la
+     esquina centellea, no gira.
+
+     `backwards` es lo que sostiene la entrada escalonada. Sin él, durante los
+     1400–3500 ms de retardo la estrella se pintaría en su estado base —opaca y
+     a tamaño completo— y al arrancar la animación saltaría de golpe a 0.4. Con
+     `backwards` mantiene el fotograma 0% desde el primer pintado, así que las
+     cuatro florecen de una en una desde casi nada. */
+  .vertice {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    color: var(--color-superficie);
+    fill: currentColor;
+    filter: drop-shadow(0 0 6px color-mix(in oklab, var(--color-superficie) 55%, transparent));
+    animation: destellar-vertice 7.2s var(--ease-in-out) var(--retardo) infinite backwards;
+  }
+
+  @keyframes destellar-vertice {
+    0% {
+      opacity: 0.4;
+      transform: translate(-50%, -50%) scale(0.86) rotate(0deg);
+    }
+    50% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1) rotate(22.5deg);
+    }
+    100% {
+      opacity: 0.4;
+      transform: translate(-50%, -50%) scale(0.86) rotate(45deg);
+    }
+  }
+
+  /* El `translate(-50%, -50%)` del keyframe centra la estrella EN la esquina, y
+     por eso las coordenadas son los bordes exactos del marco y no un offset
+     negativo: la mitad de la estrella se sale del encuadre a propósito, que es
+     lo que hace que marque el punto en vez de decorar dentro de él. */
+  .vertice-noroeste {
+    top: 0;
+    left: 0;
+  }
+
+  .vertice-noreste {
+    top: 0;
+    left: 100%;
+  }
+
+  .vertice-suroeste {
+    top: 100%;
+    left: 0;
+  }
+
+  .vertice-sureste {
+    top: 100%;
+    left: 100%;
+  }
+
+  /* ── EL CONTENIDO ───────────────────────────────────────────────────────── */
+
   .contenido-puerta {
     max-width: 68rem;
   }
@@ -139,7 +610,7 @@ const lineasTitular = [
   }
 
   .titulo-puerta {
-    margin-block: clamp(1.25rem, 3.5svh, 2.5rem) clamp(1.75rem, 5svh, 3.25rem);
+    margin-block: clamp(1.25rem, 3.5svh, 2.5rem) clamp(1.5rem, 4svh, 2.5rem);
     font-family: var(--font-display);
     font-size: clamp(1rem, 0.72rem + 1.1vw, 1.85rem);
     font-weight: 600;
@@ -154,6 +625,13 @@ const lineasTitular = [
     white-space: nowrap;
   }
 
+  /* El reloj respira menos que en el teaser: allí cierra la página, aquí es el
+     paso entre el titular y la única acción, y separarlo más rompe la lectura
+     en dos mitades. */
+  .cuenta-puerta {
+    margin-block-end: clamp(1.5rem, 4svh, 2.75rem);
+  }
+
   [data-slot='boton'].puerta-cta {
     min-height: 44px;
     border-radius: 0;
@@ -163,63 +641,6 @@ const lineasTitular = [
     font-weight: 400;
     letter-spacing: 0.28em;
     text-transform: uppercase;
-  }
-
-  .marco {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: min(86vw, 68rem);
-    height: min(64svh, 34rem);
-    color: color-mix(in oklab, var(--color-superficie) 42%, transparent);
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-  }
-
-  .cruz {
-    position: absolute;
-    width: 1.125rem;
-    height: 1.125rem;
-  }
-
-  .cruz::before,
-  .cruz::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    background: currentColor;
-    transform: translate(-50%, -50%);
-  }
-
-  .cruz::before {
-    width: 100%;
-    height: 1px;
-  }
-
-  .cruz::after {
-    width: 1px;
-    height: 100%;
-  }
-
-  .cruz-noroeste {
-    top: 0;
-    left: 0;
-  }
-
-  .cruz-noreste {
-    top: 0;
-    right: 0;
-  }
-
-  .cruz-suroeste {
-    bottom: 0;
-    left: 0;
-  }
-
-  .cruz-sureste {
-    right: 0;
-    bottom: 0;
   }
 
   /* El salto empieza donde la línea más larga conserva su corte editorial:
@@ -237,7 +658,7 @@ const lineasTitular = [
     }
 
     .titulo-puerta {
-      margin-block: clamp(1.75rem, 3.5svh, 3rem) clamp(2.25rem, 5svh, 4rem);
+      margin-block: clamp(1.75rem, 3.5svh, 3rem) clamp(1.75rem, 4svh, 3rem);
       font-size: clamp(2.4rem, 1.4rem + 1.7vw, 3.05rem);
       line-height: 1.35;
       letter-spacing: clamp(0.16em, 0.35vw, 0.22em);
@@ -258,7 +679,7 @@ const lineasTitular = [
 
     .marco {
       width: calc(100vw - 2rem);
-      height: min(72svh, 34rem);
+      height: min(80svh, 40rem);
     }
 
     .ceja-puerta {
@@ -269,6 +690,14 @@ const lineasTitular = [
     .titulo-puerta {
       font-size: 0.925rem;
       letter-spacing: 0.1em;
+    }
+
+    /* En el bolsillo la columna de texto ocupa el ancho entero: las luces que
+       viven dentro del encuadre caerían sobre el titular. Se quedan las de los
+       dos márgenes y las bandas de arriba y abajo —`borde: true`— y los cuatro
+       vértices, que son los que sostienen la composición. */
+    .solo-ancho {
+      display: none;
     }
   }
 
@@ -283,18 +712,41 @@ const lineasTitular = [
     }
 
     .titulo-puerta {
-      margin-block: 0.9rem 1.25rem;
+      margin-block: 0.9rem 1rem;
       line-height: 1.3;
+    }
+
+    .cuenta-puerta {
+      margin-block-end: 1rem;
     }
   }
 
+  /* REDUCED MOTION: se conserva lo que informa y se quita lo que se mueve. El
+     reloj sigue contando —unas cifras que cambian son información, no
+     movimiento—, las cruces y las estrellas se quedan visibles y quietas, y la
+     fotografía deja de derivar y de posarse. */
   @media (prefers-reduced-motion: reduce) {
     .puerta .entra,
-    .puerta .entra-titular-hero {
+    .puerta .entra-titular-hero,
+    .puerta .respira-puerta,
+    .puerta .vertice,
+    .puerta .estrella {
       animation: none !important;
       opacity: 1 !important;
       transform: none !important;
       clip-path: none !important;
+    }
+
+    /* `transform: none` en la estrella la descoloca: su posición depende del
+       `translate(-50%, -50%)`. Se le devuelve el centrado sin la escala. */
+    .puerta .estrella {
+      opacity: 0.5 !important;
+      transform: translate(-50%, -50%) scale(var(--escala)) !important;
+    }
+
+    .puerta .vertice {
+      opacity: 0.85 !important;
+      transform: translate(-50%, -50%) !important;
     }
   }
 </style>
