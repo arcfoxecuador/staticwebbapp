@@ -20,7 +20,18 @@ interface Props {
 }
 
 const { tono = 'marca', enlace = true, soloSello = false, class: extra } = Astro.props;
-const src = tono === 'blanco' ? '/marca/logo-blanco.png' : '/marca/logo-oficial.png';
+
+/* El lockup de 192×28 no se recorta: su zorro mide 28 px y al agrandarlo
+   (puerta de campaña, cabecera flotante) se lee pixelado y `object-cover`
+   le come las orejas. El sello sale de `wordmark-negro.png`, que sí es
+   material de marca a resolución de imprenta. */
+const src = soloSello
+  ? tono === 'blanco'
+    ? '/marca/sello-blanco.png'
+    : '/marca/sello.png'
+  : tono === 'blanco'
+    ? '/marca/logo-blanco.png'
+    : '/marca/logo-oficial.png';
 const Etiqueta = enlace ? 'a' : 'span';
 ---
 
@@ -33,11 +44,10 @@ const Etiqueta = enlace ? 'a' : 'span';
   <img
     src={src}
     alt={ORG.nombreCorto}
-    height="28"
-    width={soloSello ? '28' : '192'}
+    height={soloSello ? '64' : '28'}
+    width={soloSello ? '64' : '192'}
     class:list={[
-      'h-7',
-      soloSello ? 'w-7 object-cover object-left' : 'w-auto',
+      soloSello ? 'h-7 w-7 object-contain' : 'h-7 w-auto',
     ]}
   />
 </Etiqueta>
