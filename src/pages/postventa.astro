@@ -1,4 +1,8 @@
 ---
+/* Fuera del menú y DENTRO de `RUTAS_NO_INDEXABLES` hasta que haya red de
+   talleres que publicar. La URL sigue viva para revisar; noindex, fuera del
+   sitemap y Disallow en robots salen de esa lista. El `noindex` del <Base>
+   es el mismo interruptor, por si la página se abre sin pasar por el filtro. */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
@@ -27,7 +31,7 @@ const schema = grafo(
 );
 ---
 
-<Base {titulo} {descripcion} path="/postventa" {schema}>
+<Base {titulo} {descripcion} path="/postventa" {schema} noindex>
   <Hero rotulo="Cuidado del auto" titulo="Postventa oficial" bajada={descripcion} />
 
   <Seccion>

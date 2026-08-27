@@ -20,6 +20,12 @@ interface Props {
 
 const { titulo, descripcion, path, schema, noindex = false, imagen = '/og/portada.jpg' } = Astro.props;
 
+/* La lista es la fuente: un `noindex` suelto en la página y una ruta olvidada
+   en `RUTAS_NO_INDEXABLES` es exactamente la contradicción que el comentario
+   de esa lista promete no tener. El prop cubre 404 y casos que no viven ahí. */
+const ocultar =
+  noindex || RUTAS_NO_INDEXABLES.some((ruta) => path === ruta || path.startsWith(`${ruta}/`));
+
 const canonical = new URL(path, SITE).toString();
 const ogImagen = new URL(imagen, SITE).toString();
 
@@ -77,7 +83,7 @@ const reglasDeEspeculacion = JSON.stringify({
     olvidar el `x-default` es peor que no ponerlos. */}
 
 {
-  noindex ? (
+  ocultar ? (
     <meta name="robots" content="noindex, nofollow" />
   ) : (
     /* `max-image-preview:large` habilita la miniatura grande en resultados y en

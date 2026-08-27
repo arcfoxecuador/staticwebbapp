@@ -20,9 +20,15 @@ export const SITE = (process.env.SITE_URL || 'https://arcfox.com.ec').replace(/\
 
    `/landing` sólo va aquí en el sitio principal: existe como ruta interna pero
    no se promociona. En el dominio teaser (`SOLO_LANDING=1`) ES la home pública;
-   marcarla noindex mataría la única página indexable del despliegue. */
+   marcarla noindex mataría la única página indexable del despliegue.
+
+   `/postventa` es lo mismo que `/landing` en el sitio grande: la página existe
+   para revisar, pero el servicio no está cerrado. Fuera de `NAV` y de aquí
+   hasta que haya red de talleres. */
 export const RUTAS_NO_INDEXABLES =
-  process.env.SOLO_LANDING === '1' ? ['/gracias'] : ['/gracias', '/landing'];
+  process.env.SOLO_LANDING === '1'
+    ? ['/gracias']
+    : ['/gracias', '/landing', '/postventa'];
 
 /* ── LAS RUTAS DESPUBLICADAS DE LAS COLECCIONES ─────────────────────────────
    Un servicio con `publico: false` y un artículo con `borrador: true` ya salen

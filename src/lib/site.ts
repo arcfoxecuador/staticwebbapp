@@ -98,7 +98,10 @@ export const NAV: NavZona[] = [
   { texto: 'Concesionarios', href: '/concesionarios' },
   { texto: 'Test drive', href: '/test-drive' },
   { texto: 'Sobre ARCFOX', href: '/nosotros' },
-  { texto: 'Postventa', href: '/postventa' },
+  /* Postventa NO entra aquí a propósito: la página existe para revisar
+     (`/postventa`) pero el servicio no está cerrado. Un enlace en cabecera,
+     pie y 404 —los tres leen esta lista— la promocionaría. Vive en
+     `RUTAS_NO_INDEXABLES` hasta que haya red de talleres que publicar. */
 ];
 
 /** El CTA primario. Aparece en la cabecera, en la barra de acción de móvil y al
