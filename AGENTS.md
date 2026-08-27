@@ -141,18 +141,18 @@ scripts/                  tres verificadores de dist/ · pipeline de imágenes �
   se monta ni el script ni el banner de cookies.
 - **Asistente**: `ASISTENTE.activo` en `false` en el sitio. El chat de la teaser
   lo enciende `PUBLIC_IOZEN_BOT` vía `TEASER.iozen` (popup de ioZen v2).
-- **Landing de expectativa**: `/landing` (layout `Teaser.astro`). Copy y fecha
-  viven en `TEASER` de `site.ts`. Titular: «El zorro espera en la oscuridad»
-  (ya no «ya corre»: la puerta de abajo aún no se abre). Lanzamiento: 15 de
-  septiembre de 2026, medianoche Ecuador (`2026-09-15T05:00:00.000Z`). Dominio
-  propio **followdafox.com**, segundo proyecto Vercel (`followdafox`). Variables:
-  `SOLO_LANDING=1` poda `dist/` a esa página; `SITE_URL=https://followdafox.com`
-  fija canonical y sitemap; `PUBLIC_IOZEN_BOT` (id `m4zdh`) pinta el chat
-  como popup. Sin el bot no se monta y quedan las redes. `tsconfig.json` excluye `cms-panel/`
+- **Landing de expectativa**: `/landing` (layout `Teaser.astro`). Fecha y
+  contador viven en `TEASER`; titular, bajada y CTA salen de `CAMPAÑA` (los
+  mismos que la puerta). Lanzamiento: 15 de septiembre de 2026, medianoche
+  Ecuador (`2026-09-15T05:00:00.000Z`). Dominio propio **followdafox.com**,
+  segundo proyecto Vercel (`followdafox`). Variables: `SOLO_LANDING=1` poda
+  `dist/` a esa página; `SITE_URL=https://followdafox.com` fija canonical y
+  sitemap; `PUBLIC_IOZEN_BOT` (id `m4zdh`) pinta el chat como popup. Sin el
+  bot no se monta y quedan las redes. `tsconfig.json` excluye `cms-panel/`
   para que `astro check` no tipe el panel.
 - **Puerta de lanzamiento**: `/lanzamiento` (mismo layout `Teaser.astro`). Copy
-  en `LANZAMIENTO` de `site.ts` — ceja, titular y CTA «Continuar» de la maqueta
-  de campaña. CONTINUAR abre el popup de ioZen. Tercer proyecto Vercel
+  en `CAMPAÑA` / `LANZAMIENTO` de `site.ts` — ceja, titular y CTA «Continuar»
+  de la maqueta. CONTINUAR abre el popup de ioZen. Tercer proyecto Vercel
   (`arcfox-lanzamiento`). Variables: `SOLO_LANZAMIENTO=1` poda `dist/` a esa
   página; `SITE_URL` fija canonical. No combinar con `SOLO_LANDING` en el mismo
   build. Fuera de `NAV`; `noindex` en arcfox.com.ec.

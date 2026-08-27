@@ -207,6 +207,22 @@ export const ASISTENTE = {
   etiqueta: 'Abrir el asistente',
 } as const;
 
+// ── Campaña (teaser + puerta) ────────────────────────────────────────────────
+
+/* UNA campaña, DOS superficies. El cliente escribió ceja, titular y CTA una
+   sola vez; el teaser (cuenta atrás) y la puerta (preguntas) los leen de aquí.
+   Si cada página tuviera su propia frase, followdafox diría «pregúntale al
+   zorro» y la puerta «Continuar» — dos campañas en el mismo lanzamiento. */
+const CAMPAÑA = {
+  titulo: 'Antes de abrir la puerta',
+  ceja: 'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad.',
+  titular: 'Antes de abrir la puerta déjanos hacerte unas preguntas.',
+  bajada:
+    'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad, con ARCFOX en Ecuador.',
+  cta: 'Continuar',
+  chatEtiqueta: 'Abrir las preguntas y el chat de ARCFOX',
+} as const;
+
 // ── Landing de expectativa (followdafox.com) ────────────────────────────────
 
 /* EL TEASER, y por qué su copy vive AQUÍ y no dentro de `landing.astro`.
@@ -218,6 +234,9 @@ export const ASISTENTE = {
    <time>, y el instante del lanzamiento en el atributo que lee la cuenta atrás.
    Escritas en la página, la primera divergencia es silenciosa: el texto dice un
    día y el contador cuenta hacia otro.
+
+   Titular, bajada y CTA no se reescriben aquí: salen de `CAMPAÑA`. Lo que es
+   propio del teaser es la fecha y el contador.
 
    `soloLanding` y `path` son la MISMA decisión que toma `rutas.mjs` con
    `RUTAS_NO_INDEXABLES`, leída desde el mismo interruptor. En el sitio completo
@@ -236,15 +255,9 @@ export const TEASER = {
   /** Ruta canónica de la landing. Ver el comentario de arriba. */
   path: SOLO_LANDING ? '/' : '/landing',
 
-  /** El <title> y el `name` del nodo de página. Corto: es lo que se ve en una
-      pestaña estrecha y en una tarjeta compartida. */
-  titulo: 'ARCFOX llega a Ecuador',
-  /** El <h1>. Una idea de seis a diez palabras, no la frase citable.
-      «Espera», no «ya corre»: la puerta de abajo aún no se abre. */
-  titular: 'El zorro espera en la oscuridad',
-  /** La frase citable: marca, país y fecha, sin una sola cifra de producto. */
-  bajada:
-    'ARCFOX llega a Ecuador el 15 de septiembre de 2026 con una nueva forma de movilidad. Hasta entonces, sigue al zorro.',
+  titulo: CAMPAÑA.titulo,
+  titular: CAMPAÑA.titular,
+  bajada: CAMPAÑA.bajada,
 
   /** Lo que dice el HTML cuando el JavaScript no llega. Sin esto, la pieza
       central de la página sería un hueco. */
@@ -276,9 +289,8 @@ export const TEASER = {
      cambiar de bot sin tocar el copy. */
   iozen: import.meta.env.PUBLIC_IOZEN_BOT ?? 'm4zdh',
   chatNombre: 'ARCFOX Ecuador',
-  chatRotulo: 'Pregúntale al zorro',
-  /** Lo lee un lector de pantalla, así que dice qué hace. */
-  chatEtiqueta: 'Abrir el chat de ARCFOX',
+  chatRotulo: CAMPAÑA.cta,
+  chatEtiqueta: CAMPAÑA.chatEtiqueta,
 } as const;
 
 // ── Puerta de lanzamiento ───────────────────────────────────────────────────
@@ -293,10 +305,8 @@ export const TEASER = {
    otra.
 
    Esta página es la PUERTA: aún no se abre; antes, unas preguntas. El teaser
-   de arriba es la cuenta atrás —fecha, contador, «sigue al zorro»—. Las dos
-   superficies no pueden contradecirse: si el teaser dice que el zorro «ya
-   corre», esta puerta llega tarde. Por eso el copy de ambas vive en el mismo
-   archivo.
+   de arriba es la cuenta atrás. Ceja, titular y CTA salen de `CAMPAÑA` para
+   que followdafox no hable otro idioma.
 
    `soloLanzamiento` y `path` son la MISMA decisión que `SOLO_LANDING`: en el
    sitio completo la puerta es `/lanzamiento`; en el dominio de campaña el HTML
@@ -313,25 +323,18 @@ export const LANZAMIENTO = {
   /** Ruta canónica de la puerta. Ver el comentario de arriba. */
   path: SOLO_LANZAMIENTO ? '/' : '/lanzamiento',
 
-  /** El <title> y el `name` del nodo de página. Corto: es lo que se ve en una
-      pestaña estrecha y en una tarjeta compartida. */
-  titulo: 'Antes de abrir la puerta',
-  /** El párrafo pequeño de arriba. Copy del cliente; CSS pone versales. */
-  ceja: 'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad.',
-  /** El <h1>. Una sola cadena: el diseño parte las líneas, no el string. */
-  titular: 'Antes de abrir la puerta déjanos hacerte unas preguntas.',
-  /** La frase citable del <head>: marca, país e invitación, no el h1 entero. */
-  bajada:
-    'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad, con ARCFOX en Ecuador.',
-  cta: 'Continuar',
+  titulo: CAMPAÑA.titulo,
+  ceja: CAMPAÑA.ceja,
+  titular: CAMPAÑA.titular,
+  bajada: CAMPAÑA.bajada,
+  cta: CAMPAÑA.cta,
 
   /* EL CHAT. Mismo bot que el teaser: un id, no una URL. El botón visible
      dice Continuar; el aria dice qué abre, porque «Continuar» solo no basta
      para un lector de pantalla. */
   iozen: import.meta.env.PUBLIC_IOZEN_BOT ?? 'm4zdh',
   chatNombre: 'ARCFOX Ecuador',
-  /** Lo lee un lector de pantalla, así que dice qué hace. */
-  chatEtiqueta: 'Abrir las preguntas y el chat de ARCFOX',
+  chatEtiqueta: CAMPAÑA.chatEtiqueta,
 } as const;
 
 // ── Formulario de contacto ──────────────────────────────────────────────────
