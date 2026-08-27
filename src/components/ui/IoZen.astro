@@ -17,13 +17,23 @@ import { TEASER } from '../../lib/site';
 
 interface Props {
   bot: string;
+  rotulo?: string;
+  variante?: 'primario' | 'secundario' | 'fantasma';
+  etiqueta?: string;
+  class?: string;
 }
 
-const { bot } = Astro.props;
+const {
+  bot,
+  rotulo = TEASER.chatRotulo,
+  variante = 'primario',
+  etiqueta = TEASER.chatEtiqueta,
+  class: extra,
+} = Astro.props;
 const src = `https://app.iozen.ai/widget/v2/loader.js?bot=${bot}`;
 ---
 
-<Boton variante="primario" data-iozen-popup={bot} tipo="button">
-  {TEASER.chatRotulo}
+<Boton {variante} aria-label={etiqueta} class={extra} data-iozen-popup={bot} tipo="button">
+  {rotulo}
 </Boton>
 <script is:inline src={src} data-bot={bot} data-type="popup" async></script>

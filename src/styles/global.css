@@ -72,6 +72,12 @@
   --color-linea: #d3d9df;
   --color-tinta: #1a1d22;
 
+  /* La puerta de campaña necesita un recorrido azul→morado que los nueve roles
+     del sitio no pueden dar sin convertir `marca-clara` en otro color global.
+     Estos dos tonos quedan reservados al campo atmosférico de `.puerta`. */
+  --color-campana-fria: #0867d8;
+  --color-campana-calida: #32105f;
+
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-pill: 999px;

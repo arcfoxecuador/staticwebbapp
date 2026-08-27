@@ -239,11 +239,12 @@ export const TEASER = {
   /** El <title> y el `name` del nodo de página. Corto: es lo que se ve en una
       pestaña estrecha y en una tarjeta compartida. */
   titulo: 'ARCFOX llega a Ecuador',
-  /** El <h1>. Una idea de seis a diez palabras, no la frase citable. */
-  titular: 'El zorro ya corre en la oscuridad',
+  /** El <h1>. Una idea de seis a diez palabras, no la frase citable.
+      «Espera», no «ya corre»: la puerta de abajo aún no se abre. */
+  titular: 'El zorro espera en la oscuridad',
   /** La frase citable: marca, país y fecha, sin una sola cifra de producto. */
   bajada:
-    'ARCFOX llega a Ecuador el 15 de septiembre de 2026. Hasta entonces, sigue al zorro.',
+    'ARCFOX llega a Ecuador el 15 de septiembre de 2026 con una nueva forma de movilidad. Hasta entonces, sigue al zorro.',
 
   /** Lo que dice el HTML cuando el JavaScript no llega. Sin esto, la pieza
       central de la página sería un hueco. */
@@ -278,6 +279,59 @@ export const TEASER = {
   chatRotulo: 'Pregúntale al zorro',
   /** Lo lee un lector de pantalla, así que dice qué hace. */
   chatEtiqueta: 'Abrir el chat de ARCFOX',
+} as const;
+
+// ── Puerta de lanzamiento ───────────────────────────────────────────────────
+
+/* LA PUERTA, y por qué su copy vive AQUÍ y no dentro de `lanzamiento.astro`.
+
+   La página dice tres cosas que el cliente ya escribió —una ceja, un titular
+   y un CTA— y las tres aparecen más de una vez en la salida: el titular en el
+   <h1> y en el JSON-LD, la ceja en el párrafo y (como frase citable) en la
+   `description` del <head>, el CTA en el botón visible. Escritas en la página,
+   la primera divergencia es silenciosa: la pestaña dice una cosa y el grafo
+   otra.
+
+   Esta página es la PUERTA: aún no se abre; antes, unas preguntas. El teaser
+   de arriba es la cuenta atrás —fecha, contador, «sigue al zorro»—. Las dos
+   superficies no pueden contradecirse: si el teaser dice que el zorro «ya
+   corre», esta puerta llega tarde. Por eso el copy de ambas vive en el mismo
+   archivo.
+
+   `soloLanzamiento` y `path` son la MISMA decisión que `SOLO_LANDING`: en el
+   sitio completo la puerta es `/lanzamiento`; en el dominio de campaña el HTML
+   se renombra a `index.html` y su ruta canónica pasa a ser `/`. Si el
+   canonical y el `@id` del JSON-LD no siguen ese cambio, la campaña publica
+   una URL que en su propio dominio no existe.
+
+   `process.env` y no `import.meta.env`: `SOLO_LANZAMIENTO` no lleva prefijo
+   `PUBLIC_` —no es un dato del navegador, es una variable de construcción—. */
+const SOLO_LANZAMIENTO = process.env.SOLO_LANZAMIENTO === '1';
+
+export const LANZAMIENTO = {
+  soloLanzamiento: SOLO_LANZAMIENTO,
+  /** Ruta canónica de la puerta. Ver el comentario de arriba. */
+  path: SOLO_LANZAMIENTO ? '/' : '/lanzamiento',
+
+  /** El <title> y el `name` del nodo de página. Corto: es lo que se ve en una
+      pestaña estrecha y en una tarjeta compartida. */
+  titulo: 'Antes de abrir la puerta',
+  /** El párrafo pequeño de arriba. Copy del cliente; CSS pone versales. */
+  ceja: 'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad.',
+  /** El <h1>. Una sola cadena: el diseño parte las líneas, no el string. */
+  titular: 'Antes de abrir la puerta déjanos hacerte unas preguntas.',
+  /** La frase citable del <head>: marca, país e invitación, no el h1 entero. */
+  bajada:
+    'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad, con ARCFOX en Ecuador.',
+  cta: 'Continuar',
+
+  /* EL CHAT. Mismo bot que el teaser: un id, no una URL. El botón visible
+     dice Continuar; el aria dice qué abre, porque «Continuar» solo no basta
+     para un lector de pantalla. */
+  iozen: import.meta.env.PUBLIC_IOZEN_BOT ?? 'm4zdh',
+  chatNombre: 'ARCFOX Ecuador',
+  /** Lo lee un lector de pantalla, así que dice qué hace. */
+  chatEtiqueta: 'Abrir las preguntas y el chat de ARCFOX',
 } as const;
 
 // ── Formulario de contacto ──────────────────────────────────────────────────

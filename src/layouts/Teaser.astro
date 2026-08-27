@@ -22,13 +22,15 @@ import { IDIOMA } from '../lib/schema';
 interface Props {
   titulo: string;
   descripcion: string;
-  /** JSON-LD ya serializado con `grafo()`. Su `path` tiene que ser `TEASER.path`. */
+  /** Ruta canónica. El teaser conserva su ruta cuando la página no la precisa. */
+  path?: string;
+  /** JSON-LD ya serializado con `grafo()`. Su `path` tiene que coincidir con éste. */
   schema?: string;
   /** Imagen de compartición. Sin ella, BaseHead usa la del sitio. */
   imagen?: string;
 }
 
-const { titulo, descripcion, schema, imagen } = Astro.props;
+const { titulo, descripcion, path = TEASER.path, schema, imagen } = Astro.props;
 
 /* EL `noindex` NO ES UNA PROP, y no poder pasarlo es la garantía: se deriva de
    la MISMA lista que gobierna el sitemap y el robots.txt, así que la landing no
@@ -37,7 +39,7 @@ const { titulo, descripcion, schema, imagen } = Astro.props;
    En el sitio principal `/landing` está en `RUTAS_NO_INDEXABLES` → noindex. En
    el dominio teaser (`SOLO_LANDING=1`) su ruta es `/`, que no está en la lista
    → indexable, porque ahí ES la única página pública del despliegue. */
-const noindex = RUTAS_NO_INDEXABLES.some((ruta) => TEASER.path.startsWith(ruta));
+const noindex = RUTAS_NO_INDEXABLES.some((ruta) => path.startsWith(ruta));
 
 /* Sin ningún identificador configurado no se monta ni el script ni el banner:
    un aviso de cookies en un sitio que no pone cookies obliga al visitante a
@@ -48,7 +50,7 @@ const hayAnalitica = Boolean(ANALITICA.ga4 || ANALITICA.clarity);
 <!doctype html>
 <html lang={IDIOMA}>
   <head>
-    <BaseHead {titulo} {descripcion} path={TEASER.path} {schema} {noindex} {imagen} />
+    <BaseHead {titulo} {descripcion} {path} {schema} {noindex} {imagen} portada={false} />
   </head>
   <body>
     {/* El primer elemento enfocable del documento. No es opcional. */}

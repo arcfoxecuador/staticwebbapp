@@ -16,9 +16,21 @@ interface Props {
   noindex?: boolean;
   /** Imagen de compartición. 1200×630. */
   imagen?: string;
+  /** La portada del catálogo usa marca + tagline. Las campañas que se sirven
+      en `/` (teaser, puerta) NO son esa portada: si no se puede apagar, el
+      `<title>` de followdafox.com y de la puerta sería el del sitio grande. */
+  portada?: boolean;
 }
 
-const { titulo, descripcion, path, schema, noindex = false, imagen = '/og/portada.jpg' } = Astro.props;
+const {
+  titulo,
+  descripcion,
+  path,
+  schema,
+  noindex = false,
+  imagen = '/og/portada.jpg',
+  portada = path === '/',
+} = Astro.props;
 
 /* La lista es la fuente: un `noindex` suelto en la página y una ruta olvidada
    en `RUTAS_NO_INDEXABLES` es exactamente la contradicción que el comentario
@@ -36,8 +48,9 @@ const ogImagen = new URL(imagen, SITE).toString();
        primeros caracteres son los que se ven en una pestaña estrecha y en una
        lista de resultados.
    Los ~60 caracteres son el límite práctico antes de que Google recorte. */
-const tituloCompleto =
-  path === '/' ? `${ORG.nombreCorto} · ${ORG.tagline}` : `${titulo} | ${ORG.nombreCorto}`;
+const tituloCompleto = portada
+  ? `${ORG.nombreCorto} · ${ORG.tagline}`
+  : `${titulo} | ${ORG.nombreCorto}`;
 
 /* PRENAVEGACIÓN. El manifiesto se serializa aquí y se inyecta con `set:html`,
    igual que el JSON-LD de abajo, Y NO ES UNA PREFERENCIA DE ESTILO: escrito como

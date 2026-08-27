@@ -1,15 +1,17 @@
-/* ── PODA DEL DIST PARA EL DOMINIO TEASER ────────────────────────────────
-   Tras `astro build`, deja `dist/` listo para publicar sólo la landing en un
-   dominio aparte (p. ej. followdafox.com). El sitio principal no pasa por aquí:
-   si `SOLO_LANDING` no es `'1'`, el script sale sin tocar nada.
+/* ── PODA DEL DIST PARA UN DEPLOY DE UNA SOLA PÁGINA ─────────────────────
+   Tras `astro build`, deja `dist/` listo para publicar UNA página en un
+   proyecto Vercel aparte. Dos modos, misma poda: teaser (`SOLO_LANDING`) y
+   puerta de lanzamiento (`SOLO_LANZAMIENTO`). El sitio principal no pasa por
+   aquí: si ninguno de los dos es `'1'`, el script sale sin tocar nada.
 
-   POR QUÉ NO BASTA CON UN PROYECTO APARTE. La landing comparte tipografías,
+   POR QUÉ NO BASTA CON UN PROYECTO APARTE. La página comparte tipografías,
    tokens, componentes y el pipeline de imágenes con el sitio completo; duplicar
-   el repo multiplicaría el drift. La poda post-build recorta lo que el teaser
-   no debe mostrar — fotos de modelos aún no lanzados, rutas del catálogo,
-   sitemap del sitio entero — sin un segundo código fuente.
+   el repo multiplicaría el drift. La poda post-build recorta lo que ese
+   dominio no debe mostrar — fotos de modelos aún no lanzados, rutas del
+   catálogo, sitemap del sitio entero — sin un segundo código fuente.
 
-   Se invoca desde `npm run build:vercel` cuando Vercel despliega el teaser. */
+   Se invoca desde `npm run build:vercel`. El flag y el SITE_URL viven en
+   Environment de CADA proyecto Vercel, no en el de `arcfox`. */
 import {
   existsSync,
   readFileSync,
@@ -25,25 +27,44 @@ import { join, relative, dirname, normalize } from 'node:path';
 const DIST = 'dist';
 const ASTRO = join(DIST, '_astro');
 const INDEX = join(DIST, 'index.html');
-const LANDING = join(DIST, 'landing.html');
 
-if (process.env.SOLO_LANDING !== '1') process.exit(0);
+const SOLO_LANDING = process.env.SOLO_LANDING === '1';
+const SOLO_LANZAMIENTO = process.env.SOLO_LANZAMIENTO === '1';
 
-/* En el teaser el dominio lo fija Vercel con SITE_URL; el fallback es el
-   dominio público del teaser, no el del sitio principal. */
-const SITE = (process.env.SITE_URL ?? 'https://followdafox.com').replace(/\/+$/, '');
+if (!SOLO_LANDING && !SOLO_LANZAMIENTO) process.exit(0);
 
-if (!existsSync(LANDING)) {
+/* Dos flags a la vez producirían dos fuentes y dos SITE fallback. El build
+   no puede adivinar cuál proyecto Vercel está desplegando. */
+if (SOLO_LANDING && SOLO_LANZAMIENTO) {
   console.error(
-    `[dist-landing] Falta ${LANDING}. Construye con SOLO_LANDING=1 y asegúrate de que existe src/pages/landing.astro.`,
+    '[dist-landing] SOLO_LANDING y SOLO_LANZAMIENTO no pueden ser 1 a la vez. Un solo modo de poda por build.',
   );
   process.exit(1);
 }
 
-/* La landing pasa a ser la home del teaser; el index.html del sitio completo
-   sobra y confundiría al hosting con cleanUrls. */
+/* Fuente y SITE fallback según el flag. SITE_URL en Vercel pisa el fallback:
+   followdafox.com en el teaser; en la puerta, la URL de ese proyecto (aún
+   sin dominio propio). */
+const flag = SOLO_LANDING ? 'SOLO_LANDING' : 'SOLO_LANZAMIENTO';
+const fuente = SOLO_LANDING
+  ? join(DIST, 'landing.html')
+  : join(DIST, 'lanzamiento.html');
+const SITE = (
+  process.env.SITE_URL ??
+  (SOLO_LANDING ? 'https://followdafox.com' : 'https://arcfox-lanzamiento.vercel.app')
+).replace(/\/+$/, '');
+
+if (!existsSync(fuente)) {
+  console.error(
+    `[dist-landing] Falta ${fuente}. Construye con ${flag}=1 y asegúrate de que existe el .astro que genera ese html.`,
+  );
+  process.exit(1);
+}
+
+/* La página fuente pasa a ser la home del deploy; el index.html del sitio
+   completo sobra y confundiría al hosting con cleanUrls. */
 if (existsSync(INDEX)) unlinkSync(INDEX);
-renameSync(LANDING, INDEX);
+renameSync(fuente, INDEX);
 
 /* ── HTML, sitemap y llms del sitio entero ─────────────────────────────── */
 function borrarHtmlSobrante(dir) {

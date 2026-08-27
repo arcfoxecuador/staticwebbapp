@@ -58,7 +58,7 @@ src/
 │   ├── layout/           Header · Footer · BarraAccion
 │   ├── ui/               Boton · Chip · Figura · Marca · Asistente
 │   └── bloques/          14 bloques de composición
-├── pages/                15 archivos
+├── pages/                16 archivos
 ├── styles/
 │   ├── global.css        tokens @theme + 5 utilidades + capa base
 │   └── motion.css        todo el movimiento, en CSS puro con animation-timeline
@@ -77,11 +77,12 @@ scripts/                  tres verificadores de dist/ · pipeline de imágenes �
 | `/nosotros` | `pages/nosotros.astro` |
 | `/concesionarios` | `pages/concesionarios.astro` |
 | `/test-drive` | `pages/test-drive.astro` |
-| `/postventa` | `pages/postventa.astro` |
+| `/postventa` | `pages/postventa.astro` — `noindex`, fuera del menú; URL viva para revisar |
 | `/bitacora` | `pages/bitacora/index.astro` |
 | `/bitacora/{slug}` | `pages/bitacora/[slug].astro` |
 | `/contacto` | `pages/contacto.astro` |
 | `/landing` | `pages/landing.astro` — `noindex` en arcfox.com.ec; home de followdafox.com |
+| `/lanzamiento` | `pages/lanzamiento.astro` — `noindex` en arcfox.com.ec; home del proyecto `arcfox-lanzamiento` |
 | `/gracias` | `pages/gracias.astro` — `noindex` |
 | `/404` | `pages/404.astro` — `noindex` |
 | `/robots.txt` · `/llms.txt` | generados en construcción |
@@ -95,9 +96,10 @@ scripts/                  tres verificadores de dist/ · pipeline de imágenes �
 2. **Ningún dato se escribe dos veces.** Correo, teléfono, sedes, navegación y CTA
    salen de `src/lib/site.ts`. Un correo repetido en cabecera, pie, contacto y
    JSON-LD son cuatro sitios que cambian a la vez y el cuarto siempre se olvida.
-3. **La paleta está cerrada.** Nueve tokens en `global.css`, ningún hexadecimal
-   suelto. `acento` queda **reservado al CTA primario**: si aparece en otro sitio,
-   es un error.
+3. **La paleta está cerrada.** Nueve tokens de sitio en `global.css`, más dos de
+   campaña (`campana-fria`, `campana-calida`) que sólo usa `.puerta`. Ningún
+   hexadecimal suelto. `acento` queda **reservado al CTA primario**: si aparece
+   en otro sitio, es un error.
 4. **Cero sombras**, con la única excepción del lanzador flotante del asistente. La
    elevación se hace con el escalón de luminancia entre `fondo` y `superficie`.
 5. **El motion es CSS puro** con `animation-timeline: view()`. Sin observers y sin
@@ -140,13 +142,23 @@ scripts/                  tres verificadores de dist/ · pipeline de imágenes �
 - **Asistente**: `ASISTENTE.activo` en `false` en el sitio. El chat de la teaser
   lo enciende `PUBLIC_IOZEN_BOT` vía `TEASER.iozen` (popup de ioZen v2).
 - **Landing de expectativa**: `/landing` (layout `Teaser.astro`). Copy y fecha
-  viven en `TEASER` de `site.ts`. Lanzamiento: 15 de septiembre de 2026,
-  medianoche Ecuador (`2026-09-15T05:00:00.000Z`). Dominio propio
-  **followdafox.com**, segundo proyecto Vercel (`followdafox`). Variables:
+  viven en `TEASER` de `site.ts`. Titular: «El zorro espera en la oscuridad»
+  (ya no «ya corre»: la puerta de abajo aún no se abre). Lanzamiento: 15 de
+  septiembre de 2026, medianoche Ecuador (`2026-09-15T05:00:00.000Z`). Dominio
+  propio **followdafox.com**, segundo proyecto Vercel (`followdafox`). Variables:
   `SOLO_LANDING=1` poda `dist/` a esa página; `SITE_URL=https://followdafox.com`
   fija canonical y sitemap; `PUBLIC_IOZEN_BOT` (id `m4zdh`) pinta el chat
   como popup. Sin el bot no se monta y quedan las redes. `tsconfig.json` excluye `cms-panel/`
   para que `astro check` no tipe el panel.
+- **Puerta de lanzamiento**: `/lanzamiento` (mismo layout `Teaser.astro`). Copy
+  en `LANZAMIENTO` de `site.ts` — ceja, titular y CTA «Continuar» de la maqueta
+  de campaña. CONTINUAR abre el popup de ioZen. Tercer proyecto Vercel
+  (`arcfox-lanzamiento`). Variables: `SOLO_LANZAMIENTO=1` poda `dist/` a esa
+  página; `SITE_URL` fija canonical. No combinar con `SOLO_LANDING` en el mismo
+  build. Fuera de `NAV`; `noindex` en arcfox.com.ec.
+- **Postventa**: fuera de `NAV` y en `RUTAS_NO_INDEXABLES` hasta que haya red
+  de talleres. La URL `/postventa` sigue viva para revisar; no aparece en
+  cabecera, pie, 404, sitemap ni robots.
 - **CMS**: el panel está en `cms-panel/`. `ORIGEN` en `'colecciones'`. No es
   Storyblok. Quién publica lo deciden las variables de `cms-panel/.env`.
 - **Textos legales**: *pendiente*. `AVISO_LEGAL` y las dos rutas de `LEGAL`
@@ -174,6 +186,10 @@ scripts/                  tres verificadores de dist/ · pipeline de imágenes �
   cada deploy futuro pode `dist/`, `SOLO_LANDING=1` y
   `SITE_URL=https://followdafox.com` tienen que vivir en Environment del
   proyecto teaser, no en el de `arcfox`.
+- **Puerta:** proyecto Vercel `arcfox-lanzamiento`
+  (`https://arcfox-lanzamiento.vercel.app`). `SOLO_LANZAMIENTO=1` y `SITE_URL`
+  viven en Environment de ESE proyecto. Un push a `main` reconstruye los tres
+  si están ligados al mismo repo.
 - **Descripción oficial** (la que va al JSON-LD y a `llms.txt`):
   «ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV de diseño, autonomía y recarga para uso diario.»
 - **El primer commit es el andamiaje del kit, no trabajo de este proyecto.** Por eso

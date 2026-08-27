@@ -18,17 +18,25 @@ export const SITE = (process.env.SITE_URL || 'https://arcfox.com.ec').replace(/\
    una ruta de esta lista tiene tres efectos a la vez, y por eso viven juntas:
    el `noindex` del <head>, la exclusión del sitemap y la del robots.txt.
 
-   `/landing` sólo va aquí en el sitio principal: existe como ruta interna pero
-   no se promociona. En el dominio teaser (`SOLO_LANDING=1`) ES la home pública;
-   marcarla noindex mataría la única página indexable del despliegue.
+   Tres modos porque el mismo repo alimenta tres proyectos Vercel y un noindex
+   en la home de un deploy de una sola página la mata:
+   - Sitio grande: `/landing`, `/lanzamiento` y `/postventa` existen para
+     revisar, no se promocionan. Van aquí.
+   - Teaser (`SOLO_LANDING=1`): la home ES `/landing` renombrada → sólo
+     `/gracias`.
+   - Puerta (`SOLO_LANZAMIENTO=1`): la home ES `/lanzamiento` renombrada →
+     sólo `/gracias`.
 
-   `/postventa` es lo mismo que `/landing` en el sitio grande: la página existe
-   para revisar, pero el servicio no está cerrado. Fuera de `NAV` y de aquí
-   hasta que haya red de talleres. */
+   Si AMBOS flags son `'1'` es un error de entorno. El fallo duro va en
+   `scripts/dist-landing.mjs`; aquí no se lanza — este módulo lo importa
+   astro.config y un throw en el import rompería incluso `astro check`. */
+const SOLO_LANDING = process.env.SOLO_LANDING === '1';
+const SOLO_LANZAMIENTO = process.env.SOLO_LANZAMIENTO === '1';
+
 export const RUTAS_NO_INDEXABLES =
-  process.env.SOLO_LANDING === '1'
+  SOLO_LANDING || SOLO_LANZAMIENTO
     ? ['/gracias']
-    : ['/gracias', '/landing', '/postventa'];
+    : ['/gracias', '/landing', '/lanzamiento', '/postventa'];
 
 /* ── LAS RUTAS DESPUBLICADAS DE LAS COLECCIONES ─────────────────────────────
    Un servicio con `publico: false` y un artículo con `borrador: true` ya salen
