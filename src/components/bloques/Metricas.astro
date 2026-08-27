@@ -1,0 +1,62 @@
+---
+/* Las cifras. Sin contador animado, y es una decisión: un número que sube desde
+   cero es JavaScript, obliga a un observer, y durante el primer segundo muestra
+   un dato FALSO —que además es lo que se copia si alguien hace una captura. El
+   gesto lo da `.revela-cifra`, que es la misma revelación del sistema con más
+   recorrido.
+
+   `forma: tira` es la barra de cotas (valor + unidad + etiqueta). Existe como
+   variante y no como bloque nuevo: el dato es el mismo, cambia cómo se lee.
+
+   `fuente` es lo que separa una cifra creíble de un adorno. Un «+500 clientes»
+   sin procedencia no lo puede citar un motor generativo ni lo puede creer un
+   visitante. Si no hay fuente, la recomendación es no publicar la cifra — pero el
+   campo es opcional porque hay cifras que son la propia oferta («10 fechas de
+   inicio al año») y no necesitan una nota al pie. */
+import { METRICAS, type Metrica } from '../../lib/site';
+
+interface Props {
+  items?: Metrica[];
+  /** En campo oscuro las cifras van en blanco. */
+  tono?: 'marca' | 'blanco';
+  /** `tira` es la barra de cotas: valor + unidad en una línea, etiqueta debajo. */
+  forma?: 'rejilla' | 'tira';
+  /** Nota al pie de las cifras — homologación, fecha, aviso de país. */
+  nota?: string;
+}
+
+const { items = METRICAS, tono = 'marca', forma = 'rejilla', nota } = Astro.props;
+const color = tono === 'blanco' ? 'text-white' : 'text-marca';
+const tira = forma === 'tira';
+---
+
+{
+  items.length > 0 && (
+    <div data-slot="metricas">
+      {/* `.tira` (motion) y `forma=tira` (layout) no son lo mismo: la primera
+          es cómo entra la fila, la segunda es cómo se lee. */}
+      <dl
+        class:list={[
+          'tira',
+          tira
+            ? 'grid grid-cols-2 gap-px overflow-clip border border-current/15 sm:grid-cols-4'
+            : 'grid gap-8 sm:grid-cols-2 lg:grid-cols-4',
+        ]}
+      >
+        {items.map((m) => (
+          <div class:list={[tira && 'bg-current/4 px-4 py-5 text-center']}>
+            <dd class:list={['revela-cifra font-bold tabular-nums', tira ? 'text-h3' : 'text-stat', color]}>
+              {m.valor}
+              {m.unidad && <span class="ms-1 text-small font-medium text-current/55">{m.unidad}</span>}
+            </dd>
+            <dt class:list={[tira ? 'mt-1 text-eyebrow uppercase tracking-[0.14em] text-current/50' : 'mt-2 text-small text-current/70']}>
+              {m.etiqueta}
+            </dt>
+            {!tira && m.fuente && <dd class="mt-1 text-small text-current/45">{m.fuente}</dd>}
+          </div>
+        ))}
+      </dl>
+      {nota && <p class="mt-4 max-w-[72ch] text-small text-current/50">{nota}</p>}
+    </div>
+  )
+}

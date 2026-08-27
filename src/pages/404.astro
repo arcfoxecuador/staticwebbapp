@@ -1,0 +1,66 @@
+---
+/* El 404. Tres cosas que casi siempre faltan:
+
+   1. `noindex`. Una página de error indexada compite con las buenas.
+   2. SALIDAS REALES, no sólo «volver al inicio». Quien llega aquí venía buscando
+      algo concreto, y los enlaces de la navegación son la respuesta más probable.
+   3. Tiene que ser una página estática de verdad, no una redirección: el
+      alojamiento la sirve con código 404 y el navegador conserva la URL que el
+      visitante escribió — que es la única pista que tiene para corregirla.
+
+   El tono no se disculpa demasiado. Un 404 divertido a costa del visitante que se
+   ha perdido es una broma que no pidió. */
+import Base from '../layouts/Base.astro';
+import Seccion from '../components/bloques/Seccion.astro';
+import Boton from '../components/ui/Boton.astro';
+import { NAV } from '../lib/site';
+---
+
+<Base
+  titulo="Página no encontrada"
+  descripcion="La página que buscas no existe o ha cambiado de dirección."
+  path="/404"
+  noindex
+  barraAccion={false}
+>
+  <Seccion aire="amplio">
+    <div class="max-w-[52ch]">
+      <p class="eyebrow entra text-marca-clara">Error 404</p>
+
+      <h1 class="entra entra-2 mt-4 equilibra text-h1 font-bold text-marca">
+        Esta página no existe
+      </h1>
+
+      <p class="entra entra-3 mt-6 text-lead text-tinta/75">
+        Puede que haya cambiado de dirección. Prueba desde aquí:
+      </p>
+
+      <nav class="entra entra-4 mt-10" aria-label="Secciones del sitio">
+        <ul class="flex flex-col gap-1">
+          {
+            NAV.map((zona) => (
+              <li class="border-t border-linea last:border-b">
+                <a href={zona.href} class="tarjeta flex items-center justify-between gap-4 py-4">
+                  <span class="text-subtitulo font-bold text-marca">{zona.texto}</span>
+                  <svg class="flecha text-marca" width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path
+                      d="M3 8h10M9 4l4 4-4 4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <div class="entra entra-4 mt-10">
+        <Boton href="/">Volver al inicio</Boton>
+      </div>
+    </div>
+  </Seccion>
+</Base>

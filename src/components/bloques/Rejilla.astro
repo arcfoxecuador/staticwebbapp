@@ -1,0 +1,40 @@
+---
+/* La rejilla. Su único trabajo es elegir la utilidad de motion CORRECTA, y ésa es
+   toda la razón de que exista en vez de escribir `grid gap-6` en cada página.
+
+   `navegable` decide entre dos utilidades que parecen la misma y no lo son:
+
+     · `.tira` escalona la entrada entre `cover 8%` y `cover 82%`. Funciona en una
+       fila de tres o una lista de seis.
+     · `.tira-indice` mete a todas las hijas en un rango corto y temprano.
+
+   Con más de ~8 elementos, `.tira` se rompe de una forma concreta y medida: al
+   llegar a la rejilla, la primera tarjeta está a 0,84 de opacidad, la segunda a
+   0,42 y de la tercera en adelante a CERO. La mitad de lo que cabe en pantalla es
+   invisible, así que el visitante no puede ver ni elegir la tercera opción — que
+   es exactamente para lo que existe un catálogo.
+
+   REGLA: si la rejilla es para ELEGIR, el motion no puede esconder las opciones. */
+interface Props {
+  columnas?: 2 | 3 | 4;
+  /** Enciéndelo en catálogos y archivos: rejillas que se navegan, no que se leen.
+      Por encima de 8 elementos es obligatorio. */
+  navegable?: boolean;
+  class?: string;
+}
+
+const { columnas = 3, navegable = false, class: extra } = Astro.props;
+
+const COLUMNAS = {
+  2: 'sm:grid-cols-2',
+  3: 'sm:grid-cols-2 lg:grid-cols-3',
+  4: 'sm:grid-cols-2 lg:grid-cols-4',
+} as const;
+---
+
+<div
+  data-slot="rejilla"
+  class:list={['grid gap-6', COLUMNAS[columnas], navegable ? 'tira-indice' : 'tira', extra]}
+>
+  <slot />
+</div>

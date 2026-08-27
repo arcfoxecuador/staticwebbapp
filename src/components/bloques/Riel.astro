@@ -1,0 +1,100 @@
+---
+/* EL RIEL HORIZONTAL. Una fila que desborda a propósito y se desplaza con el
+   dedo, la rueda o el teclado.
+
+   ¿Por qué no una rejilla? Porque hay contenidos donde el número de elementos no
+   lo decide el diseño sino la colección —seis servicios hoy, nueve el mes que
+   viene— y una rejilla de tres columnas con siete elementos deja una fila huérfana
+   de uno. El riel no tiene ese problema y además comunica que hay más.
+
+   Cuatro cosas que lo hacen usable y que casi siempre faltan:
+
+   · `scroll-snap-type: inline mandatory` — el riel se detiene en una ficha, no a
+     medio camino entre dos.
+   · `scroll-padding-inline-start` alineado con la medida del sitio, para que la
+     ficha a la que salta quede donde empieza el texto de la página y no pegada al
+     borde de la ventana.
+   · Es un `<ul>` con `tabindex="0"` en el contenedor: sin eso, un contenedor de
+     scroll no es alcanzable por teclado y su contenido queda inaccesible para
+     quien no usa ratón. Chrome lo hace solo desde hace poco; el resto, no.
+   · `data-foco` SÓLO con tres fichas o más → ver el comentario de `.riel` en
+     motion.css. Un riel que no desborda no tiene recorrido, y una línea de tiempo
+     sin recorrido se queda en su primer fotograma: las fichas se quedarían
+     atenuadas para siempre.
+
+   El riel sangra a los bordes de la ventana (`ancho-total`) porque un riel
+   recortado a la medida del texto parece un error de maquetación: se tiene que
+   ver que continúa. */
+interface Props {
+  /** Cuántos elementos va a recibir por slot. Se necesita en el servidor para
+      decidir `data-foco`, y desde un componente Astro no se pueden contar los
+      hijos de un slot. */
+  total: number;
+  etiqueta: string;
+  class?: string;
+}
+
+const { total, etiqueta, class: extra } = Astro.props;
+const desborda = total >= 3;
+---
+
+<ul
+  data-slot="riel"
+  class:list={['riel', extra]}
+  data-foco={desborda ? '' : undefined}
+  tabindex="0"
+  role="list"
+  aria-label={etiqueta}
+>
+  <slot />
+</ul>
+
+<style>
+  .riel {
+    display: grid;
+    /* `auto-flow: column` y no flex: con grid el ancho de la ficha se declara una
+       vez en `grid-auto-columns` y todas miden lo mismo sin `flex-basis` ni
+       `shrink` en cada hija. */
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(260px, 32vw);
+    gap: 20px;
+
+    overflow-x: auto;
+    /* `clip` y no `hidden` en el eje bloque: `hidden` en un eje convierte el otro
+       en `auto` y crea un scrollport vertical que dejaría inertes las líneas de
+       tiempo `view()` de dentro. Ver la cabecera de motion.css. */
+    overflow-y: clip;
+
+    scroll-snap-type: inline mandatory;
+    /* La ficha se detiene donde empieza el texto de la página, no en el borde de
+       la ventana. `max()` reparte el resto de la medida cuando hay sitio. */
+    scroll-padding-inline-start: max(20px, (100vw - 1240px) / 2);
+
+    /* Sangrado a la ventana con el mismo cálculo, para que la primera ficha nazca
+       alineada con el titular de la sección. */
+    padding-inline: max(20px, (100vw - 1240px) / 2);
+    padding-block: 4px;
+    margin: 0;
+    list-style: none;
+
+    /* Firefox y Safari pintan la barra siempre; ocultarla del todo esconde la
+       única señal de que hay más contenido. `thin` es el compromiso. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-linea) transparent;
+
+    /* El scroll con teclado o con un enlace de ancla es instantáneo por decisión
+       global (ver el comentario de `html` en global.css); aquí el snap ya da la
+       sensación de continuidad. */
+  }
+
+  .riel > * {
+    scroll-snap-align: start;
+  }
+
+  @media (width >= 64rem) {
+    .riel {
+      grid-auto-columns: minmax(300px, 24vw);
+      gap: 24px;
+    }
+  }
+</style>

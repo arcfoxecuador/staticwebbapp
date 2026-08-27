@@ -1,0 +1,218 @@
+---
+/* Ficha de modelo: ocho escenas. Los datos salen del markdown; las fotos, de
+   `imagenPorArchivo`. Si falta una, esa escena no se pinta — no hay placeholder. */
+import Base from '../../layouts/Base.astro';
+import Escena from '../../components/bloques/Escena.astro';
+import Seccion from '../../components/bloques/Seccion.astro';
+import Encabezado from '../../components/bloques/Encabezado.astro';
+import Conmutador from '../../components/bloques/Conmutador.astro';
+import Metricas from '../../components/bloques/Metricas.astro';
+import Mosaico from '../../components/bloques/Mosaico.astro';
+import Destacados from '../../components/bloques/Destacados.astro';
+import Cierre from '../../components/bloques/Cierre.astro';
+import Formulario from '../../components/bloques/Formulario.astro';
+
+import { coleccion, renderizar } from '../../lib/contenido';
+import { imagenDeEntrada, imagenPorArchivo } from '../../lib/imagenes';
+import { AVISO_CIFRAS } from '../../lib/site';
+import { grafo, migas, organizacion, pagina, servicio, sitioWeb } from '../../lib/schema';
+
+import cotizar from '../../assets/cotizar.webp';
+
+export async function getStaticPaths() {
+  const modelos = await coleccion('modelos');
+  return modelos.map((entrada) => ({ params: { slug: entrada.id }, props: { entrada } }));
+}
+
+const { entrada } = Astro.props;
+const { data } = entrada;
+const { Content } = await renderizar(entrada);
+
+const heroLocal = imagenPorArchivo(
+  entrada.id === 't5' ? 't5-45-gris' : entrada.id === 's5' ? 's5-45' : 't1-kv',
+  data.alt ?? data.nombre,
+);
+const heroCms = heroLocal
+  ? undefined
+  : imagenDeEntrada('modelos', entrada.id, { asset: data.imagen, alt: data.alt, generada: data.portadaGenerada });
+const heroSrc =
+  heroLocal ??
+  (heroCms && typeof heroCms.fuente.src !== 'string' ? heroCms.fuente.src : undefined);
+
+const variantes = data.variantes
+  .map((v) => {
+    const imagen = imagenPorArchivo(v.archivo, v.alt);
+    return imagen ? { etiqueta: v.etiqueta, imagen, alt: v.alt, muestra: v.muestra } : null;
+  })
+  .filter((v) => v !== null);
+
+const interiores = data.interior
+  .map((v) => {
+    const imagen = imagenPorArchivo(v.archivo, v.alt);
+    return imagen ? { etiqueta: v.etiqueta, imagen, alt: v.alt } : null;
+  })
+  .filter((v) => v !== null);
+
+/* Un interior solo se pinta como escena; dos o más, como conmutador.
+   Pintar los dos enseña la primera foto dos veces — Conductor, otra vez. */
+const escenaInterior = interiores.length === 1 ? interiores[0] : undefined;
+const conmutadorInterior = interiores.length >= 2 ? interiores : [];
+const llenoInterior = data.interior.some((v) =>
+  /habitaculo|tablero|cabina|traseras|techo|estudio/.test(v.archivo),
+);
+
+const mosaico = data.galeria
+  .map((g) => {
+    const imagen = imagenPorArchivo(g.archivo, g.alt);
+    return imagen ? { imagen, alt: g.alt } : null;
+  })
+  .filter((g) => g !== null);
+
+const destacados = data.destacados
+  .map((d) => {
+    const imagen = d.archivo && d.alt ? imagenPorArchivo(d.archivo, d.alt) : undefined;
+    return { titulo: d.titulo, puntos: d.puntos, imagen, alt: d.alt };
+  });
+
+const cotas = data.cotas.map((c) => ({ valor: c.valor, unidad: c.unidad, etiqueta: c.etiqueta }));
+
+const path = `/modelos/${entrada.id}`;
+
+const schema = grafo(
+  organizacion(),
+  sitioWeb(),
+  pagina({ path, titulo: data.nombre, descripcion: data.seoDescripcion }),
+  migas([
+    { nombre: 'Modelos', path: '/modelos' },
+    { nombre: data.nombre, path },
+  ]),
+  servicio({
+    slug: entrada.id,
+    nombre: data.nombre,
+    descripcion: data.seoDescripcion,
+    categoria: data.categoria,
+  }),
+);
+---
+
+<Base
+  titulo={data.nombre}
+  descripcion={data.seoDescripcion}
+  {path}
+  {schema}
+  noindex={!data.publico}
+  cabeceraFlotante={Boolean(heroSrc)}
+>
+  {
+    heroSrc && (
+      <Escena
+        imagen={heroSrc}
+        alt={data.alt ?? data.nombre}
+        rotulo={data.rotulo ?? data.categoria}
+        titulo={data.nombre}
+        bajada={data.bajada}
+        transicion={`modelo-${entrada.id}`}
+        primera
+        altura="completa"
+      />
+    )
+  }
+
+  {
+    variantes.length > 0 && (
+      <Seccion campo="tinte">
+        <Conmutador
+          rotulo="Colores"
+          titulo="Elige el que te representa"
+          marca={entrada.id.toUpperCase()}
+          items={variantes}
+          forma="circulo"
+          nombre={`color-${entrada.id}`}
+        />
+      </Seccion>
+    )
+  }
+
+  {
+    cotas.length > 0 && (
+      <Seccion campo="superficie" aire="apretado">
+        <Metricas items={cotas} forma="tira" nota={AVISO_CIFRAS} />
+      </Seccion>
+    )
+  }
+
+  {
+    escenaInterior && (
+      <Escena
+        imagen={escenaInterior.imagen}
+        alt={escenaInterior.alt}
+        titulo="Dentro"
+        bajada={
+          entrada.id === 't1'
+            ? 'El familiar se entiende por lo que cabe, no por la ficha.'
+            : 'El auto se entiende desde el asiento, no desde la ficha.'
+        }
+        altura="completa"
+        anclaje="pie"
+      />
+    )
+  }
+
+  {
+    conmutadorInterior.length > 0 && (
+      <Seccion campo="tinte" aire="apretado" contenido={false}>
+        <Conmutador
+          titulo="Míralo desde dentro"
+          items={conmutadorInterior}
+          forma="texto"
+          nombre={`interior-${entrada.id}`}
+          lleno={llenoInterior}
+        />
+      </Seccion>
+    )
+  }
+
+  {
+    mosaico.length > 0 && (
+      <Seccion aire="apretado" contenido={false}>
+        <Mosaico items={mosaico} patron="destacado" />
+      </Seccion>
+    )
+  }
+
+  {
+    destacados.length > 0 && (
+      <Seccion>
+        <Encabezado rotulo="Tecnología" titulo="Lo que hace distinto a este modelo" />
+        <p class="mt-4 max-w-[68ch] text-small text-tinta/50">{AVISO_CIFRAS}</p>
+        <Destacados items={destacados} etiqueta={`Tecnología del ${data.nombre}`} class="mt-10" />
+        <div class="prosa mt-16">
+          <Content />
+        </div>
+      </Seccion>
+    )
+  }
+
+  {
+    destacados.length === 0 && (
+      <Seccion>
+        <div class="prosa">
+          <Content />
+        </div>
+      </Seccion>
+    )
+  }
+
+  <Cierre
+    id="cotizalo"
+    imagen={cotizar}
+    alt="ARCFOX, fondo de la ficha de cotización."
+  >
+    <Formulario
+      titulo={`Cotiza el ${data.nombre}`}
+      bajada="Ciudad y datos de contacto. Te respondemos desde el concesionario más cercano."
+      origen={path}
+      compacto
+    />
+  </Cierre>
+</Base>

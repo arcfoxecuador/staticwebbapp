@@ -1,0 +1,168 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { variantes } from '../../lib/ui';
+
+/* `type` y no `interface`: este componente puede pintar DOS elementos —<a> o
+   <button>—, así que sus props son la intersección de los dos juegos de
+   atributos, y esa intersección hay que recortarla (`Omit`) antes de heredarla.
+   Lo que se retira es `type`, que existe en los dos elementos con tipos
+   distintos —libre en el ancla, terna cerrada en el botón—: su hueco lo ocupa
+   `tipo`, con los tres únicos valores que admite el HTML. */
+type Comunes = Omit<HTMLAttributes<'a'> & HTMLAttributes<'button'>, 'type' | 'href'> & {
+  variante?: 'primario' | 'secundario' | 'fantasma';
+  tamano?: 'sm' | 'md' | 'lg';
+  ancho?: boolean;
+  deshabilitado?: boolean;
+  ocupado?: boolean;
+};
+
+/* UNIÓN DISCRIMINADA, y no un `href?: string` suelto. La diferencia importa:
+
+   con `href?: string`, un `<Boton href={expresión}>` cuya expresión pudiera ser
+   `undefined` deja de ser un error y pinta, en silencio, un `<button>` con las
+   MISMAS clases. Un CTA idéntico a la vista, anunciado como botón en vez de como
+   enlace, que al pulsarlo no hace nada. El día que ese dato se vuelva opcional,
+   antes reventaba el build y ahora se publicaría roto.
+
+   Con la unión, cada rama declara lo que la otra prohíbe: `href: string`
+   obligatorio en la rama de enlace y `href?: never` en la de botón, así que un
+   `string | undefined` no encaja en NINGUNA de las dos y vuelve a ser un error.
+
+   Alcance honesto de la garantía: `astro build` transpila SIN comprobar tipos,
+   así que esto protege en el editor y en `astro check` — que es justo por lo que
+   `npm run check` los ejecuta los dos. */
+type PropsEnlace = Comunes & { href: string; tipo?: never };
+type PropsBoton = Comunes & { href?: never; tipo?: 'button' | 'submit' | 'reset' };
+type Props = PropsEnlace | PropsBoton;
+
+/* El foco NO se declara aquí, y es deliberado: `:focus-visible` ya está resuelto
+   en global.css con los dos tokens del sistema. Una utilidad `focus-visible:`
+   local ganaría por especificidad sobre la regla de campo oscuro, y el botón
+   fantasma —que vive precisamente sobre campo oscuro— se quedaría con un halo
+   invisible contra su propio fondo. */
+const boton = variantes(
+  'inline-flex items-center justify-center gap-2 rounded-[var(--radius-pill)] font-medium transition-colors duration-200',
+  {
+    variants: {
+      /* Tres tonos, tres jerarquías, y el acento es EXCLUSIVO del primario. Si
+         aparece en un secundario, la página deja de tener una sola acción
+         principal — y una página con dos acciones principales no tiene ninguna. */
+      variante: {
+        primario: 'bg-acento text-marca hover:bg-acento-hover border border-transparent',
+        /* El borde es lo ÚNICO que dice que ahí hay un control: el relleno es el
+           mismo suelo del <body>, o sea 1,00:1 contra su propio fondo. WCAG
+           1.4.11 pide 3:1 para el límite de un componente de interfaz, y una
+           opacidad baja no llega:
+             marca/20 sobre el suelo → ~1,4:1   (insuficiente)
+             marca/60 sobre el suelo → ~3,5:1   (pasa)
+           De ahí el /60 en reposo y el token entero en hover, que además deja el
+           hover como un escalón visible por encima del reposo. */
+        secundario: 'bg-fondo text-marca border border-marca/60 hover:border-marca',
+        fantasma:
+          'bg-transparent text-white border border-white/55 hover:border-white hover:bg-white/10',
+      },
+
+      /* Las tres alturas no se inventan, se derivan:
+         · 44px es el objetivo táctil de WCAG 2.5.5 y de la HIG de Apple. `sm` se
+           posa justo encima del suelo, nunca por debajo.
+         · 52px es el `md`, el botón de siempre — y el número que da por sentado
+           la barra de acción de móvil (85px = 52 + 32 de relleno + 1 de filete,
+           la cuenta está en global.css).
+         · 60px es el mismo escalón de 8px hacia arriba (44 · 52 · 60).
+         El relleno horizontal conserva la proporción del `md`, 24/52 = 0,46, así
+         que ninguno se lee más ancho de lo que es alto.
+         Y el texto NO escala con la caja —15 × 44/52 daría 12,7px, ilegible—:
+         cada tamaño aterriza en un valor que la escala tipográfica ya tiene. */
+      tamano: {
+        sm: 'min-h-[44px] px-5 text-[14px]',
+        md: 'min-h-[52px] px-6 text-[15px]',
+        lg: 'min-h-[60px] px-7 text-[17px]',
+      },
+
+      ancho: {
+        true: 'w-full',
+        false: '',
+      },
+
+      /* El estado inerte se escribe distinto según el elemento, así que es un eje
+         de variante y no una clase suelta colgada del marcado:
+         · <button> sí casa con `:disabled`, de modo que las utilidades llevan el
+           prefijo `disabled:` y viven SIEMPRE en el botón, para que el estado
+           siga resolviéndose si alguien cambia el atributo más tarde.
+         · <a> no casa con `:disabled` JAMÁS: ahí `disabled:opacity-50` es CSS
+           muerto. El enlace inerte usa las mismas utilidades sin prefijo y se
+           apoya en `aria-disabled` y en salir del orden de tabulación, porque
+           `pointer-events-none` sólo detiene el ratón — con el foco puesto,
+           Intro seguiría navegando. */
+      elemento: {
+        enlace: '',
+        'enlace-inerte': 'pointer-events-none opacity-50',
+        boton: 'disabled:pointer-events-none disabled:opacity-50',
+      },
+    },
+    /* Sólo los dos ejes que pueden llegar sin resolver: `ancho` y `elemento` se
+       calculan siempre abajo, y declararles un defecto sería escribir el mismo
+       valor dos veces y dejar que uno de los dos envejezca. */
+    defaultVariants: { variante: 'primario', tamano: 'md' },
+  },
+);
+
+const {
+  href,
+  variante,
+  tamano,
+  ancho = false,
+  tipo = 'button',
+  deshabilitado = false,
+  ocupado = false,
+  class: extra,
+  ...resto
+} = Astro.props;
+
+const esEnlace = href != null;
+
+const clase = boton({
+  variante,
+  tamano,
+  ancho: ancho ? 'true' : 'false',
+  elemento: esEnlace ? (deshabilitado ? 'enlace-inerte' : 'enlace') : 'boton',
+  class: extra ?? undefined,
+});
+
+/* `ocupado` no implica `deshabilitado`, y la diferencia importa: un control que
+   desaparece del orden de tabulación mientras trabaja se lleva el foco consigo y
+   el lector de pantalla se queda mudo justo cuando había algo que contar.
+   `aria-busy` describe; `disabled` impide. Se emite sólo cuando es cierto: un
+   `aria-busy="false"` en cada botón de cada página es ruido en el árbol de
+   accesibilidad. */
+const ocupadoAttr = ocupado ? 'true' : undefined;
+---
+
+{/* Las dos ramas van escritas enteras y no con una etiqueta dinámica
+    (`const Etiqueta = href ? 'a' : 'button'`): la etiqueta dinámica de Astro no
+    comprueba los atributos, y aquí cada rama lleva atributos que la otra no
+    admite — `href` no existe en un botón, `disabled` no existe en un ancla. */}
+{esEnlace ? (
+  <a
+    data-slot="boton"
+    href={href}
+    aria-disabled={deshabilitado ? 'true' : undefined}
+    tabindex={deshabilitado ? -1 : undefined}
+    aria-busy={ocupadoAttr}
+    class={clase}
+    {...resto}
+  >
+    <slot />
+  </a>
+) : (
+  <button
+    data-slot="boton"
+    type={tipo}
+    disabled={deshabilitado}
+    aria-busy={ocupadoAttr}
+    class={clase}
+    {...resto}
+  >
+    <slot />
+  </button>
+)}

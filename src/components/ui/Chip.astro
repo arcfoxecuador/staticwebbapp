@@ -1,0 +1,32 @@
+---
+import { variantes } from '../../lib/ui';
+
+interface Props {
+  tono?: 'marca' | 'tinte' | 'contorno' | 'claro';
+  class?: string;
+}
+
+const chip = variantes(
+  'inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] px-3 py-1 text-small font-medium',
+  {
+    variants: {
+      tono: {
+        marca: 'bg-marca text-white',
+        tinte: 'bg-tinte text-marca',
+        /* El contorno usa /60 por lo mismo que el botón secundario: por debajo
+           de eso el borde no llega a los 3:1 que pide WCAG 1.4.11 y la etiqueta
+           parece flotar sin caja. */
+        contorno: 'border border-marca/60 text-marca',
+        claro: 'bg-white/15 text-white',
+      },
+    },
+    defaultVariants: { tono: 'tinte' },
+  },
+);
+
+const { tono, class: extra } = Astro.props;
+---
+
+<span data-slot="chip" class={chip({ tono, class: extra })}>
+  <slot />
+</span>

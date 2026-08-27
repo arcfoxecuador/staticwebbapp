@@ -1,0 +1,91 @@
+---
+/* La única forma de pintar una imagen de contenido en este sitio.
+
+   Existe por tres cosas que se olvidan por separado en cuanto hay más de un
+   sitio donde pintar una imagen:
+
+   1. EL ALT NO ES OPCIONAL. Lo garantiza el tipo `Imagen` de `imagenes.ts`: si
+      no hay texto alternativo, no hay objeto, y aquí no llega nada que describir.
+   2. `loading="lazy"` SALVO CUANDO ES EL LCP. Una imagen diferida por encima del
+      pliegue retrasa el Largest Contentful Paint; una imagen no diferida por
+      debajo se descarga sin que nadie la mire. `prioritaria` cambia las dos
+      cosas a la vez —`eager` + `fetchpriority="high"`— porque van juntas
+      siempre.
+   3. LAS IMÁGENES GENERADAS SE DECLARAN. `data-generada` viaja al marcado, y el
+      pie lo dice cuando lo hay. No es escrúpulo: publicar una imagen sintética
+      como si fuera una fotografía del cliente es el tipo de detalle que, cuando
+      se descubre, se lleva por delante la credibilidad de la página entera.
+      El defecto es `true` por eso mismo: se puede acreditar de más, nunca de
+      menos. */
+import { Image } from 'astro:assets';
+import { anchos, type Imagen } from '../../lib/imagenes';
+
+interface Props {
+  imagen: Imagen;
+  /** Los anchos candidatos del `srcset`. Se recortan al ancho real. */
+  candidatos?: number[];
+  /** El `sizes` del HTML. Sin él el navegador asume 100vw y baja de más. */
+  sizes?: string;
+  /** La proporción del encuadre. `object-cover` recorta lo que sobre. */
+  proporcion?: 'ancha' | 'apaisada' | 'cuadrada' | 'retrato' | 'libre';
+  /** Es el LCP: carga con prioridad y sin diferir. UNA por página, no más. */
+  prioritaria?: boolean;
+  /** Pie de figura visible. */
+  pie?: string;
+  class?: string;
+}
+
+const {
+  imagen,
+  candidatos = [400, 800, 1200, 1600],
+  sizes = '(min-width: 1024px) 50vw, 100vw',
+  proporcion = 'apaisada',
+  prioritaria = false,
+  pie,
+  class: extra,
+} = Astro.props;
+
+const PROPORCIONES = {
+  ancha: 'aspect-[16/9]',
+  apaisada: 'aspect-[4/3]',
+  cuadrada: 'aspect-square',
+  retrato: 'aspect-[4/5]',
+  libre: '',
+} as const;
+---
+
+<figure data-slot="figura" data-generada={imagen.generada ? 'true' : undefined} class:list={[extra]}>
+  {/* `overflow-clip` y no `overflow-hidden`: `hidden` crearía un contenedor de
+      scroll y dejaría inerte la línea de tiempo `view()` de `.revela-imagen`,
+      que es justo la que anima esta imagen. La regla está en motion.css. */}
+  <div class:list={['relative overflow-clip rounded-[var(--radius-lg)]', PROPORCIONES[proporcion]]}>
+    {/* `decoding="async"` en todas menos la prioritaria: descodificar en el hilo
+        principal la imagen del hero es lo que produce el salto de layout que
+        luego nadie sabe de dónde sale. */}
+    <Image
+      {...imagen.fuente}
+      alt={imagen.alt}
+      widths={anchos(imagen.fuente, candidatos)}
+      {sizes}
+      loading={prioritaria ? 'eager' : 'lazy'}
+      fetchpriority={prioritaria ? 'high' : undefined}
+      decoding={prioritaria ? 'auto' : 'async'}
+      class:list={[
+        'h-full w-full',
+        proporcion === 'libre' ? '' : 'object-cover',
+        'revela-imagen',
+      ]}
+    />
+  </div>
+
+  {
+    pie && (
+      <figcaption class="mt-3 text-small text-tinta/70">
+        {pie}
+        {/* La acreditación va DENTRO del pie y no en un atributo suelto: lo que
+            no se ve, no acredita. */}
+        {imagen.generada && <span class="text-tinta/50"> · Imagen generada</span>}
+      </figcaption>
+    )
+  }
+</figure>

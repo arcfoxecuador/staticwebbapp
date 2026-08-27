@@ -1,0 +1,86 @@
+---
+/* El aviso de cookies. Aparece sólo si no hay decisión guardada, y su único
+   trabajo es disparar `consentimiento:aceptado` para que `Analitica.astro`
+   cargue lo que tenga que cargar.
+
+   TRES DECISIONES QUE LO HACEN LEGAL Y NO SÓLO VISIBLE:
+
+   1. RECHAZAR ES TAN FÁCIL COMO ACEPTAR. Dos botones del mismo tamaño, en la
+      misma fila. Un banner donde «aceptar» es un botón grande y «rechazar» un
+      enlace gris en letra pequeña es exactamente lo que las autoridades europeas
+      llevan años multando, y es lo que hace la mitad de los sitios.
+   2. NADA SE CARGA ANTES DE LA DECISIÓN. No hay «seguir navegando implica
+      aceptar»: el consentimiento tiene que ser un acto.
+   3. NO BLOQUEA EL CONTENIDO. Es una banda al pie, no un modal que secuestra la
+      página. Un muro de cookies penaliza en Core Web Vitals y en conversión.
+
+   Se pinta oculto y lo revela el script sólo si hace falta: si se pintara
+   visible y lo escondiera el script, quien ya decidió vería un parpadeo del
+   banner en cada carga. */
+import { LEGAL } from '../../lib/site';
+---
+
+<div
+  id="aviso-cookies"
+  class="fixed inset-x-0 bottom-0 z-50 hidden border-t border-linea bg-superficie"
+  role="region"
+  aria-label="Aviso de cookies"
+>
+  <div class="medida flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between">
+    <p class="max-w-[68ch] text-small text-tinta/80">
+      Usamos cookies para entender cómo se usa el sitio y mejorarlo. Puedes
+      rechazarlas y seguir navegando con normalidad.
+      {/* Sin política publicada no hay enlace, porque un enlace legal roto es
+          peor que ninguno. Pero entonces este banner recoge un consentimiento
+          que el visitante no puede informar: `LEGAL.privacidad` es requisito
+          para encender la analítica, no un extra. */}
+      {
+        LEGAL.privacidad && (
+          <a
+            href={LEGAL.privacidad}
+            class="underline decoration-marca/40 underline-offset-2 hover:decoration-marca"
+          >
+            Política de privacidad
+          </a>
+        )
+      }
+    </p>
+    <div class="flex shrink-0 gap-3">
+      <button
+        type="button"
+        data-cookies="rechazar"
+        class="min-h-[44px] rounded-[var(--radius-pill)] border border-marca/60 px-5 text-small font-medium text-marca hover:border-marca"
+      >
+        Rechazar
+      </button>
+      <button
+        type="button"
+        data-cookies="aceptar"
+        class="min-h-[44px] rounded-[var(--radius-pill)] bg-acento px-5 text-small font-medium text-marca hover:bg-acento-hover"
+      >
+        Aceptar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    var CLAVE = 'consentimiento';
+    var aviso = document.getElementById('aviso-cookies');
+    if (!aviso) return;
+
+    if (!localStorage.getItem(CLAVE)) aviso.classList.remove('hidden');
+
+    aviso.addEventListener('click', function (e) {
+      var boton = e.target.closest('[data-cookies]');
+      if (!boton) return;
+      var acepta = boton.dataset.cookies === 'aceptar';
+      localStorage.setItem(CLAVE, acepta ? 'aceptado' : 'rechazado');
+      aviso.classList.add('hidden');
+      /* El evento se dispara SÓLO al aceptar. `Analitica.astro` lo escucha con
+         `{ once: true }`, así que rechazar no deja nada escuchando. */
+      if (acepta) document.dispatchEvent(new Event('consentimiento:aceptado'));
+    });
+  })();
+</script>

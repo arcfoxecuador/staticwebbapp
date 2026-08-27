@@ -1,0 +1,56 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/bloques/Hero.astro';
+import Seccion from '../../components/bloques/Seccion.astro';
+import Encabezado from '../../components/bloques/Encabezado.astro';
+import Rejilla from '../../components/bloques/Rejilla.astro';
+import Tarjeta from '../../components/bloques/Tarjeta.astro';
+import Cierre from '../../components/bloques/Cierre.astro';
+
+import { coleccion } from '../../lib/contenido';
+import { grafo, listaDeServicios, migas, organizacion, pagina, sitioWeb } from '../../lib/schema';
+
+const modelos = (await coleccion('modelos', ({ data }) => data.publico)).sort(
+  (a, b) => a.data.orden - b.data.orden,
+);
+
+const titulo = 'Modelos';
+const descripcion = 'La gama ARCFOX en Ecuador: T5, T1 y S5, los tres 100% eléctricos.';
+
+const schema = grafo(
+  organizacion(),
+  sitioWeb(),
+  pagina({ path: '/modelos', titulo, descripcion, tipo: 'CollectionPage' }),
+  migas([{ nombre: titulo, path: '/modelos' }]),
+  listaDeServicios(modelos.map((s) => ({ slug: s.id, nombre: s.data.nombre }))),
+);
+---
+
+<Base {titulo} {descripcion} path="/modelos" {schema}>
+  <Hero rotulo="Gama" titulo="Modelos 100% eléctricos" bajada={descripcion} />
+
+  <Seccion>
+    <Encabezado rotulo="Gama" titulo="T5, T1 y S5" />
+    {
+      modelos.length > 0 ? (
+        <Rejilla navegable class="mt-14">
+          {modelos.map((s) => (
+            <Tarjeta
+              titulo={s.data.nombre}
+              bajada={s.data.bajada}
+              href={`/modelos/${s.id}`}
+              etiqueta={s.data.categoria}
+              datos={s.data.datos}
+            />
+          ))}
+        </Rejilla>
+      ) : (
+        <p class="medida text-lead text-tinta/70">
+          Estamos preparando el catálogo. Escríbenos y te avisamos cuando cada modelo esté disponible.
+        </p>
+      )
+    }
+  </Seccion>
+
+  <Cierre titulo="¿Cuál te encaja?" bajada="Cuéntanos ciudad y modelo. Te contactamos con el concesionario." />
+</Base>

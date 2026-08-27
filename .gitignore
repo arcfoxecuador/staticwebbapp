@@ -1,0 +1,23 @@
+# Build
+dist/
+.astro/
+
+# Dependencias
+node_modules/
+
+# Entorno — los secretos nunca se versionan
+.env
+.env.local
+.env.production
+
+# Material del cliente y capturas de la web original: pesan y no son código
+migracion/
+fuentes/
+
+# Bandeja del pipeline de imágenes. `npm run imagenes` la vacía al convertir, así
+# que lo que quede aquí es un original sin procesar — nunca debe llegar a git.
+imagenes-entrada/
+
+# Sistema
+.DS_Store
+.vercel

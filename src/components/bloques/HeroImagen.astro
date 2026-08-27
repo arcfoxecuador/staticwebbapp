@@ -1,0 +1,215 @@
+---
+/* El hero fotográfico de la portada. Es el elemento más delicado del sitio en
+   rendimiento, porque su imagen es el LCP y el LCP es la métrica que decide si la
+   página «se siente rápida».
+
+   CUATRO DECISIONES QUE NO SE PUEDEN CAMBIAR SIN MEDIR:
+
+   1. La imagen va con `loading="eager"` y `fetchpriority="high"`. Diferirla es
+      diferir el LCP.
+   2. NADA que sea candidato LCP nace en `opacity: 0`. El titular se revela con
+      `transform` + `clip-path` (`.entra-titular-hero`), que no descalifican.
+      Los botones sí pueden usar `.entra`: no son el LCP.
+   3. La paralaje usa `.deriva-hero` y no `.deriva-fondo`. En `cover` un hero de
+      100svh nace al 50% de su rango; `.deriva-hero` arranca en `cover 50%`.
+   4. El velo es un degradado corto. Una capa plana apaga la fotografía entera
+      para salvar el contraste de un rincón. El anochecer ES el impacto; el
+      texto se lee sobre el tercio de abajo, no sobre el cielo. */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Boton from '../ui/Boton.astro';
+
+interface Props {
+  titulo: string;
+  bajada?: string;
+  rotulo?: string;
+  /** Sello corto sobre el titular: «100% eléctrico». No es un segundo h1. */
+  insignia?: string;
+  accion?: { texto: string; href: string };
+  secundaria?: { texto: string; href: string };
+  imagen: ImageMetadata;
+  alt: string;
+  generada?: boolean;
+  /** Ancla del siguiente capítulo. Sin ella no hay invitación a bajar. */
+  siguiente?: { href: string; etiqueta: string };
+}
+
+const {
+  titulo,
+  bajada,
+  rotulo,
+  insignia,
+  accion,
+  secundaria,
+  imagen,
+  alt,
+  generada = true,
+  siguiente,
+} = Astro.props;
+
+/* La primera palabra carga; el resto acompaña. Un solo h1, dos cuerpos:
+   es el cartel, no un párrafo en versales. */
+const palabras = titulo.trim().split(/\s+/);
+const cabeza = palabras[0] ?? titulo;
+const cola = palabras.slice(1).join(' ');
+---
+
+<section
+  data-slot="hero-imagen"
+  data-generada={generada ? 'true' : undefined}
+  class="campo-oscuro relative isolate flex min-h-svh items-end overflow-clip bg-marca"
+>
+  <div class="deriva-hero absolute inset-0 -z-10">
+    <Image
+      src={imagen}
+      {alt}
+      widths={[640, 1024, 1440, 1920]}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+      class="entra-imagen h-full w-full object-cover object-[58%_60%]"
+    />
+  </div>
+
+  <div
+    class="absolute inset-0 -z-10 bg-gradient-to-t from-marca/80 via-marca/25 via-35% to-transparent"
+    aria-hidden="true"
+  >
+  </div>
+  <div
+    class="absolute inset-x-0 top-0 -z-10 h-28 bg-gradient-to-b from-marca/55 to-transparent"
+    aria-hidden="true"
+  >
+  </div>
+
+  <div class="medida relative w-full pb-16 pt-32 max-lg:pb-[calc(85px+2.25rem)] md:pb-20">
+    {rotulo && <p class="eyebrow entra text-white/70">{rotulo}</p>}
+
+    {
+      insignia && (
+        <p class="hero-insignia entra text-eyebrow uppercase tracking-[0.22em] text-white/80">
+          {insignia}
+        </p>
+      )
+    }
+
+    <h1 class="mt-5 font-display font-bold uppercase text-white">
+      <span class="entra-titular-hero block text-mega tracking-[0.04em]">{cabeza}</span>
+      {
+        cola && (
+          <span class="entra-titular-hero entra-titular-hero-2 mt-1 block max-w-[14ch] text-display tracking-[0.08em]">
+            {cola}
+          </span>
+        )
+      }
+    </h1>
+
+    {bajada && <p class="entra entra-2 mt-6 max-w-[46ch] text-lead text-white/80">{bajada}</p>}
+
+    {
+      (accion || secundaria) && (
+        <div class="hero-acciones entra entra-3 mt-10 flex flex-wrap gap-4">
+          {/* En móvil Cotízalo ya vive en la barra fija: repetirlo aquí
+              apila dos CTAs idénticos y el de arriba queda tapado. */}
+          {accion && <Boton href={accion.href} tamano="lg">{accion.texto}</Boton>}
+          {
+            secundaria && (
+              <Boton href={secundaria.href} tamano="lg" variante="fantasma">
+                {secundaria.texto}
+              </Boton>
+            )
+          }
+        </div>
+      )
+    }
+  </div>
+
+  {
+    siguiente && (
+      <a href={siguiente.href} class="hero-baja" aria-label={siguiente.etiqueta}>
+        <span class="hero-baja-linea" aria-hidden="true"></span>
+        <span class="hero-baja-texto">{siguiente.etiqueta}</span>
+      </a>
+    )
+  }
+</section>
+
+<style>
+  .hero-insignia {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .hero-insignia::after {
+    content: '';
+    width: 2.5rem;
+    height: 2px;
+    background: currentColor;
+    transform-origin: left;
+    animation: trazar 700ms var(--ease-out) 380ms both;
+  }
+
+  .hero-baja {
+    position: absolute;
+    right: max(20px, (100vw - 1240px) / 2);
+    bottom: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    text-decoration: none;
+  }
+
+  .hero-baja-linea {
+    width: 1px;
+    height: 44px;
+    background: currentColor;
+    transform-origin: top;
+    animation: trazar 1100ms var(--ease-out) 700ms both;
+  }
+
+  .hero-baja-texto {
+    font-size: var(--text-eyebrow);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    rotate: 180deg;
+  }
+
+  @media (width < 64rem) {
+    /* DISTINTOS a 3.5rem + tracking no cabe en 350px de columna: se come
+       la O. El cartel sigue siendo el más grande de la página, pero entero. */
+    h1 .entra-titular-hero:first-of-type {
+      font-size: clamp(2.2rem, 10vw, 3.5rem);
+      letter-spacing: 0.02em;
+    }
+
+    /* `text-display` + tracking 0.08em parte «POR NATURALEZA» y se come la A. */
+    h1 .entra-titular-hero-2 {
+      max-width: none;
+      font-size: clamp(1.7rem, 7.6vw, 2.5rem);
+      letter-spacing: 0.06em;
+    }
+
+    /* La barra de acción (85px) ocupa esta esquina. Dejar la invitación
+       vertical detrás de Cotízalo se leía como una E suelta. */
+    .hero-baja {
+      display: none;
+    }
+
+    .hero-acciones [data-slot='boton']:first-child {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-insignia::after,
+    .hero-baja-linea {
+      animation: none;
+      transform: none;
+    }
+  }
+</style>

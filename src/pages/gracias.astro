@@ -1,0 +1,41 @@
+---
+/* El acuse de recibo. Existe para el envío NATIVO del formulario —cuando el
+   JavaScript no carga—, así que su trabajo es confirmar y devolver al visitante a
+   la web. No es una página de contenido.
+
+   Va en `RUTAS_NO_INDEXABLES`, que con una sola entrada en esa lista produce tres
+   efectos: `noindex` en el <head>, fuera del sitemap y `Disallow` en robots.txt.
+   Una página de gracias indexada es una página que aparece en Google para el
+   nombre de la marca y no dice nada. */
+import Base from '../layouts/Base.astro';
+import Seccion from '../components/bloques/Seccion.astro';
+import Boton from '../components/ui/Boton.astro';
+import { ORG } from '../lib/site';
+---
+
+<Base
+  titulo="Recibido"
+  descripcion="Hemos recibido tu mensaje."
+  path="/gracias"
+  noindex
+  barraAccion={false}
+>
+  <Seccion aire="amplio">
+    <div class="max-w-[46ch]">
+      <div class="traza mb-8 w-full max-w-[120px]" aria-hidden="true"></div>
+
+      <h1 class="entra equilibra text-h1 font-bold text-marca">Recibido</h1>
+
+      <p class="entra entra-2 mt-6 text-lead text-tinta/75">
+        Te respondemos dentro de un día hábil. Si es urgente, escríbenos directamente a
+        <a href={`mailto:${ORG.email}`} class="enlace-subrayado text-marca">{ORG.email}</a>.
+      </p>
+
+      {/* La salida siempre existe: una página de confirmación sin camino de vuelta
+          deja al visitante en un callejón. */}
+      <div class="entra entra-3 mt-10 flex flex-wrap gap-4">
+        <Boton href="/">Volver al inicio</Boton>
+      </div>
+    </div>
+  </Seccion>
+</Base>

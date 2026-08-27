@@ -1,0 +1,75 @@
+---
+/* La cabecera de una sección: rótulo, titular y bajada.
+
+   DOS DECISIONES QUE SE REPITEN EN TODO EL SITIO Y POR ESO VIVEN AQUÍ:
+
+   1. El espacio ENTRE el titular y su bajada es la mitad del que hay antes del
+      rótulo. Un titular y su bajada son una sola unidad de lectura; separarlos lo
+      mismo que separas dos secciones los convierte en dos cosas.
+   2. El rótulo es un <p> y NO un <h_>. Es decorativo: subirlo a encabezado mete
+      un nivel falso en el esquema que lee un lector de pantalla, y entonces el
+      titular de la sección pasa a ser un h3 de algo que no existe.
+
+   `nivel` cambia la etiqueta sin cambiar el tamaño, que es exactamente lo que
+   hace falta: el h1 sólo puede haber uno por página, pero el TAMAÑO de titular a
+   veces se repite. Jerarquía y cuerpo son ejes distintos. */
+interface Props {
+  rotulo?: string;
+  titulo: string;
+  bajada?: string;
+  nivel?: 'h1' | 'h2' | 'h3';
+  tamano?: 'display' | 'h1' | 'h2' | 'subtitulo';
+  /** La regla de 2px que abre el bloque. Es la firma gráfica del sistema. */
+  traza?: boolean;
+  centrado?: boolean;
+  class?: string;
+}
+
+const {
+  rotulo,
+  titulo,
+  bajada,
+  nivel = 'h2',
+  tamano = 'h2',
+  traza = true,
+  centrado = false,
+  class: extra,
+} = Astro.props;
+
+const Titular = nivel;
+const TAMANOS = {
+  display: 'text-display',
+  h1: 'text-h1',
+  h2: 'text-h2',
+  subtitulo: 'text-subtitulo',
+} as const;
+---
+
+<div data-slot="encabezado" class:list={[centrado && 'mx-auto text-center', extra]}>
+  {traza && <div class="traza mb-8 w-full max-w-[120px]" aria-hidden="true"></div>}
+
+  {
+    rotulo && (
+      <p class="eyebrow revela text-marca-clara">
+        {rotulo}
+      </p>
+    )
+  }
+
+  <Titular class:list={['revela-titular mt-3 equilibra font-bold', TAMANOS[tamano]]}>
+    {titulo}
+  </Titular>
+
+  {
+    bajada && (
+      /* La medida en `ch` y no en píxeles: así la columna crece con el tamaño de
+         letra y sigue midiendo las mismas palabras por línea cuando alguien sube
+         el cuerpo tipográfico del sistema. */
+      <p class:list={['revela mt-5 max-w-[58ch] text-lead text-current/75', centrado && 'mx-auto']}>
+        {bajada}
+      </p>
+    )
+  }
+
+  <slot />
+</div>

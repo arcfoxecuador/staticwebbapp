@@ -1,0 +1,36 @@
+{
+  "name": "arcfox",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "build:vercel": "astro build && node scripts/dist-landing.mjs",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check && npm run build && npm run verificar",
+    "verificar": "node scripts/verificar-scripts-inline.mjs && node scripts/verificar-enlaces.mjs && node scripts/verificar-coherencia.mjs",
+    "imagenes": "node scripts/imagenes.mjs",
+    "og": "node scripts/og.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.3",
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/instrument-sans": "^5.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.2.4",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "sharp": "^0.35.3",
+    "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "satteri": "0.10.3"
+  }
+}

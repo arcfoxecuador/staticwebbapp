@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/bloques/Hero.astro';
+import Seccion from '../components/bloques/Seccion.astro';
+import Encabezado from '../components/bloques/Encabezado.astro';
+import Pasos from '../components/bloques/Pasos.astro';
+import Formulario from '../components/bloques/Formulario.astro';
+import { PASOS } from '../lib/site';
+import { grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
+
+const titulo = 'Test drive';
+const descripcion =
+  'Reserva una prueba de manejo de un ARCFOX en Ecuador. Elige modelo y ciudad; te contactamos para coordinar fecha y concesionario.';
+
+const schema = grafo(
+  organizacion(),
+  sitioWeb(),
+  pagina({ path: '/test-drive', titulo, descripcion }),
+  migas([{ nombre: titulo, path: '/test-drive' }]),
+);
+---
+
+<Base {titulo} {descripcion} path="/test-drive" {schema} barraAccion={false}>
+  <Hero rotulo="Pruébalo" titulo="Pide un test drive" bajada={descripcion} />
+
+  {
+    PASOS.length > 0 && (
+      <Seccion campo="tinte" aire="apretado">
+        <Encabezado rotulo="Cómo funciona" titulo="De la reserva a la prueba" />
+        <div class="mt-10">
+          <Pasos />
+        </div>
+      </Seccion>
+    )
+  }
+
+  <Seccion>
+    <Formulario
+      titulo="Reserva tu prueba"
+      bajada="Nombre, teléfono, ciudad y modelo. Con eso coordinamos la cita."
+      origen="/test-drive"
+    />
+  </Seccion>
+</Base>

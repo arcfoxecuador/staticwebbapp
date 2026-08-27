@@ -1,0 +1,130 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/bloques/Hero.astro';
+import Seccion from '../components/bloques/Seccion.astro';
+import Encabezado from '../components/bloques/Encabezado.astro';
+import Rejilla from '../components/bloques/Rejilla.astro';
+import Tarjeta from '../components/bloques/Tarjeta.astro';
+import Figura from '../components/ui/Figura.astro';
+import Metricas from '../components/bloques/Metricas.astro';
+import Escena from '../components/bloques/Escena.astro';
+import Cierre from '../components/bloques/Cierre.astro';
+
+import sobre from '../assets/sobre.webp';
+
+import { coleccion } from '../lib/contenido';
+import { imagenDeEntrada } from '../lib/imagenes';
+import { METRICAS, ORG } from '../lib/site';
+import { grafo, migas, organizacion, pagina, persona, sitioWeb } from '../lib/schema';
+
+const equipo = (await coleccion('equipo')).sort((a, b) => a.data.orden - b.data.orden);
+const modelos = (await coleccion('modelos', ({ data }) => data.publico)).sort(
+  (a, b) => a.data.orden - b.data.orden,
+);
+
+const titulo = 'Sobre ARCFOX';
+const descripcion = ORG.descripcion;
+
+const schema = grafo(
+  organizacion(),
+  sitioWeb(),
+  pagina({ path: '/nosotros', titulo, descripcion, tipo: 'AboutPage' }),
+  migas([{ nombre: titulo, path: '/nosotros' }]),
+  ...equipo
+    .filter((p) => p.data.bio)
+    .map((p) => persona({ nombre: p.data.nombre, cargo: p.data.cargo, bio: p.data.bio! })),
+);
+---
+
+<Base {titulo} {descripcion} path="/nosotros" {schema}>
+  <Hero
+    rotulo={ORG.tagline}
+    titulo="Sobre ARCFOX"
+    bajada="Marca de vehículos 100% eléctricos de BAIC. En Ecuador se presenta con el T5, el T1 y el S5."
+  />
+
+  {
+    METRICAS.length > 0 && (
+      <Seccion campo="tinte" aire="apretado">
+        <Metricas items={METRICAS} />
+      </Seccion>
+    )
+  }
+
+  <Escena
+    imagen={sobre}
+    alt="ARCFOX T5, la marca en Ecuador."
+    rotulo="BAIC"
+    titulo="Distintos por naturaleza"
+    bajada="Diseño, autonomía y recarga para el uso diario. Sin cifras de otro país presentadas como locales."
+    altura="media"
+    anclaje="centro"
+  />
+
+  {
+    equipo.length > 0 && (
+      <Seccion>
+        <Encabezado rotulo="Equipo" titulo="Quién hace el trabajo" />
+
+        <Rejilla columnas={3} navegable={equipo.length > 8} class="mt-14">
+          {equipo.map((p) => {
+            const retrato = imagenDeEntrada('equipo', p.id, {
+              asset: p.data.retrato,
+              alt: p.data.retratoAlt,
+              generada: p.data.retratoGenerado,
+            });
+            return (
+              <article class="flex flex-col">
+                {retrato && (
+                  <Figura
+                    imagen={retrato}
+                    proporcion="retrato"
+                    candidatos={[320, 640, 960]}
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  />
+                )}
+                <h3 class="mt-5 text-h3 font-bold text-marca">{p.data.nombre}</h3>
+                <p class="mt-1 text-small text-tinta/60">{p.data.cargo}</p>
+                {p.data.bio && <p class="mt-3 max-w-[46ch] text-small text-tinta/75">{p.data.bio}</p>}
+                {p.data.linkedin && (
+                  <a
+                    href={p.data.linkedin}
+                    class="enlace-subrayado mt-4 text-small text-marca"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    LinkedIn
+                  </a>
+                )}
+              </article>
+            );
+          })}
+        </Rejilla>
+      </Seccion>
+    )
+  }
+
+  {
+    modelos.length > 0 && (
+      <Seccion>
+        <Encabezado
+          rotulo="Ecuador"
+          titulo="Tres modelos, una red"
+          bajada="T5, T1 y S5. Las cifras de homologación global se publican con aviso; lo local se confirma en el concesionario."
+        />
+        <Rejilla navegable class="mt-14">
+          {modelos.map((s) => (
+            <Tarjeta
+              titulo={s.data.nombre}
+              bajada={s.data.bajada}
+              href={`/modelos/${s.id}`}
+              etiqueta={s.data.categoria}
+            />
+          ))}
+        </Rejilla>
+      </Seccion>
+    )
+  }
+
+  <Cierre titulo="¿Hablamos?" bajada="Ciudad y modelo. Te contactamos con el concesionario." />
+</Base>

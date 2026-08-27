@@ -1,0 +1,37 @@
+# Panel CMS en Render. El sitio Astro sigue en Vercel; este servicio
+# solo corre cms-panel/. SITE_DIR vacío: el sitio es la raíz del repo.
+# Los secretos NO van aquí: el servicio arranca sin ellos. Se añaden
+# después en Environment (GITHUB_TOKEN, Microsoft, ANTHROPIC_API_KEY).
+services:
+  - type: web
+    name: arcfox-cms-panel
+    runtime: node
+    rootDir: cms-panel
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    buildFilter:
+      paths:
+        - cms-panel/**
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: SITE_URL
+        value: https://arcfox.com.ec
+      - key: SITE_DIR
+        value: ""
+      - key: GITHUB_OWNER
+        value: Retr1to
+      - key: GITHUB_REPO
+        value: ARCFOX
+      - key: GITHUB_BASE_BRANCH
+        value: main
+      - key: GITHUB_PROD_BRANCH
+        value: main
+      - key: IMAGE_PROVIDER
+        value: none
+      - key: SESSION_SECRET
+        generateValue: true

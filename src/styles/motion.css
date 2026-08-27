@@ -1,0 +1,711 @@
+/* ── MOTION ────────────────────────────────────────────────────────────────
+   Todo el movimiento del sitio vive aquí, y es CSS puro: `animation-timeline`
+   nativo, sin IntersectionObserver, sin librería y sin una línea de JavaScript.
+   El scroll lo mide el compositor, fuera del hilo principal, así que el
+   movimiento no compite con nada.}
+
+   SEIS REGLAS DEL SISTEMA, no adornos sueltos:
+
+   1. Sólo se animan `transform`, `opacity`, `clip-path` y `filter`. Son las
+      únicas que no provocan reflow. Animar `height`, `top` o `margin` es pedirle
+      al navegador que recalcule la maqueta 60 veces por segundo.
+   2. Nada de `ease-in` en interfaz: retrasa el arranque justo cuando el ojo está
+      mirando. Curvas propias, porque las de fábrica son flojas.
+   3. Las revelaciones van con `animation-timeline`, nunca con observers.
+      La isla WAAPI del Conmutador es la excepción: decora un clic, no el scroll.
+   4. Bajo 300ms todo lo que sea interfaz. Lo editorial puede respirar más.
+   5. `prefers-reduced-motion` conserva la OPACIDAD y quita el movimiento: menos
+      animación, no cero. Apagar a opacidad 0 esconde contenido.
+   6. Dos vocabularios y una regla para elegir:
+        · fila de hermanas en rejilla  → `.tira`
+        · lista de filas apiladas      → `.revela-grupo`
+      Sin esa regla, el mismo objeto acaba con gestos distintos en la misma
+      página y el sitio se lee como si lo hubieran hecho dos personas.
+
+   ── DOS PROHIBICIONES QUE ROMPEN EL SISTEMA ENTERO ─────────────────────────
+
+   `overflow: hidden` EN CUALQUIER ANCESTRO de un elemento animado. `hidden`
+   convierte al elemento en contenedor de scroll, y una línea de tiempo `view()`
+   que cae dentro de un contenedor de scroll deja de medir el viewport: se queda
+   inerte. Usa `overflow: clip`, que recorta igual y no crea scrollport.
+
+   `content-visibility: auto` en cualquier ancestro. Salta el renderizado del
+   subárbol, y `view()` depende justo de lo contrario: de que ese subárbol tenga
+   geometría resuelta para poder medir cuándo entra en el encuadre. Además,
+   `contain-intrinsic-size` sustituye la altura real por una estimación, la altura
+   del documento cambia sola al bajar, y `.progreso-lectura` —que mide
+   `scroll(root block)`— avanzaría y RETROCEDERÍA. El rendimiento que busca esa
+   optimización se consigue con `loading="lazy"` en las imágenes, que no tiene
+   este efecto. */
+
+@theme {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-suave: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@layer utilities {
+  @supports (animation-timeline: view()) {
+    /* `.revela` es la única utilidad medida dentro de `entry`, y tiene que
+       seguir así. Con `cover`, el ÚLTIMO bloque del documento no puede completar
+       su rango —no queda scroll por delante— y se queda a 0,8 de opacidad para
+       siempre. Con `entry`, cualquier elemento visible termina en 1. Las demás sí
+       usan `cover`, porque no cierran documento. */
+    .revela {
+      animation: revelar linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 60%;
+    }
+
+    /* ESCALONADO REAL en una lista apilada, con UNA línea de tiempo compartida.
+
+       El error natural es poner `view()` en cada hijo y desfasar los rangos con
+       nth-child. No funciona: cada hijo mide su rango contra su PROPIA entrada,
+       así que el desfase que produce es de unos pocos píxeles — el que ya daba
+       gratis la maquetación. Es un no-op caro de leer.
+
+       Con una línea de tiempo NOMBRADA en el contenedor, los hijos comparten
+       reloj y el desfase existe de verdad (de ~3px a ~78px, medido). */
+    .revela-grupo {
+      view-timeline-name: --grupo;
+      view-timeline-axis: block;
+    }
+    .revela-grupo > * {
+      animation: revelar linear both;
+      animation-timeline: --grupo;
+      /* El valor base ES el del ÚLTIMO hijo escalonado, así que un décimo o
+         posterior nunca entra ANTES que un hermano anterior. Llega hasta 9
+         porque una lista alimentada por una colección crece sin avisar: con el
+         escalonado cortado en 5, publicar el sexto elemento funde las dos
+         últimas filas en el mismo fotograma — justo el defecto que el
+         escalonado existe para evitar. */
+      animation-range: cover 54% cover 88%;
+    }
+    .revela-grupo > *:nth-child(1) { animation-range: cover 6% cover 40%; }
+    .revela-grupo > *:nth-child(2) { animation-range: cover 12% cover 46%; }
+    .revela-grupo > *:nth-child(3) { animation-range: cover 18% cover 52%; }
+    .revela-grupo > *:nth-child(4) { animation-range: cover 24% cover 58%; }
+    .revela-grupo > *:nth-child(5) { animation-range: cover 30% cover 64%; }
+    .revela-grupo > *:nth-child(6) { animation-range: cover 36% cover 70%; }
+    .revela-grupo > *:nth-child(7) { animation-range: cover 42% cover 76%; }
+    .revela-grupo > *:nth-child(8) { animation-range: cover 48% cover 82%; }
+    .revela-grupo > *:nth-child(9) { animation-range: cover 54% cover 88%; }
+
+    /* La regla que abre un bloque, dibujada de izquierda a derecha. Es la firma
+       gráfica del sistema: una línea de 2px que aparece antes de cada grupo de
+       filas.
+
+       El rango arranca en 12% y no en 0% porque `cover 0%` empieza cuando el
+       borde de ataque toca el BORDE INFERIOR del viewport: el gesto se consume
+       entero por debajo de la zona de lectura y luego el elemento recorre cientos
+       de píxeles inmóvil hasta donde alguien lo mira. */
+    .traza {
+      animation: trazar linear both;
+      animation-timeline: view();
+      animation-range: cover 12% cover 48%;
+      transform-origin: left;
+      background-color: var(--color-marca);
+      height: 2px;
+    }
+
+    /* Titular de sección: sube desde debajo de su propia línea base. La máscara
+       es `clip-path` y no un contenedor con overflow, para no meter una caja
+       extra en el layout sólo por la animación — y para no caer en la
+       prohibición de `overflow: hidden` de la cabecera de este archivo. */
+    .revela-titular {
+      animation: revelar-titular linear both;
+      animation-timeline: view();
+      animation-range: cover 12% cover 48%;
+    }
+
+    /* La cifra grande: mismo gesto, más recorrido y más lento. Es el único
+       elemento del sistema con permiso para ocupar su propio rango. */
+    .revela-cifra {
+      animation: revelar-titular linear both;
+      animation-timeline: view();
+      animation-range: cover 12% cover 56%;
+    }
+
+    /* Paralaje de una fotografía a sangre: sólo `transform`, porque la imagen ya
+       viene sobredimensionada por `object-cover`. */
+    .deriva-fondo {
+      animation: derivar-fondo linear both;
+      animation-timeline: view();
+      animation-range: cover;
+    }
+
+    /* PARALAJE DEL HERO DE PORTADA, y por qué necesita su propia utilidad.
+
+       `.deriva-fondo` no vale aquí. Su rango es `cover` entero, y en `cover` la
+       ventana mide viewport + elemento: un hero de 100svh al arranque del
+       documento YA ocupa la pantalla en el scroll 0, o sea que nace al 50% de su
+       propio rango. La mitad del gesto se consume antes de que nadie toque la
+       rueda, y lo que se ve es la mitad sosa.
+
+       Con `cover 50%` el keyframe entero cae dentro del tramo que sí se mira. Es
+       la única utilidad pensada para un elemento que ABRE documento; el resto
+       entra desde abajo y no tiene este problema. */
+    .deriva-hero {
+      animation: derivar-fondo linear both;
+      animation-timeline: view();
+      animation-range: cover 50% cover 100%;
+    }
+
+    /* El plano de luz se desplaza más lento que la página. Profundidad real, sin
+       librería de parallax y sin tocar el layout. */
+    .deriva {
+      animation: derivar linear both;
+      animation-timeline: view();
+      animation-range: cover;
+    }
+
+    /* TIRA: una fila de piezas que se muestran de izquierda a derecha. Cada una
+       llega desde su derecha, así el ojo lee la fila en orden en vez de
+       encontrársela entera. */
+    .tira {
+      view-timeline-name: --tira-fila;
+      view-timeline-axis: block;
+    }
+    /* Por debajo de `md` casi todas estas rejillas colapsan a una columna: las
+       piezas están APILADAS, no en fila, así que el gesto lateral no dice nada y
+       encima empuja el contenido fuera del encuadre. En móvil la tira entra como
+       cualquier otro bloque. */
+    .tira > * {
+      animation: revelar linear both;
+      animation-timeline: --tira-fila;
+      animation-range: cover 48% cover 82%;
+    }
+    @media (width >= 48rem) {
+      .tira > * {
+        animation-name: entrar-tira;
+      }
+    }
+    .tira > *:nth-child(1) { animation-range: cover 8% cover 42%; }
+    .tira > *:nth-child(2) { animation-range: cover 13% cover 47%; }
+    .tira > *:nth-child(3) { animation-range: cover 18% cover 52%; }
+    .tira > *:nth-child(4) { animation-range: cover 23% cover 57%; }
+    .tira > *:nth-child(5) { animation-range: cover 28% cover 62%; }
+    .tira > *:nth-child(6) { animation-range: cover 33% cover 67%; }
+    .tira > *:nth-child(7) { animation-range: cover 38% cover 72%; }
+    .tira > *:nth-child(8) { animation-range: cover 43% cover 77%; }
+    .tira > *:nth-child(9) { animation-range: cover 48% cover 82%; }
+
+    /* `.tira-indice` — LA VARIANTE PARA REJILLAS QUE SE NAVEGAN, no que se leen,
+       y la diferencia no es de gusto.
+
+       En `.tira` el escalonado reparte la entrada entre `cover 8%` y `cover 82%`.
+       Eso funciona en una fila de tres o en una lista de seis, y se rompe en un
+       archivo de veinte tarjetas: medido, al llegar a la rejilla la primera
+       estaba a 0,84 de opacidad, la segunda a 0,42, y de la tercera a la sexta a
+       CERO. Cuatro de las seis que caben en pantalla eran invisibles, así que el
+       visitante no podía ver ni elegir la tercera opción — que es exactamente
+       para lo que existe un archivo.
+
+       Aquí todas las hijas comparten un rango corto y temprano: entran juntas y
+       terminan antes de que la rejilla llegue a media pantalla. Se conserva el
+       gesto sin que el movimiento decida qué se puede leer.
+
+       REGLA GENERAL: si el bloque es para elegir, el motion no puede esconder
+       las opciones. */
+    .tira-indice {
+      view-timeline-name: --tira-indice;
+      view-timeline-axis: block;
+    }
+    .tira-indice > * {
+      animation: entrar-tira linear both;
+      animation-timeline: --tira-indice;
+      animation-range: cover 2% cover 18%;
+    }
+
+    /* EL RIEL HORIZONTAL: la única utilidad que no mide el scroll de la PÁGINA
+       sino el de su propio contenedor. `view(inline)` resuelve contra el
+       scrollport horizontal, así que lo que avanza el fotograma no es bajar por
+       el documento — es desplazar la fila.
+
+       El efecto es que ninguna ficha nace destacada: la que está centrada llega a
+       opacidad plena porque el visitante la puso ahí, no porque el marcado la
+       eligiera. Es la diferencia entre un encuadre y una recomendación.
+
+       `data-foco` lo pone el servidor y SÓLO con tres fichas o más. Un riel que
+       no desborda no tiene recorrido, y una línea de tiempo sin recorrido se
+       congela en su fotograma inicial: sin ese guardia, un grupo de una o dos
+       fichas se quedaría atenuado para siempre. Es el mismo fallo por el que
+       `.revela` se mide en `entry` y no en `cover`.
+
+       Los planos son 0.55 y 1, no 0 y 1: una ficha que asoma por el borde tiene
+       que seguir siendo legible —lleva un nombre—, y a opacidad 0 el riel
+       parecería vacío por los lados en vez de continuo. */
+    .riel[data-foco] > * {
+      animation: enfocar-riel linear both;
+      animation-timeline: view(inline);
+      animation-range: cover;
+    }
+    @keyframes enfocar-riel {
+      0%, 100% { opacity: 0.55; transform: scale(0.97); }
+      /* MESETA y no un pico: con un único fotograma al 50% la ficha sólo estaría
+         entera en un punto exacto del recorrido y el ojo la vería palpitar al
+         desplazar. Entre 42% y 58% se queda quieta y a plena. */
+      42%, 58% { opacity: 1; transform: scale(1); }
+    }
+
+    /* La imagen se descubre desde abajo mientras el encuadre se cierra. */
+    .revela-imagen {
+      animation: revelar-imagen linear both;
+      animation-timeline: view();
+      animation-range: cover 12% cover 54%;
+    }
+
+    /* MÓVIL: el gesto del escritorio termina a media pantalla. En 390px eso
+       deja el texto recortado en el tercio de abajo —detrás de la barra de
+       acción— y hay que bajar casi toda la sección para poder leer. Aquí
+       cada pieza mide su propia entrada y cierra en cuanto asoma. El
+       escalonado del grupo se queda en `md`: en una columna esconde filas. */
+    @media (width < 48rem) {
+      .revela {
+        animation-name: revelar-movil;
+        animation-range: entry 0% entry 18%;
+      }
+      .traza,
+      .revela-titular,
+      .revela-cifra {
+        animation-range: entry 0% entry 22%;
+      }
+      .revela-titular,
+      .revela-cifra {
+        animation-name: revelar-titular-movil;
+      }
+      .revela-imagen {
+        animation-name: revelar-imagen-movil;
+        animation-range: entry 0% entry 24%;
+      }
+      .revela-grupo {
+        view-timeline-name: none;
+      }
+      .revela-grupo > *,
+      .revela-grupo > *:nth-child(n),
+      .tira > *,
+      .tira > *:nth-child(n) {
+        animation-name: revelar-movil;
+        animation-timeline: view();
+        animation-range: entry 0% entry 20%;
+      }
+    }
+  }
+
+  /* ── PROGRESO DE LECTURA ─────────────────────────────────────────────────
+     La misma regla de 2px de `.traza` con otro sujeto: en vez de abrir un
+     bloque, mide el documento. Mismo keyframe, mismo grosor, misma dirección —
+     no es un recurso prestado de otra web, es `.traza` cambiando de escala.
+
+     `scroll(root block)` y no `view()`: lo que se mide no es un elemento que
+     entra en pantalla, es cuánto queda por leer.
+
+     El color es `marca-clara` y no `marca`: la barra cruza por encima de los dos
+     tipos de cabecera que suele tener un sitio —blanca en las páginas internas y
+     flotante sobre un hero de marca en la portada— y marca sobre marca sería
+     invisible justo en la página donde más se mira. */
+  .progreso-lectura {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    height: 2px;
+    /* El header y el cajón móvil son z-50: a 60 la barra sigue diciendo por
+       dónde va la lectura incluso con el menú abierto. */
+    z-index: 60;
+    background: var(--color-marca-clara);
+    transform: scaleX(0);
+    transform-origin: left;
+    pointer-events: none;
+  }
+  @supports (animation-timeline: scroll()) {
+    .progreso-lectura {
+      animation: trazar linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+
+  /* La fotografía del hero se POSA al cargar: entra sobredimensionada y se
+     asienta. Es lo primero que ve un visitante.
+
+     NO lleva `opacity`, y es deliberado: la imagen es candidata a elemento LCP
+     —va con `fetchpriority="high"`— y un `opacity: 0` inicial la DESCALIFICA del
+     cálculo. Es el mismo motivo por el que el rótulo y el h1 de un hero no
+     llevan `.entra`. `transform` no afecta a la elegibilidad, así que el gesto
+     sale gratis en métrica.
+
+     1500ms contra los 480 de `.entra`: la regla 4 acota la interfaz, no lo
+     editorial, y esto es una masa a pantalla completa.
+
+     1.03 y no 1.06: esta escala se COMPONE con la del envoltorio que hace el
+     paralaje, que arranca en 1.06. A 1.06 × 1.06 la fotografía nacería un 12%
+     sobredimensionada y el gesto dejaría de leerse como que se posa para leerse
+     como un zoom de apertura. */
+  .entra-imagen {
+    animation: posarse 1500ms var(--ease-out) both;
+  }
+  @keyframes posarse {
+    from { transform: scale(1.03); }
+    to   { transform: scale(1); }
+  }
+
+  /* El titular del hero. Sin `opacity`: si el navegador elige el h1 como LCP
+     (una foto tardía, un recorte raro), nacer transparente lo descalifica.
+     `clip-path` + `transform` no entran en ese cálculo. */
+  .entra-titular-hero {
+    animation: entrar-titular-hero 900ms var(--ease-out) both;
+  }
+  .entra-titular-hero-2 {
+    animation-delay: 90ms;
+  }
+  @keyframes entrar-titular-hero {
+    from { transform: translateY(0.7em); clip-path: inset(0 0 100% 0); }
+    to   { transform: translateY(0); clip-path: inset(0 0 -8% 0); }
+  }
+
+  /* EL RELOJ PARTIDO: la opacidad cierra al 35% del recorrido y el
+     desplazamiento sigue el 65% restante. La pieza es legible enseguida y
+     termina de colocarse después — que es lo contrario de lo que hace una
+     animación con una sola curva, donde el texto sigue medio transparente
+     mientras ya casi ha llegado. */
+  @keyframes revelar {
+    from { opacity: 0; transform: translateY(28px) scale(0.98); }
+    35%  { opacity: 1; }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  /* Sólo de `md` para arriba, donde las piezas sí forman una fila. En una
+     columna el componente lateral no comunica nada y sus 40px de recorrido son
+     el origen del desborde horizontal que luego hay que tapar. */
+  @keyframes entrar-tira {
+    from { opacity: 0; transform: translate3d(40px, 0, 0) scale(0.96); }
+    35%  { opacity: 1; }
+    to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  }
+  /* 62% y 1.06, no 82% y 1.14: por encima de ahí se lee como zoom y delata la
+     planitud del original. */
+  @keyframes revelar-imagen {
+    from { clip-path: inset(0 0 62% 0); transform: scale(1.06); }
+    to   { clip-path: inset(0 0 0 0); transform: scale(1); }
+  }
+  @keyframes derivar {
+    from { transform: translate3d(0, 4%, 0) scale(1.04); }
+    to   { transform: translate3d(0, -4%, 0) scale(1.04); }
+  }
+  @keyframes trazar {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+  @keyframes revelar-titular {
+    from { opacity: 0; transform: translateY(18px); clip-path: inset(0 0 100% 0); }
+    35%  { opacity: 1; }
+    to   { opacity: 1; transform: translateY(0);    clip-path: inset(0 0 -8% 0); }
+  }
+  /* Recorrido corto y máscara que se abre YA en el 40%. En el escritorio el
+     titular puede permitirse llegar recortado; en el bolsillo no. */
+  @keyframes revelar-movil {
+    from { opacity: 0; transform: translateY(10px); }
+    40%  { opacity: 1; }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes revelar-titular-movil {
+    from { opacity: 0; transform: translateY(8px); clip-path: inset(0 0 28% 0); }
+    40%  { opacity: 1; clip-path: inset(0 0 -8% 0); }
+    to   { opacity: 1; transform: translateY(0); clip-path: inset(0 0 -8% 0); }
+  }
+  @keyframes revelar-imagen-movil {
+    from { clip-path: inset(0 0 28% 0); transform: scale(1.04); }
+    to   { clip-path: inset(0 0 0 0); transform: scale(1); }
+  }
+  @keyframes derivar-fondo {
+    from { transform: scale(1.06) translateY(-1.5%); }
+    to   { transform: scale(1) translateY(1.5%); }
+  }
+  /* La respuesta del acordeón. No se anima la altura —no está en la lista de
+     propiedades permitidas—: `details[open]` ya la reserva, así que `clip-path`
+     no mete ninguna caja en el layout. */
+  @keyframes revelar-respuesta {
+    from { opacity: 0; clip-path: inset(0 0 100% 0); }
+    to   { opacity: 1; clip-path: inset(0 0 -6% 0); }
+  }
+
+  /* La entrada POR TIEMPO. Es el único movimiento que no dispara el scroll, y
+     vive en los heros de las páginas internas — donde el contenido ya está en
+     pantalla al cargar y por tanto no hay entrada que medir.
+
+     Sin `filter: blur()`: se aplicaría al subárbol entero durante 480ms mientras
+     la imagen del hero carga con prioridad alta, y desenfocar texto grande es
+     justo lo que no conviene en el primer pantallazo. */
+  .entra {
+    animation: entrar 480ms var(--ease-out) both;
+  }
+  .entra-2 { animation-delay: 70ms; }
+  .entra-3 { animation-delay: 125ms; }
+  .entra-4 { animation-delay: 180ms; }
+
+  @keyframes entrar {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Pulso del indicador «en línea». TRES latidos y para: llama la atención una
+     vez y devuelve la pantalla a la lectura. Un bucle infinito en el primer
+     pantallazo compite con el titular para siempre.
+     Y sólo UNA instancia por vista: acotar la duración no acota la
+     simultaneidad, y dos puntos latiendo a la vez se leen como un error. */
+  .late::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: currentColor;
+    animation: latir 2.4s var(--ease-in-out) 3;
+  }
+  @keyframes latir {
+    0%   { opacity: 0.55; transform: scale(1); }
+    70%  { opacity: 0; transform: scale(2.6); }
+    100% { opacity: 0; transform: scale(2.6); }
+  }
+}
+
+/* ── RESPUESTA AL DEDO ─────────────────────────────────────────────────────
+   La interfaz responde antes de que llegue la respuesta del servidor. */
+@layer base {
+  /* UNA sola duración de interfaz. Tres valores distintos —150, 160, 200ms— sin
+     nada que distinga los casos es la forma más común de que un sitio se sienta
+     descoordinado sin que nadie sepa señalar dónde. */
+  a, button, summary {
+    transition: transform 180ms var(--ease-out), background-color 180ms var(--ease-out),
+                border-color 180ms var(--ease-out), color 180ms var(--ease-out);
+  }
+  a:active, button:active, summary:active {
+    transform: scale(0.97);
+  }
+
+  /* El hover sólo existe donde hay puntero fino: en táctil da falsos positivos
+     —el estado se queda pegado después del toque. */
+  @media (hover: hover) and (pointer: fine) {
+    /* La tarjeta NO se levanta con `transform`. Dos razones: sería la única
+       anidación de transform del sitio —una tarjeta que sube dentro de una fila
+       que todavía está entrando— y el solape se ve. La respuesta al puntero es un
+       escalón de luminancia, que es coherente con elevar sin sombras. */
+    .tarjeta {
+      transition: background-color 180ms var(--ease-out), border-color 180ms var(--ease-out);
+    }
+    .tarjeta:hover {
+      background-color: var(--color-fondo);
+    }
+
+    /* La flecha avanza al pasar por encima: dice «esto lleva a otro sitio».
+       Vale igual dentro de una tarjeta que en un enlace suelto. */
+    .tarjeta:hover .flecha,
+    a:hover .flecha {
+      transform: translateX(4px);
+    }
+    .flecha {
+      transition: transform 180ms var(--ease-out);
+    }
+
+    /* BARRIDO DE LUZ: una banda cruza la tarjeta una vez y se apaga. El escalón
+       de luminancia dice «esto responde»; el barrido dice «esto es un objeto».
+
+       Va en una clase APARTE y no en `.tarjeta`, a propósito: la mitad de los
+       usos de `.tarjeta` visten una FILA de índice y no una caja, y un destello
+       cruzando una fila de 24px de alto no se lee como materia — se lee como un
+       fallo de pintado. Sólo lo llevan las piezas que son objeto de verdad.
+
+       `overflow: clip` y no `hidden`: es la regla de la cabecera de este
+       archivo. `hidden` dejaría inerte cualquier `view()` que caiga dentro. */
+    .brillo {
+      position: relative;
+      overflow: clip;
+    }
+    .brillo::after {
+      content: '';
+      position: absolute;
+      inset-block: 0;
+      /* Sangra a los dos lados para que la banda entre y salga fuera de cuadro
+         en vez de aparecer y desaparecer dentro de la tarjeta. */
+      inset-inline: -40%;
+      pointer-events: none;
+      background: linear-gradient(
+        100deg,
+        transparent 42%,
+        var(--color-tinte) 50%,
+        transparent 58%
+      );
+      opacity: 0;
+      transform: translateX(-55%);
+    }
+    /* Dos disparadores porque hay dos anatomías: cuando la tarjeta ES el enlace,
+       el barrido va sobre la misma caja que recibe el puntero; cuando la tarjeta
+       no tiene fondo propio y lo que se ve es la portada, el barrido tiene que
+       caer sobre la portada y no sobre el bloque de texto de debajo. */
+    .brillo:hover::after,
+    .tarjeta:hover .brillo::after {
+      animation: brillar 700ms var(--ease-out);
+    }
+    /* La opacidad máxima es 0.5 y se alcanza pronto: por encima de ahí lava el
+       texto que hay debajo justo cuando alguien lo está mirando. */
+    @keyframes brillar {
+      0%   { opacity: 0;   transform: translateX(-55%); }
+      22%  { opacity: 0.5; }
+      100% { opacity: 0;   transform: translateX(55%); }
+    }
+  }
+}
+
+/* ── ESTUDIO ───────────────────────────────────────────────────────────────
+   El barrido de luz se fue: en foto de auto se leía como suciedad, no como
+   estudio. Quedan la mira (el habitáculo se asoma al puntero) y el viaje
+   del auto de la portada a su ficha. */
+
+[data-slot='escena'][data-mira] {
+  --mira-x: 0%;
+  --mira-y: 0%;
+}
+[data-slot='escena'][data-mira] img {
+  transform: scale(1.08) translate3d(var(--mira-x, 0%), var(--mira-y, 0%), 0);
+  transition: transform 180ms var(--ease-out);
+}
+
+.aviso-mira {
+  position: absolute;
+  inset-inline-end: 1.25rem;
+  inset-block-end: 1.5rem;
+  z-index: 2;
+  margin: 0;
+  font-size: var(--text-eyebrow);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: white;
+  pointer-events: none;
+  animation: aviso-mira 5s var(--ease-out) both;
+}
+@keyframes aviso-mira {
+  0%, 50% { opacity: 0.65; }
+  100%    { opacity: 0; }
+}
+@media (hover: none) {
+  .aviso-mira { display: none; }
+}
+
+/* ── TRANSICIONES ENTRE PÁGINAS ────────────────────────────────────────────
+   Continuidad espacial en la navegación, en CSS nativo. Sin el router de una
+   librería y sin hidratar nada. */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root) {
+  animation: 90ms var(--ease-out) both desvanecer-fuera;
+}
+::view-transition-new(root) {
+  animation: 260ms var(--ease-out) both desvanecer-dentro;
+}
+@keyframes desvanecer-fuera { to { opacity: 0; } }
+@keyframes desvanecer-dentro { from { opacity: 0; transform: translateY(8px); } }
+
+/* `@view-transition` captura un único grupo, `root`: TODO el viewport se funde
+   como una sola imagen. Ahí dentro va el lanzador flotante, que es
+   `position: fixed`, aparece en el MISMO píxel en todas las páginas y no cambia
+   entre una y otra. Sin nombre propio se desvanece con la página vieja y vuelve
+   a aparecer con la nueva: un parpadeo en cada navegación de un elemento que no
+   se ha movido. Con `view-transition-name` sale del grupo raíz y el navegador lo
+   trata como el mismo objeto a los dos lados, así que se queda quieto.
+
+   Va AQUÍ y no en el <style> del componente porque Astro lo dejaría con el
+   ámbito del componente, y el nombre tiene que ser global al documento.
+
+   DOS SITIOS DONDE NO SE PUEDE PONER, y los dos se probaron:
+     · el <header> completo — si es `relative` en unas páginas y `absolute` en la
+       portada, el par de estados tiene geometrías distintas y el navegador
+       interpola una posición que no existe en ninguna de las dos;
+     · un componente que se monta DOS VECES por documento (una marca en la
+       cabecera y en el pie) — un `view-transition-name` duplicado hace que
+       Chrome ABORTE la transición entera, no sólo la de ese elemento. */
+.lanzador {
+  view-transition-name: lanzador;
+}
+
+::view-transition-group(modelo-t5),
+::view-transition-group(modelo-t1),
+::view-transition-group(modelo-s5) {
+  animation-duration: 560ms;
+  animation-timing-function: var(--ease-suave);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .revela, .revela-grupo > *, .tira > *, .tira-indice > *, .deriva, .deriva-hero,
+  .entra, .traza, .revela-titular, .revela-cifra, .deriva-fondo, .revela-imagen,
+  .entra-imagen, .entra-titular-hero, .riel > *, .riel[data-foco] > *,
+  .aviso-mira, [data-slot='escena'][data-mira] img {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    /* OBLIGATORIO: sin esto un titular animado con `clip-path` se queda
+       recortado a altura cero, es decir, invisible. Apagar mal una animación
+       esconde contenido, que es peor que la animación. */
+    clip-path: none !important;
+  }
+  .late::after { animation: none; opacity: 0; }
+  details[open] > p {
+    animation: none !important;
+    clip-path: none !important;
+    opacity: 1 !important;
+  }
+
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+  /* El comodín y no sólo `root`: desde que `.lanzador` tiene nombre propio,
+     apagar únicamente el grupo raíz lo dejaría con la animación por defecto del
+     navegador, que interpola posición y tamaño entre las dos páginas. El comodín
+     cubre el raíz, el lanzador y cualquier nombre que se añada después — que es
+     lo que evita que esto se vuelva a quedar corto. */
+  ::view-transition-group(*) { animation: none; }
+
+  /* Los gestos que DE VERDAD se repiten en una sesión son los hover, no los
+     reveals de scroll. Un bloque de reduced-motion que apaga los reveals y deja
+     intactos veintiséis desplazamientos de flecha está aplicando el criterio al
+     revés. */
+  a:active, button:active, summary:active { transform: none; }
+  .tarjeta:hover { transform: none; }
+  .flecha,
+  .tarjeta:hover .flecha,
+  a:hover .flecha {
+    transition: none;
+    transform: none;
+  }
+  .lanzador:hover { transform: none; }
+  /* El barrido se va entero. El escalón de luminancia de `.tarjeta` SE QUEDA:
+     esa es la respuesta al puntero, y quitarla sería retirar el afordance en vez
+     de retirar el movimiento. */
+  .brillo:hover::after { animation: none; opacity: 0; }
+
+  /* `.progreso-lectura` NO figura en la lista de arriba, y es la única excepción
+     del archivo. Apagarla querría decir `transform: none`, o sea `scaleX(1)`:
+     una barra permanentemente llena que informa de algo falso. Y no es
+     decoración —es el indicador de posición dentro del documento—, así que
+     retirarla quita información, no movimiento. La regla 5 dice «menos
+     animación, no cero», y aquí lo correcto es dejarla trabajando: su recorrido
+     lo dicta el dedo, no un reloj. */
+}
+
+/* ── ALTO CONTRASTE DE WINDOWS ─────────────────────────────────────────────
+   `.traza` y `.progreso-lectura` son cajas sin texto y sin borde: su ÚNICO píxel
+   visible es un `background-color`. En modo de alto contraste el sistema fuerza
+   los fondos a `Canvas`, así que las dos se vuelven canvas sobre canvas — o sea
+   invisibles — y con ellas desaparecen la firma gráfica del sitio y el indicador
+   de posición dentro del documento.
+
+   `CanvasText` es una palabra clave de color del SISTEMA, no un color de marca:
+   el valor lo elige el usuario en su sistema operativo. No amplía la paleta —no
+   hay ningún valor de color escrito aquí, sólo el nombre de una ranura que
+   rellena el SO.
+
+   El `!important` es necesario: este archivo se importa inmediatamente después
+   de `@import "tailwindcss"`, y una utilidad de fondo tiene la MISMA
+   especificidad que `.traza`, así que sin él ganaría por orden de origen. */
+@media (forced-colors: active) {
+  .traza,
+  .progreso-lectura {
+    background-color: CanvasText !important;
+  }
+}

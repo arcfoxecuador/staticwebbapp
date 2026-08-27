@@ -1,0 +1,20 @@
+// Configuración SOLO para verificar tipos (npm run typecheck).
+//
+// El tsconfig.json de al lado es el de COMPILACIÓN: su `include` es src/**
+// a propósito, porque `tsc -p tsconfig.json` emite a dist/ y meter test/ ahí
+// acabaría metiendo las pruebas dentro de la imagen Docker.
+//
+// Sin este archivo, las ~4.400 líneas de test/ no las miraba nadie: una prueba
+// podía compilar mal —o afirmar sobre un tipo que ya no existe— y nadie se
+// enteraba hasta ejecutarla.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    // El tsconfig de compilación fija rootDir en src/ (para que dist/ salga
+    // plano). Aquí no se emite nada, así que se amplía a la raíz: si no,
+    // TypeScript rechaza cada archivo de test por estar "fuera de rootDir".
+    "rootDir": "."
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

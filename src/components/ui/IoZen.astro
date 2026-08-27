@@ -1,0 +1,29 @@
+---
+/* El chat de ioZen v2 NO ES UN IFRAME. El loader inyecta el widget; `Asistente.astro`
+   espera una URL de embed y aquí no hay ninguna. Un iframe vacío o un `src` inventado
+   abriría un recuadro mudo. Por eso este componente existe aparte y no se reutiliza
+   el lanzador del sitio: el contrato del proveedor cambió.
+
+   POPUP y no inline ni floating, y es una decisión de composición. El snippet
+   inline pide `min-height: 600px` y partiría la pantalla única del teaser. El
+   floating pinta el botón genérico del proveedor («Chat with us») encima de la
+   marca. El popup deja el CTA en nuestro `Boton` —el único acento de la página—
+   y el proveedor sólo aparece cuando alguien lo pide.
+
+   El `<script>` vive A RAÍZ DE ESTE ARCHIVO, nunca dentro de `{condición && (…)}`.
+   Esta página se monta o no se monta; el script no se decide a medias. */
+import Boton from './Boton.astro';
+import { TEASER } from '../../lib/site';
+
+interface Props {
+  bot: string;
+}
+
+const { bot } = Astro.props;
+const src = `https://app.iozen.ai/widget/v2/loader.js?bot=${bot}`;
+---
+
+<Boton variante="primario" data-iozen-popup={bot} tipo="button">
+  {TEASER.chatRotulo}
+</Boton>
+<script is:inline src={src} data-bot={bot} data-type="popup" async></script>

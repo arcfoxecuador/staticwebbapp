@@ -1,0 +1,61 @@
+---
+/* El hero de una página interna: tipográfico, sin fotografía.
+
+   El movimiento es `.entra` y no `.revela`, y la diferencia es de método: este
+   contenido YA está en pantalla al cargar, así que no hay entrada en el encuadre
+   que medir. `.revela` mide el scroll; aquí lo que corre es el reloj.
+
+   El escalonado va en el orden en que se lee —rótulo, titular, bajada, botones—
+   con 70/125/180ms. Por debajo de ~60ms el desfase no se percibe y por encima de
+   ~250ms se percibe como lentitud. */
+import Boton from '../ui/Boton.astro';
+
+interface Props {
+  rotulo?: string;
+  titulo: string;
+  bajada?: string;
+  /** El CTA primario. Sin él, el hero no pide nada — que a veces es correcto en
+      una página informativa, pero nunca en una de conversión. */
+  accion?: { texto: string; href: string };
+  /** El secundario. UNO como máximo: tres acciones en un hero son cero. */
+  secundaria?: { texto: string; href: string };
+  campo?: 'suelo' | 'marca';
+}
+
+const { rotulo, titulo, bajada, accion, secundaria, campo = 'suelo' } = Astro.props;
+const oscuro = campo === 'marca';
+---
+
+<section
+  data-slot="hero"
+  class:list={[
+    'relative',
+    oscuro ? 'bg-marca text-white campo-oscuro' : 'bg-fondo',
+  ]}
+>
+  <div class="medida py-20 md:py-28">
+    {rotulo && <p class="eyebrow entra text-marca-clara">{rotulo}</p>}
+
+    {/* UN solo <h1> por página, y es éste. */}
+    <h1 class="entra entra-2 mt-4 max-w-[24ch] equilibra text-h1 font-bold">
+      {titulo}
+    </h1>
+
+    {bajada && <p class="entra entra-3 mt-6 max-w-[56ch] text-lead text-current/75">{bajada}</p>}
+
+    {
+      (accion || secundaria) && (
+        <div class="entra entra-4 mt-10 flex flex-wrap gap-4">
+          {accion && <Boton href={accion.href} tamano="lg">{accion.texto}</Boton>}
+          {
+            secundaria && (
+              <Boton href={secundaria.href} tamano="lg" variante={oscuro ? 'fantasma' : 'secundario'}>
+                {secundaria.texto}
+              </Boton>
+            )
+          }
+        </div>
+      )
+    }
+  </div>
+</section>

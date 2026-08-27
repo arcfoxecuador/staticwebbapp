@@ -1,0 +1,245 @@
+import { api } from "../core/api.js";
+import { CAREERS, ensureCareers } from "../core/careers.js";
+import { $, ICONS, el, esc, fmtDate } from "../core/dom.js";
+import { FORMS, PUBLISH, SITE, isAdmin, isHidden } from "../core/state.js";
+import { confirmModal, notice, screen } from "../core/ui.js";
+
+// ── Escritorio ───────────────────────────────────────────────────────────────
+export async function showDashboard() {
+  const wrap = screen("Escritorio", "Escritorio");
+
+  const welcome = el("div", "welcome-panel");
+  welcome.innerHTML = `
+    <h2>¡Te damos la bienvenida al Panel IIDEA!</h2>
+    <p class="about-description">Hemos preparado algunos enlaces para que empieces:</p>
+    <div class="welcome-panel-columns">
+      <div class="welcome-panel-column">
+        <h3>Empieza</h3>
+        <ul>
+          <li><a href="#page/home">Edita tu página de inicio</a></li>
+          <li><a href="#post/new">Escribe tu primera entrada</a></li>
+          <li>${SITE ? `<a href="${esc(SITE)}" target="_blank" rel="noopener">Ver tu sitio</a>` : ""}</li>
+        </ul>
+      </div>
+      <div class="welcome-panel-column">
+        <h3>Siguientes pasos</h3>
+        <ul>
+          <li><a href="#pages">Gestiona las páginas</a></li>
+          <li><a href="#media">Sube imágenes a la biblioteca de medios</a></li>
+          <li><a href="#careers">Actualiza las carreras</a></li>
+          ${isAdmin() ? `<li><a href="#appearance">Personaliza colores y tema</a></li>` : ""}
+        </ul>
+      </div>
+      <div class="welcome-panel-column">
+        <h3>Deja que lo haga la IA</h3>
+        <ul>
+          <li><a href="#agent">Pide un cambio escribiéndolo</a><span class="welcome-hint">El asistente lo hace por ti.</span></li>
+          ${isAdmin() && !isHidden("automation") ? `<li><a href="#automation">Deja que escriba el blog sola</a><span class="welcome-hint">Tú apruebas antes de publicar.</span></li>` : ""}
+          ${!isHidden("review") ? `<li><a href="#review">Revisa lo que escribió la IA</a><span class="welcome-hint">Nada sale al sitio sin tu visto bueno.</span></li>` : ""}
+        </ul>
+      </div>
+    </div>`;
+  wrap.appendChild(welcome);
+
+  const grid = el("div", "dashboard-widgets");
+  const colA = el("div"); const colB = el("div");
+  grid.append(colA, colB);
+  wrap.appendChild(grid);
+
+  // Estado del sitio: ¿el último build/deploy pasó? Cierra el ciclo "publiqué
+  // pero no sé si llegó".
+  const deploy = el("div", "postbox");
+  // Dos botones: "staging" es el que funciona hoy (consulta el estado del
+  // último despliegue). "Página en vivo" se ve y se pulsa igual, pero NO tiene
+  // acción todavía: base y producción son la misma rama (main), así que no hay
+  // a dónde apuntarlo. Para conectarlo, engánchale su acción aquí abajo.
+  deploy.innerHTML = `<div class="postbox-header"><h2>Estado del sitio</h2>
+      <div class="deploy-actions">
+        <button class="button" id="deploy-refresh">Actualizar staging</button>
+        <button class="button" id="deploy-refresh-live">Actualizar página en vivo</button>
+      </div>
+    </div>
+    <div class="inside" id="deploy-status"><span class="spinner"></span>Consultando…</div>`;
+  colA.appendChild(deploy);
+  const drawDeploy = async () => {
+    const box = $("deploy-status");
+    if (!box) return;
+    try {
+      const d = await api("/api/deploy-status");
+      const when = d.updatedAt ? ` · ${new Date(d.updatedAt).toLocaleString()}` : "";
+      const link = d.detailUrl ? ` <a href="${esc(d.detailUrl)}" target="_blank" rel="noopener">Ver detalles</a>` : "";
+      box.innerHTML =
+        d.state === "success" ? `<span class="deploy-ok">●</span> Última publicación desplegada correctamente${when}.${link}`
+        : d.state === "pending" ? `<span class="deploy-pending">●</span> Desplegando la última publicación…${when}${link}`
+        : d.state === "failure" ? `<span class="deploy-fail">●</span> <b>El último build falló</b>: el sitio sigue mostrando la versión anterior.${when}${link}`
+        : "Sin información de despliegue todavía.";
+    } catch (e) { box.innerHTML = `<span class="muted">${esc(e.message)}</span>`; }
+  };
+  $("deploy-refresh").addEventListener("click", drawDeploy);
+  drawDeploy();
+
+  // Automatización del blog: estado + horario + cola de revisión (solo admin).
+  // Da visibilidad al motor desde la portada del panel (dónde configurar días/horas).
+  if (isAdmin() && !isHidden("automation")) {
+    const auto = el("div", "postbox");
+    auto.innerHTML = `<div class="postbox-header"><h2>Blogs automáticos</h2><a class="button" href="#automation">Configurar</a></div>
+      <div class="inside" id="auto-status"><span class="spinner"></span>Consultando…</div>`;
+    colB.appendChild(auto);
+    (async () => {
+      const box = $("auto-status");
+      if (!box) return;
+      try {
+        const [a, posts] = await Promise.all([api("/api/automation"), api("/api/posts").catch(() => ({ posts: [] }))]);
+        const pending = (posts.posts || []).filter((p) => p.autoGenerated && p.draft).length;
+        const dn = { mon: "Lun", tue: "Mar", wed: "Mié", thu: "Jue", fri: "Vie", sat: "Sáb", sun: "Dom" };
+        const days = (a.schedule.days || []).map((d) => dn[d] || d).join(", ");
+        const state = a.enabled
+          ? `<span class="deploy-ok">●</span> <b>Activa</b>: ${a.schedule.perWeek} blog(s)/semana · ${esc(days)} a las ${esc(a.schedule.time)} (${esc(a.schedule.timezone)}).`
+          : `<span class="deploy-pending">●</span> Desactivada. <a href="#automation">Actívala y programa los días y horas</a>.`;
+        const review = pending ? ` · <a href="#review">${pending} borrador(es) por revisar</a>` : "";
+        box.innerHTML = state + review;
+      } catch (e) { box.innerHTML = `<span class="muted">${esc(e.message)}</span>`; }
+    })();
+  }
+
+  // De un vistazo
+  const glance = el("div", "postbox");
+  glance.innerHTML = `<div class="postbox-header"><h2>De un vistazo</h2></div><div class="inside"><ul class="glance-list" id="glance"><li class="muted">Cargando…</li></ul></div>`;
+  colA.appendChild(glance);
+
+  // Actividad
+  const act = el("div", "postbox");
+  act.innerHTML = `<div class="postbox-header"><h2>Actividad</h2></div><div class="inside"><ul class="activity-list" id="activity"><li class="muted">Cargando…</li></ul></div>`;
+  colA.appendChild(act);
+
+  // Borrador rápido
+  const qd = el("div", "postbox quick-draft");
+  qd.innerHTML = `
+    <div class="postbox-header"><h2>Borrador rápido</h2></div>
+    <div class="inside">
+      <input type="text" id="qd-title" placeholder="Título" aria-label="Título del borrador" />
+      <textarea id="qd-body" rows="4" placeholder="¿Qué te ronda la cabeza?"></textarea>
+      <select id="qd-cat" aria-label="Categoría"></select>
+      <button class="button button-primary" id="qd-save">Guardar borrador</button>
+      <p class="muted" id="qd-help">Se guarda como borrador (no se publica). La portada podrás elegirla al editar la entrada.</p>
+    </div>`;
+  colB.appendChild(qd);
+
+  // Publicar a producción (solo en modo staging)
+  if (!PUBLISH.toProd && isAdmin()) {
+    const promote = el("div", "postbox promote-box");
+    promote.innerHTML = `
+      <div class="postbox-header"><h2>Publicar a producción</h2></div>
+      <div class="inside">
+        <p class="muted" style="margin:0">Tus cambios se ven primero en <b>staging</b>. Cuando estén listos, pásalos a producción.</p>
+        <button class="button button-primary button-hero" id="promote-btn">Publicar a producción →</button>
+      </div>`;
+    colB.appendChild(promote);
+    $("promote-btn").addEventListener("click", promoteToProduction);
+  }
+
+  // Uso del Asistente IA (tokens del mes, costo estimado). Cierra el "¿cuánto
+  // estamos gastando en IA?" sin salir del panel. Solo admins: incluye correos y
+  // actividad por usuario, y el endpoint responde 403 a editores.
+  if (isAdmin()) {
+  const usage = el("div", "postbox");
+  usage.innerHTML = `<div class="postbox-header"><h2>Uso del Asistente IA</h2></div>
+    <div class="inside" id="agent-usage"><span class="spinner"></span>Consultando…</div>`;
+  colB.appendChild(usage);
+  (async () => {
+    const box = $("agent-usage");
+    if (!box) return;
+    try {
+      const u = await api("/api/agent/usage");
+      const fmt = (n) => n.toLocaleString("es-EC");
+      const pct = u.budget > 0 ? Math.min(100, Math.round((u.tokens.total / u.budget) * 100)) : null;
+      const cost = u.estCostUsd != null ? ` · ~$${u.estCostUsd} USD` : "";
+      const bar = pct != null
+        ? `<div class="usage-bar"><span style="width:${pct}%"></span></div><p class="muted" style="margin:4px 0 0">${fmt(u.tokens.total)} / ${fmt(u.budget)} tokens (${pct}%)</p>`
+        : `<p style="margin:0"><b>${fmt(u.tokens.total)}</b> tokens este mes${cost}</p><p class="muted" style="margin:2px 0 0">${fmt(u.tokens.input)} entrada · ${fmt(u.tokens.output)} salida</p>`;
+      const top = (u.byUser || []).slice(0, 3).map((x) => `<li><span>${esc(x.email)}</span><span class="muted">${fmt(x.tokens)}</span></li>`).join("");
+      // Gasto de fondo: los blogs automáticos y las imágenes se pagan igual,
+      // pero no consumen la cuota del equipo. Se muestran aparte para que el
+      // costo real deje de ser invisible.
+      const auto = u.automation || { runs: 0, tokens: { total: 0 }, estCostUsd: null };
+      const imgs = (u.images && u.images.generated) || 0;
+      const bg = (auto.runs || imgs)
+        ? `<p class="muted" style="margin:8px 0 0;font-size:12px">Aparte, sin gastar la cuota del equipo:
+             <b>${fmt(auto.tokens.total)}</b> tokens en ${auto.runs} blog${auto.runs === 1 ? "" : "s"} automático${auto.runs === 1 ? "" : "s"}${auto.estCostUsd != null ? ` (~$${auto.estCostUsd} USD)` : ""}
+             ${imgs ? ` · <b>${fmt(imgs)}</b> ${imgs === 1 ? "imagen generada" : "imágenes generadas"}` : ""}.</p>`
+        : "";
+      box.innerHTML = `${bar}${top ? `<ul class="usage-top">${top}</ul>` : ""}${bg}
+        <p class="muted" style="margin:8px 0 0;font-size:12px">Límite: ${u.limits.ratePerHour}/h por usuario. Mes ${esc(u.month)}. En memoria (se reinicia con el panel).</p>`;
+    } catch (e) { box.innerHTML = `<span class="muted">${esc(e.message)}</span>`; }
+  })();
+  }
+
+  // Datos: entradas + medios (para vistazo/actividad/borrador rápido).
+  try {
+    const [postsData, mediaData] = await Promise.all([api("/api/posts"), api("/api/media").catch(() => ({ items: [] }))]);
+    const posts = postsData.posts || [];
+    const drafts = posts.filter((p) => p.draft);
+    const g = $("glance");
+    const glanceItem = (ico, hash, label) =>
+      `<li><span class="glance-ico">${ICONS[ico]}</span><a href="#${hash}">${label}</a></li>`;
+    if (g) {
+      g.innerHTML =
+        glanceItem("posts", "posts", `${posts.length} entrada${posts.length === 1 ? "" : "s"}`) +
+        glanceItem("pages", "pages", `${Object.keys(FORMS.pages).length} páginas`) +
+        glanceItem("careers", "careers", `${CAREERS ? Object.keys(CAREERS).length : "…"} carreras`) +
+        glanceItem("media", "media", `${mediaData.items.length} medios`) +
+        (drafts.length ? glanceItem("posts", "posts", `${drafts.length} borrador${drafts.length === 1 ? "" : "es"}`) : "");
+      if (!CAREERS) {
+        ensureCareers().then(() => {
+          const li = g.children[2];
+          if (li) li.innerHTML = `<span class="glance-ico">${ICONS.careers}</span><a href="#careers">${Object.keys(CAREERS).length} carreras</a>`;
+        }).catch(() => {});
+      }
+    }
+    const a = $("activity");
+    if (a) {
+      a.innerHTML = posts.slice(0, 5).map((p) => `
+        <li><span class="act-date">${fmtDate(p.date)}</span><a href="#post/${esc(p.slug)}">${esc(p.title)}</a>${p.draft ? " <span class='ed-tag'>borrador</span>" : ""}</li>`).join("") || "<li class='muted'>Sin entradas todavía.</li>";
+    }
+    const catSel = $("qd-cat");
+    if (catSel) catSel.innerHTML = (postsData.categories || []).map((c) => `<option>${esc(c)}</option>`).join("");
+    const defaultCover = mediaData.items[0] ? mediaData.items[0].path : "";
+    $("qd-save").addEventListener("click", async () => {
+      const title = $("qd-title").value.trim();
+      if (!title) { notice("err", "Ponle un título al borrador."); return; }
+      if (!defaultCover) { notice("err", "Sube primero una imagen a la <a href='#media'>biblioteca de medios</a> para usarla de portada."); return; }
+      const btn = $("qd-save"); btn.disabled = true; btn.textContent = "Guardando…";
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const data = await api("/api/posts", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title, cat: $("qd-cat").value, date: today,
+            excerpt: $("qd-body").value.trim().slice(0, 270) || title,
+            img: defaultCover, draft: true, tags: [], body: $("qd-body").value.trim(),
+          }),
+        });
+        notice("ok", `Borrador guardado. <a href="#post/${esc(data.slug)}">Seguir editándolo →</a>`);
+        $("qd-title").value = ""; $("qd-body").value = "";
+      } catch (e) { notice("err", "" + esc(e.message)); }
+      finally { btn.disabled = false; btn.textContent = "Guardar borrador"; }
+    });
+  } catch (e) {
+    const g = $("glance"); if (g) g.innerHTML = `<li class="error">${esc(e.message)}</li>`;
+    const a = $("activity"); if (a) a.innerHTML = "";
+  }
+}
+
+async function promoteToProduction() {
+  if (!(await confirmModal({ title: "Publicar a producción", message: "¿Publicar a producción todo lo que está en staging? El sitio público se actualizará en ~1 minuto.", confirmLabel: "Publicar a producción" }))) return;
+  const btn = $("promote-btn");
+  btn.disabled = true; btn.textContent = "Publicando…";
+  try {
+    const data = await api("/api/promote", { method: "POST" });
+    notice("ok", data.alreadyUpToDate
+      ? "Producción ya estaba al día (no había cambios nuevos en staging)."
+      : "Promovido a producción. El sitio se reconstruye en ~1 minuto.");
+  } catch (e) { notice("err", "" + esc(e.message)); }
+  finally { btn.disabled = false; btn.textContent = "Publicar a producción →"; }
+}
+

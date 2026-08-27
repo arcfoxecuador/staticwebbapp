@@ -1,0 +1,59 @@
+---
+/* Testimonios. `<blockquote>` con `<cite>` dentro de `<figcaption>`: es el
+   marcado correcto para una cita atribuida, y es también lo que permite a un
+   motor entender que la frase la dijo una persona concreta.
+
+   UNA REGLA QUE NO ES DE DISEÑO: si no hay testimonio real, no hay bloque.
+   Un testimonio inventado es publicidad engañosa en cualquier jurisdicción, y en
+   sectores regulados es una sanción. El componente no puede evitar que alguien
+   escriba uno falso, pero sí puede exigir atribución completa —nombre Y cargo o
+   empresa— y así hacer evidente el hueco cuando el dato no existe.
+
+   El bloque NO renderiza nada con la lista vacía. Es a propósito: una sección
+   «Lo que dicen» con una tarjeta de ejemplo es lo que acaba publicado. */
+interface Props {
+  items: { cita: string; nombre: string; cargo: string; empresa?: string }[];
+  columnas?: 2 | 3;
+}
+
+const { items, columnas = 2 } = Astro.props;
+
+const rejilla = {
+  2: 'md:grid-cols-2',
+  3: 'md:grid-cols-3',
+}[columnas];
+---
+
+{
+  items.length > 0 && (
+    <div data-slot="testimonios" class:list={['tira grid gap-6', rejilla]}>
+      {items.map((t) => (
+        <figure class="brillo campo-claro flex flex-col rounded-[var(--radius-lg)] border border-linea bg-superficie p-7 md:p-8">
+          {/* La comilla es decorativa y va con `aria-hidden`: un lector de
+              pantalla ya sabe que esto es una cita por el <blockquote>, y leer
+              «comilla izquierda» antes de cada testimonio es ruido. */}
+          <span
+            class="font-display text-[3.5rem] leading-[0.6] text-marca-clara"
+            aria-hidden="true"
+          >
+            &ldquo;
+          </span>
+
+          {/* `text-lead` y medida en `ch`: es prosa corta y se tiene que poder
+              leer de un vistazo. Sin comillas en el texto — las pone el marcado. */}
+          <blockquote class="mt-4 flex-1 text-lead text-tinta/85">
+            <p class="max-w-[46ch]">{t.cita}</p>
+          </blockquote>
+
+          <figcaption class="mt-7 border-t border-linea pt-5 text-small">
+            <cite class="not-italic font-semibold text-marca">{t.nombre}</cite>
+            <span class="mt-1 block text-tinta/60">
+              {t.cargo}
+              {t.empresa && <> · {t.empresa}</>}
+            </span>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  )
+}

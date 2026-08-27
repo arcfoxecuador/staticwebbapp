@@ -1,0 +1,177 @@
+---
+/* Portada en capítulos a sangre: héroe, habitáculo, gama, otra cabina,
+   mosaico de interiores, pilares y cierre. Las tarjetas de catálogo
+   aplanaban el scroll; aquí cada tramo cambia de escala. */
+import Base from '../layouts/Base.astro';
+import HeroImagen from '../components/bloques/HeroImagen.astro';
+import Seccion from '../components/bloques/Seccion.astro';
+import Encabezado from '../components/bloques/Encabezado.astro';
+import Mosaico from '../components/bloques/Mosaico.astro';
+import Escena from '../components/bloques/Escena.astro';
+import Destacados from '../components/bloques/Destacados.astro';
+import Conmutador from '../components/bloques/Conmutador.astro';
+import Cierre from '../components/bloques/Cierre.astro';
+import Formulario from '../components/bloques/Formulario.astro';
+import Faq from '../components/bloques/Faq.astro';
+
+import hero from '../assets/hero.webp';
+import t5Habitaculo from '../assets/t5-habitaculo.webp';
+import t5Tablero from '../assets/t5-tablero.webp';
+import t5Cabina from '../assets/t5-cabina.webp';
+import t5Techo from '../assets/t5-techo.webp';
+import t5Rueda from '../assets/t5-rueda.webp';
+import s5Habitaculo from '../assets/s5-habitaculo.webp';
+import s5Tablero from '../assets/s5-tablero.webp';
+import s5Traseras from '../assets/s5-traseras.webp';
+import cotizar from '../assets/cotizar.webp';
+import t5Gris from '../assets/t5-45-gris.webp';
+import t1Kv from '../assets/t1-kv.webp';
+import s5Perfil from '../assets/s5-perfil.webp';
+
+import { coleccion } from '../lib/contenido';
+import { CTA, FAQ, ORG, PILARES, PORTADA } from '../lib/site';
+import { faq, grafo, listaDeServicios, organizacion, pagina, sitioWeb } from '../lib/schema';
+
+const modelos = (await coleccion('modelos', ({ data }) => data.publico)).sort(
+  (a, b) => a.data.orden - b.data.orden,
+);
+
+const descripcion = ORG.descripcion;
+
+const schema = grafo(
+  organizacion(),
+  sitioWeb(),
+  pagina({ path: '/', titulo: `${ORG.nombreCorto} · ${ORG.tagline}`, descripcion }),
+  ...(modelos.length ? [listaDeServicios(modelos.map((s) => ({ slug: s.id, nombre: s.data.nombre })))] : []),
+  ...(FAQ.length ? [faq(FAQ)] : []),
+);
+---
+
+<Base
+  titulo={`${ORG.nombreCorto} · ${ORG.tagline}`}
+  {descripcion}
+  path="/"
+  {schema}
+  cabeceraFlotante
+>
+  <HeroImagen
+    titulo={PORTADA.titular}
+    insignia="100% eléctrico"
+    accion={{ texto: CTA.texto, href: CTA.href }}
+    secundaria={{ texto: 'Ver modelos', href: '/modelos' }}
+    imagen={hero}
+    alt="SUV eléctrico en un muelle al anochecer, vista de tres cuartos."
+    generada={false}
+    siguiente={{ href: '#sientate', etiqueta: 'Siéntate' }}
+  />
+
+  <Escena
+    id="sientate"
+    imagen={t5Habitaculo}
+    alt="Puesto de mando del T5: volante, pantallas y techo panorámico."
+    titulo="Siéntate"
+    bajada="El primer gesto no es el de un catálogo. Es el del conductor."
+    altura="completa"
+    anclaje="pie"
+  />
+
+  {
+    modelos.length > 0 && (
+      <Seccion campo="tinte" contenido={false} aire="apretado">
+        <Conmutador
+          titulo="Elige tu modelo"
+          items={[
+            {
+              etiqueta: 'T5',
+              bajada: 'SUV crossover',
+              href: '/modelos/t5',
+              transicion: 'modelo-t5',
+              imagen: t5Gris,
+              alt: 'T5 en gris, perfil a 45 grados.',
+            },
+            {
+              etiqueta: 'T1',
+              bajada: 'SUV familiar',
+              href: '/modelos/t1',
+              transicion: 'modelo-t1',
+              imagen: t1Kv,
+              alt: 'T1, SUV familiar.',
+            },
+            {
+              etiqueta: 'S5',
+              bajada: 'SUV fastback',
+              href: '/modelos/s5',
+              transicion: 'modelo-s5',
+              imagen: s5Perfil,
+              alt: 'S5 de perfil.',
+            },
+          ]}
+          forma="modelo"
+          nombre="elige-modelo"
+          lleno
+        />
+      </Seccion>
+    )
+  }
+
+  <Escena
+    imagen={s5Habitaculo}
+    alt="Cabina envolvente del S5, vista desde el asiento del conductor."
+    titulo="Dentro del S5"
+    bajada="Tablero, volante y la línea del techo. Así se siente el fastback."
+    altura="completa"
+    anclaje="pie"
+  />
+
+  <Seccion aire="apretado" contenido={false}>
+    <Mosaico
+      patron="destacado"
+      items={[
+        { imagen: t5Tablero, alt: 'Tablero y pantalla del T5.', ancho: 2 },
+        { imagen: t5Cabina, alt: 'Plazas traseras del T5, techo panorámico.' },
+        { imagen: s5Tablero, alt: 'Tablero del S5.' },
+        { imagen: t5Techo, alt: 'Techo panorámico del T5.' },
+        { imagen: s5Traseras, alt: 'Plazas traseras del S5.' },
+      ]}
+    />
+  </Seccion>
+
+  {
+    PILARES.length > 0 && (
+      <Seccion contenido={false} aire="apretado">
+        <div class="medida">
+          <Encabezado
+            titulo="Tres razones para sentarse"
+            bajada="No se entienden en una ficha. Se entienden al entrar."
+          />
+        </div>
+        <Destacados
+          class="mt-12"
+          forma="bandas"
+          etiqueta="Por qué ARCFOX"
+          items={PILARES.map((p, i) => ({
+            titulo: p.titulo,
+            puntos: [p.texto],
+            imagen: [t5Habitaculo, t5Rueda, t5Techo][i],
+            alt: p.titulo,
+          }))}
+        />
+      </Seccion>
+    )
+  }
+
+  {
+    FAQ.length > 0 && (
+      <Seccion campo="tinte">
+        <div class="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+          <Encabezado titulo="Lo que solemos responder" />
+          <Faq />
+        </div>
+      </Seccion>
+    )
+  }
+
+  <Cierre id="cotizalo" imagen={cotizar} alt="T5, fondo de la ficha de cotización.">
+    <Formulario titulo="Cotízalo" bajada="Te contactamos con el concesionario más cercano." origen="/" compacto />
+  </Cierre>
+</Base>

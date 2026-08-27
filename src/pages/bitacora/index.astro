@@ -1,0 +1,57 @@
+---
+/* El hub editorial. Los borradores no salen nunca, y el filtro está aquí y no en
+   la plantilla del artículo: una entrada con `borrador: true` conserva su URL —para
+   que alguien pueda revisarla— pero desaparece del índice.
+
+   NO HAY FILTRO INTERACTIVO, y es deliberado. Un filtro que oculta artículos con
+   JavaScript deja un índice que los rastreadores recorren a medias y que sin JS no
+   funciona. Si algún día hacen falta categorías, la forma correcta es una RUTA por
+   categoría (`/bitacora/categoria/[slug]`): páginas reales, indexables y
+   enlazables. El orden por fecha cubre el resto. */
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/bloques/Hero.astro';
+import Seccion from '../../components/bloques/Seccion.astro';
+import ListaIndice from '../../components/bloques/ListaIndice.astro';
+import Cierre from '../../components/bloques/Cierre.astro';
+
+import { coleccion } from '../../lib/contenido';
+import { fechaLarga } from '../../lib/ui';
+import { grafo, migas, organizacion, pagina, sitioWeb } from '../../lib/schema';
+
+const articulos = (await coleccion('articulos', ({ data }) => !data.borrador)).sort(
+  (a, b) => +b.data.fecha - +a.data.fecha,
+);
+
+const titulo = 'Bitácora';
+const descripcion = 'Lo que aprendemos trabajando, escrito para que sirva a alguien más.';
+
+const schema = grafo(
+  organizacion(),
+  sitioWeb(),
+  pagina({ path: '/bitacora', titulo, descripcion, tipo: 'CollectionPage' }),
+  migas([{ nombre: titulo, path: '/bitacora' }]),
+);
+
+const items = articulos.map((a) => ({
+  titulo: a.data.titulo,
+  bajada: a.data.resumen,
+  href: `/bitacora/${a.id}`,
+  meta: fechaLarga(a.data.fecha),
+}));
+---
+
+<Base {titulo} {descripcion} path="/bitacora" {schema}>
+  <Hero rotulo="Ideas" titulo={titulo} bajada={descripcion} />
+
+  <Seccion>
+    {
+      items.length > 0 ? (
+        <ListaIndice {items} numerada />
+      ) : (
+        <p class="text-lead text-tinta/70">Todavía no hemos publicado nada. Vuelve pronto.</p>
+      )
+    }
+  </Seccion>
+
+  <Cierre />
+</Base>

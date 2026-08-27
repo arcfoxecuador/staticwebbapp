@@ -1,0 +1,76 @@
+---
+/* EL ENVOLTORIO DE LA LANDING DE EXPECTATIVA, y existe porque `Base.astro` no
+   sirve para esto — no por gusto de tener dos plantillas.
+
+   Base monta cabecera, pie y barra de acción, es decir la navegación de un
+   catálogo: «Modelos», «Concesionarios», «Test drive», el CTA «Cotízalo». En
+   followdafox.com ninguno de esos destinos existe todavía, así que reutilizar
+   Base publicaría un menú de cinco enlaces rotos sobre una página cuyo único
+   mensaje es «espera». El verificador de enlaces lo cazaría; el visitante, no.
+
+   Lo que SÍ se reutiliza es todo lo que no es navegación: los tokens, las
+   tipografías, el <head> entero, el consentimiento de analítica y el salto al
+   contenido. Esta plantilla son treinta líneas, no un segundo sistema. */
+import '../styles/global.css';
+
+import BaseHead from '../components/seo/BaseHead.astro';
+import Analitica from '../components/seo/Analitica.astro';
+import BannerCookies from '../components/seo/BannerCookies.astro';
+import { ANALITICA, RUTAS_NO_INDEXABLES, TEASER } from '../lib/site';
+import { IDIOMA } from '../lib/schema';
+
+interface Props {
+  titulo: string;
+  descripcion: string;
+  /** JSON-LD ya serializado con `grafo()`. Su `path` tiene que ser `TEASER.path`. */
+  schema?: string;
+  /** Imagen de compartición. Sin ella, BaseHead usa la del sitio. */
+  imagen?: string;
+}
+
+const { titulo, descripcion, schema, imagen } = Astro.props;
+
+/* EL `noindex` NO ES UNA PROP, y no poder pasarlo es la garantía: se deriva de
+   la MISMA lista que gobierna el sitemap y el robots.txt, así que la landing no
+   puede quedar indexada en un sitio y excluida del sitemap en el otro.
+
+   En el sitio principal `/landing` está en `RUTAS_NO_INDEXABLES` → noindex. En
+   el dominio teaser (`SOLO_LANDING=1`) su ruta es `/`, que no está en la lista
+   → indexable, porque ahí ES la única página pública del despliegue. */
+const noindex = RUTAS_NO_INDEXABLES.some((ruta) => TEASER.path.startsWith(ruta));
+
+/* Sin ningún identificador configurado no se monta ni el script ni el banner:
+   un aviso de cookies en un sitio que no pone cookies obliga al visitante a
+   decidir sobre algo que no existe. Misma regla que en Base. */
+const hayAnalitica = Boolean(ANALITICA.ga4 || ANALITICA.clarity);
+---
+
+<!doctype html>
+<html lang={IDIOMA}>
+  <head>
+    <BaseHead {titulo} {descripcion} path={TEASER.path} {schema} {noindex} {imagen} />
+  </head>
+  <body>
+    {/* El primer elemento enfocable del documento. No es opcional. */}
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+    <main id="contenido">
+      <slot />
+    </main>
+
+    {/* El chat NO se monta aquí. En el sitio principal lo decide
+        `ASISTENTE.activo`; en el teaser lo decide `TEASER.iozen`, y esa
+        decisión es de la página —que sabe con qué cierra— no de la plantilla. */}
+    {hayAnalitica && <Analitica />}
+    {hayAnalitica && <BannerCookies />}
+  </body>
+</html>
+
+<style is:global>
+  /* `clip` y NUNCA `hidden`: en el <body>, `overflow: hidden` crea un contenedor
+     de scroll y deja inerte toda línea de tiempo `view()` del documento. `clip`
+     recorta igual. La razón larga está en la cabecera de motion.css. */
+  body {
+    overflow-x: clip;
+  }
+</style>

@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/bloques/Hero.astro';
+import Seccion from '../components/bloques/Seccion.astro';
+import Escena from '../components/bloques/Escena.astro';
+import Formulario from '../components/bloques/Formulario.astro';
+import { SEDES } from '../lib/site';
+import { grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
+
+import sobre from '../assets/sobre.webp';
+
+const titulo = 'Concesionarios';
+const descripcion =
+  'La red de concesionarios ARCFOX en Ecuador se publica a medida que cada sede abre. Mientras tanto, pide contacto y te asignamos el punto más cercano.';
+
+const schema = grafo(
+  organizacion(),
+  sitioWeb(),
+  pagina({ path: '/concesionarios', titulo, descripcion }),
+  migas([{ nombre: titulo, path: '/concesionarios' }]),
+);
+---
+
+<Base {titulo} {descripcion} path="/concesionarios" {schema}>
+  <Hero rotulo="Red" titulo="Concesionarios en Ecuador" bajada={descripcion} />
+
+  <Escena
+    imagen={sobre}
+    alt="Un ARCFOX, de camino al concesionario."
+    rotulo="Quito primero"
+    titulo="La red se publica al abrir"
+    bajada="No inventamos una calle. Cuando una sede esté operativa, aparece aquí con dirección y horario."
+    altura="media"
+    anclaje="centro"
+  />
+
+  <Seccion campo="tinte">
+    <ul class="revela-grupo grid gap-6 md:grid-cols-2">
+      {
+        SEDES.map((sede) => (
+          <li class="border border-linea bg-superficie p-7">
+            <p class="eyebrow text-marca-clara">{sede.pais}</p>
+            <h2 class="mt-2 text-h3 font-bold text-marca">{sede.ciudad}</h2>
+            <p class="mt-3 text-small text-tinta/70">
+              Dirección y horarios se publican cuando la sede esté operativa.
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </Seccion>
+
+  <Seccion>
+    <Formulario
+      titulo="¿En qué ciudad estás?"
+      bajada="Te decimos qué punto te corresponde cuando esté abierto."
+      origen="/concesionarios"
+    />
+  </Seccion>
+</Base>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Escritorio ‹ Panel IIDEA</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="wp">
+    <!-- Región para lectores de pantalla: anuncia cambios de estructura del
+         editor (sección añadida, movida, eliminada…). Invisible en pantalla. -->
+    <div id="sr-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+    <!-- Barra de administración (réplica de #wpadminbar) -->
+    <header id="wpadminbar" class="wpadminbar">
+      <div class="ab-left">
+        <div class="ab-group">
+          <a class="ab-item ab-site" id="ab-site" href="#" target="_blank" rel="noopener">
+            <span class="ab-logo" aria-hidden="true"></span><span id="ab-sitename">IIDEA</span>
+          </a>
+          <div class="ab-sub">
+            <a id="ab-visit" href="#" target="_blank" rel="noopener">Visitar sitio</a>
+          </div>
+        </div>
+        <div class="ab-group">
+          <a class="ab-item" href="#post/new"><span class="ab-ico" id="ab-new-ico" aria-hidden="true"></span>Nuevo</a>
+          <div class="ab-sub">
+            <a href="#post/new">Entrada</a>
+            <a href="#media">Medio</a>
+            <a href="#pages">Página</a>
+          </div>
+        </div>
+        <div class="ab-group">
+          <button class="ab-item ab-search" id="ab-search" type="button" aria-label="Buscar y navegar (Ctrl+K)" title="Buscar y navegar (Ctrl+K)">
+            <span class="ab-search-ico" aria-hidden="true">⌕</span>Buscar<kbd class="ab-kbd">⌘K</kbd>
+          </button>
+        </div>
+      </div>
+      <div class="ab-right">
+        <div class="ab-group">
+          <!-- No es un enlace: es la etiqueta del menú de usuario. Antes era un
+               <a href="#" onclick="return false">, que obligaba a permitir
+               scripts inline en la CSP. El botón "Salir" del submenú sigue
+               siendo un control real y alcanzable con el teclado. -->
+          <span class="ab-item ab-user">Hola, <b id="ab-user"></b><span class="ab-avatar" id="ab-avatar" aria-hidden="true"></span></span>
+          <div class="ab-sub ab-sub-right">
+            <form method="post" action="/logout"><button class="ab-sub-link">Salir</button></form>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Menú lateral de administración -->
+    <aside id="adminmenu" class="adminmenu">
+      <nav id="wp-menu"></nav>
+      <button id="collapse-menu" class="collapse-menu"><span class="collapse-arrow" aria-hidden="true">◀</span><span class="collapse-label">Cerrar menú</span></button>
+    </aside>
+
+    <!-- Zona principal -->
+    <div class="wpbody">
+      <main id="wp-content" class="wpbody-content"></main>
+      <footer class="wp-footer">
+        <span>Panel de contenido de IIDEA.</span>
+      </footer>
+    </div>
+
+    <!-- Modal: insertar bloque -->
+    <div id="ed-picker" class="wp-modal" hidden>
+      <div class="wp-modal-card">
+        <div class="wp-modal-head">
+          <strong>Añadir una sección</strong>
+          <button id="ed-picker-close" class="button">✕</button>
+        </div>
+        <input id="ed-picker-search" class="wp-modal-search" type="search" placeholder="Buscar sección…" autocomplete="off" aria-label="Buscar sección" />
+        <div id="ed-picker-list" class="ed-picker-list"></div>
+      </div>
+    </div>
+
+    <!-- Modal: biblioteca de medios (selector) -->
+    <div id="media-modal" class="wp-modal" hidden>
+      <div class="wp-modal-card wp-modal-wide">
+        <div class="wp-modal-head">
+          <strong>Biblioteca de medios</strong>
+          <div class="wp-modal-head-actions">
+            <button id="media-modal-upload" class="button">Subir archivo</button>
+            <button id="media-modal-close" class="button">✕</button>
+          </div>
+        </div>
+        <div id="media-modal-grid" class="media-grid media-grid-modal"></div>
+        <input id="media-modal-file" type="file" accept="image/*" hidden />
+      </div>
+    </div>
+
+    <script type="module" src="/assets/editor.js"></script>
+  </body>
+</html>

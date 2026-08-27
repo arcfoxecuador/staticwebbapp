@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ARCFOX">
+  <!-- Provisional: un monograma con el color de marca, para que el sitio no salga
+       con el icono por defecto del navegador mientras llega el favicon real.
+       Sustit�yelo por la marca del cliente en cuanto exista. SVG y no PNG porque
+       un solo archivo sirve todos los tama�os y se ve n�tido en cualquier pantalla. -->
+  <rect width="64" height="64" rx="14" fill="#0b0d12" />
+  <text
+    x="32"
+    y="33"
+    fill="#f4f6f8"
+    font-family="system-ui, sans-serif"
+    font-size="34"
+    font-weight="700"
+    text-anchor="middle"
+    dominant-baseline="central"
+  >A</text>
+</svg>

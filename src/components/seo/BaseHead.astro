@@ -1,0 +1,120 @@
+---
+/* Todo el <head> del sitio, en un sitio. Ninguna página escribe una etiqueta
+   meta por su cuenta: si una la escribiera, sería la única que se olvidaría de
+   actualizar el día que cambie el patrón del título. */
+import { ORG, SITE, RUTAS_NO_INDEXABLES } from '../../lib/site';
+import { IDIOMA } from '../../lib/schema';
+
+interface Props {
+  titulo: string;
+  descripcion: string;
+  /** Ruta canónica, sin dominio. Ej. '/servicios/consultoria' */
+  path: string;
+  /** JSON-LD ya serializado con `grafo()` */
+  schema?: string;
+  /** Páginas de utilidad y contenido que existe pero no se promociona. */
+  noindex?: boolean;
+  /** Imagen de compartición. 1200×630. */
+  imagen?: string;
+}
+
+const { titulo, descripcion, path, schema, noindex = false, imagen = '/og/portada.jpg' } = Astro.props;
+
+const canonical = new URL(path, SITE).toString();
+const ogImagen = new URL(imagen, SITE).toString();
+
+/* El patrón del título, decidido una vez:
+     · la portada lleva marca + tagline, porque es la que se posiciona por el
+       nombre de la empresa;
+     · el resto lleva el título de la página + marca, en ese orden, porque los
+       primeros caracteres son los que se ven en una pestaña estrecha y en una
+       lista de resultados.
+   Los ~60 caracteres son el límite práctico antes de que Google recorte. */
+const tituloCompleto =
+  path === '/' ? `${ORG.nombreCorto} · ${ORG.tagline}` : `${titulo} | ${ORG.nombreCorto}`;
+
+/* PRENAVEGACIÓN. El manifiesto se serializa aquí y se inyecta con `set:html`,
+   igual que el JSON-LD de abajo, Y NO ES UNA PREFERENCIA DE ESTILO: escrito como
+   contenido literal dentro de <script>, el JSON empieza por `{`, y en una
+   plantilla de Astro esa llave abre una expresión. El bloque saldría roto o
+   convertido en una cadena.
+
+   Las exclusiones se derivan de `RUTAS_NO_INDEXABLES` en vez de escribirse a
+   mano: no se precarga lo que no se indexa, y así las dos listas no pueden
+   divergir. */
+const reglasDeEspeculacion = JSON.stringify({
+  prerender: [
+    {
+      where: {
+        and: [
+          { href_matches: '/*' },
+          ...RUTAS_NO_INDEXABLES.map((r) => ({ not: { href_matches: `${r}*` } })),
+        ],
+      },
+      /* `moderate` y no `eager`. `eager` dispara al cargar el documento y se
+         llevaría por delante el sitio entero —con su ancho de banda y su
+         cómputo— para un visitante que probablemente vea dos páginas.
+         `moderate` espera a que el puntero se pose ~200ms sobre el enlace: para
+         entonces la intención ya existe y sólo se prerenderiza lo que se va a
+         abrir. */
+      eagerness: 'moderate',
+    },
+  ],
+});
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="generator" content={Astro.generator} />
+
+<title>{tituloCompleto}</title>
+<meta name="description" content={descripcion} />
+<link rel="canonical" href={canonical} />
+
+{/* SIN hreflang: este sitio es de un solo idioma, y un `hreflang` que se
+    autorreferencia sin alternativas no hace nada. El día que haya una segunda
+    versión, aquí van los pares idioma→URL Y un `x-default`; declarar uno solo o
+    olvidar el `x-default` es peor que no ponerlos. */}
+
+{
+  noindex ? (
+    <meta name="robots" content="noindex, nofollow" />
+  ) : (
+    /* `max-image-preview:large` habilita la miniatura grande en resultados y en
+       Discover; `max-snippet:-1` levanta el límite del fragmento. Los dos son
+       lo que permite que un motor generativo cite un párrafo entero en vez de
+       una línea cortada. */
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  )
+}
+
+<meta property="og:type" content="website" />
+<meta property="og:locale" content={IDIOMA.replace('-', '_')} />
+<meta property="og:site_name" content={ORG.nombreCorto} />
+<meta property="og:title" content={tituloCompleto} />
+<meta property="og:description" content={descripcion} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImagen} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={tituloCompleto} />
+<meta name="twitter:description" content={descripcion} />
+<meta name="twitter:image" content={ogImagen} />
+
+<meta name="theme-color" content="#0b0d12" />
+<link rel="icon" href="/favicon.png" type="image/png" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+{schema && <script type="application/ld+json" set:html={schema} is:inline />}
+
+{/* `type="speculationrules"` es un manifiesto JSON que el navegador parsea como
+    DATOS y no ejecuta nunca —igual que `application/ld+json`—, así que el
+    presupuesto de cero JavaScript queda intacto. Quien no lo soporte lo ignora
+    entero, sin efecto observable ni error en consola.
+
+    `is:inline` es OBLIGATORIO: sin él Astro trata el bloque como un script
+    propio, lo procesa y le cambia el `type`, con lo que el navegador deja de
+    reconocerlo como manifiesto. */}
+<script type="speculationrules" set:html={reglasDeEspeculacion} is:inline />

@@ -1,0 +1,31 @@
+{
+  "_note": "Identidad del CLIENTE. El generador rellena estos campos desde el brief. No hardcodear la marca en el código del panel.",
+  "orgName": "ARCFOX Ecuador",
+  "orgShort": "ARCFOX",
+  "location": "Ecuador",
+  "language": "Español",
+  "description": "ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV de diseño, autonomía y recarga para uso diario.",
+  "voiceTone": "claro, concreto y de producto",
+  "emailDomain": "arcfox.com.ec",
+  "authorDefault": "Equipo ARCFOX",
+  "github": {
+    "owner": "",
+    "repo": "ARCFOX",
+    "siteDir": ""
+  },
+  "themePresets": [
+    {
+      "id": "default",
+      "label": "ARCFOX — base",
+      "ink": "#0b0d12",
+      "cloud": "#eef1f4",
+      "accent": [
+        { "color": "#0b0d12", "at": 0 },
+        { "color": "#8b93a0", "at": 50 },
+        { "color": "#f4f6f8", "at": 100 }
+      ],
+      "seasonalEffect": "none",
+      "seasonalIntensity": "medium"
+    }
+  ]
+}

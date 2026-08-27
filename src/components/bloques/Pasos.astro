@@ -1,0 +1,53 @@
+---
+/* Los pasos de un proceso. La numeración la pone el componente con un contador
+   CSS: si alguien inserta un paso en medio, no hay que renumerar el contenido —
+   que es el error que produce dos «paso 3» en la misma página.
+
+   Es un <ol> y no un <ul>: el orden ES la información, y eso lo tiene que saber
+   un lector de pantalla, no sólo el ojo. */
+import { PASOS } from '../../lib/site';
+
+interface Props {
+  items?: { titulo: string; texto: string }[];
+  tono?: 'marca' | 'blanco';
+}
+
+const { items = PASOS, tono = 'marca' } = Astro.props;
+const oscuro = tono === 'blanco';
+---
+
+{
+  items.length > 0 && (
+    <ol data-slot="pasos" class="revela-grupo flex flex-col gap-10 md:gap-12">
+      {items.map((paso) => (
+        <li class="grid gap-4 md:grid-cols-[auto_1fr] md:gap-8">
+          <span
+            class:list={[
+              'paso-numero flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-pill)] text-dato font-bold tabular-nums',
+              oscuro ? 'bg-white/10 text-white' : 'bg-tinte text-marca',
+            ]}
+            aria-hidden="true"
+          />
+          <div>
+            <h3 class:list={['text-h3 font-bold', oscuro ? 'text-white' : 'text-marca']}>
+              {paso.titulo}
+            </h3>
+            <p class="mt-2 max-w-[62ch] text-current/75">{paso.texto}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+<style>
+  ol {
+    counter-reset: paso;
+  }
+  li {
+    counter-increment: paso;
+  }
+  .paso-numero::before {
+    content: counter(paso);
+  }
+</style>

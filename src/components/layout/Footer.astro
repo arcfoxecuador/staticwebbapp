@@ -1,0 +1,76 @@
+---
+/* Pie del look aprobado: superficie clara, marca a la izquierda, redes a la
+   derecha. El aviso legal —cuando existe— va debajo, no dentro de una columna
+   de marketing: es la letra chica, no un párrafo de venta. */
+import Marca from '../ui/Marca.astro';
+import { ORG, NAV, AVISO_LEGAL, LEGAL } from '../../lib/site';
+
+const anio = new Date().getFullYear();
+---
+
+<footer class="border-t border-linea bg-superficie text-tinta/70">
+  <div class="medida flex flex-col gap-8 py-10 md:flex-row md:items-center md:justify-between">
+    <Marca tono="marca" enlace={false} />
+
+    {
+      ORG.redes.length > 0 && (
+        <ul class="flex gap-5">
+          {ORG.redes.map((red) => (
+            <li>
+              <a
+                href={red}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex min-h-11 items-center text-small uppercase tracking-[0.12em] hover:text-marca"
+              >
+                {new URL(red).hostname.replace('www.', '').split('.')[0]}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+
+  <div class="medida border-t border-linea py-6">
+    <nav aria-label="Navegación del pie" class="flex flex-wrap gap-x-6 gap-y-2 text-small">
+      {
+        NAV.map((zona) => (
+          <a href={zona.href} class="inline-flex min-h-11 items-center hover:text-marca">
+            {zona.texto}
+          </a>
+        ))
+      }
+    </nav>
+
+    {
+      AVISO_LEGAL && (
+        <p class="mt-6 max-w-[80ch] text-small text-tinta/55">{AVISO_LEGAL}</p>
+      )
+    }
+
+    <div class="mt-6 flex flex-col gap-2 text-small text-tinta/50 md:flex-row md:justify-between">
+      <p>© {anio} {ORG.nombreLegal}</p>
+      {
+        (LEGAL.privacidad || LEGAL.terminos) && (
+          <ul class="flex gap-6">
+            {LEGAL.privacidad && (
+              <li>
+                <a href={LEGAL.privacidad} class="hover:text-marca">
+                  Privacidad
+                </a>
+              </li>
+            )}
+            {LEGAL.terminos && (
+              <li>
+                <a href={LEGAL.terminos} class="hover:text-marca">
+                  Términos
+                </a>
+              </li>
+            )}
+          </ul>
+        )
+      }
+    </div>
+  </div>
+</footer>

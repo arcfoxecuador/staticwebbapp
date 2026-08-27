@@ -1,0 +1,78 @@
+---
+/* La tarjeta. Cuando lleva `href`, TODA la caja es el enlace — no sólo el
+   titular: un objeto que se ve pulsable y sólo responde en una palabra es la
+   frustración más común de una rejilla en móvil.
+
+   `.tarjeta` y `.brillo` vienen de motion.css. `.brillo` sólo se pone en las
+   piezas que son OBJETO de verdad (una ficha, un artículo con portada) y nunca en
+   una fila de índice: un destello cruzando una fila de 24px de alto no se lee
+   como materia, se lee como un fallo de pintado. */
+import Chip from '../ui/Chip.astro';
+
+interface Props {
+  titulo: string;
+  bajada?: string;
+  href?: string;
+  etiqueta?: string;
+  /** Pares clave/valor. Es lo que permite comparar dos tarjetas de un vistazo,
+      y por eso se alinean: `tabular-nums` en el valor. */
+  datos?: { clave: string; valor: string }[];
+  /** El barrido de luz. Sólo en tarjetas con cuerpo, no en filas. */
+  brillo?: boolean;
+  class?: string;
+}
+
+const { titulo, bajada, href, etiqueta, datos = [], brillo = true, class: extra } = Astro.props;
+const Etiqueta = href ? 'a' : 'div';
+---
+
+<Etiqueta
+  data-slot="tarjeta"
+  href={href}
+  class:list={[
+    'tarjeta group flex h-full flex-col rounded-[var(--radius-lg)] border border-linea bg-superficie p-6',
+    brillo && 'brillo',
+    extra,
+  ]}
+>
+  {etiqueta && <div class="mb-4"><Chip tono="tinte">{etiqueta}</Chip></div>}
+
+  <h3 class="equilibra text-h3 font-bold text-marca">{titulo}</h3>
+
+  {bajada && <p class="mt-3 text-small text-tinta/75">{bajada}</p>}
+
+  {
+    datos.length > 0 && (
+      <dl class="mt-6 flex flex-col gap-2 border-t border-linea pt-4">
+        {datos.map((d) => (
+          <div class="flex items-baseline justify-between gap-4">
+            <dt class="text-small text-tinta/60">{d.clave}</dt>
+            <dd class="text-dato font-semibold tabular-nums text-marca">{d.valor}</dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
+
+  <slot />
+
+  {
+    href && (
+      /* `mt-auto` empuja la flecha al fondo: en una rejilla de tarjetas de
+         distinta altura, las flechas alineadas son lo que hace que la fila se lea
+         como una fila. `aria-hidden` porque el destino ya lo dice el titular. */
+      <span class="mt-auto flex items-center gap-2 pt-6 text-small font-medium text-marca">
+        Ver más
+        <svg class="flecha" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path
+            d="M3 8h10M9 4l4 4-4 4"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </span>
+    )
+  }
+</Etiqueta>

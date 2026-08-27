@@ -1,0 +1,87 @@
+---
+/* ── ANALÍTICA TRAS CONSENTIMIENTO ─────────────────────────────────────────
+   Ni GA4 ni Clarity están en el <head>. Se inyectan SÓLO cuando el visitante ha
+   aceptado, y la decisión se lee de `localStorage`.
+
+   POR QUÉ IMPORTA MÁS DE LO QUE PARECE. Un script de analítica en el <head>
+   deja cookies antes de que nadie acepte nada, lo que incumple el RGPD y sus
+   equivalentes latinoamericanos (LOPDP en Ecuador, Ley 29733 en Perú). El fallo
+   es invisible desde el navegador de quien lo programó y muy visible en una
+   auditoría.
+
+   Y hay un beneficio de rendimiento que sale gratis: la mayoría de visitas de
+   una landing no llegan a aceptar, así que la mayoría no paga los ~90 kB de
+   gtag ni su tiempo de bloqueo.
+
+   ── LA TRAMPA DE ASTRO QUE HAY QUE CONOCER PARA TOCAR ESTE ARCHIVO ─────────
+   Un `<script>` escrito DENTRO de una expresión `{condición && (…)}` se parsea
+   como JSX: la llave abre una expresión y el cuerpo acaba emitido como un
+   literal de plantilla suelto — una cadena que nadie evalúa. El fallo es
+   invisible por todas las vías normales: `astro build` compila, `astro check`
+   pasa, el HTML se ve bien y buscar el identificador en la página da verde,
+   porque el identificador SÍ está ahí. En un proyecto real, GA4 estuvo así un
+   despliegue entero: `gtag/js` cargando con 200 y cero eventos enviados.
+
+   De ahí dos decisiones de este archivo:
+     1. el `<script>` es de nivel superior y NO va dentro de ninguna condición —
+        la condición la aplica el layout, decidiendo si monta el componente;
+     2. `npm run verificar` comprueba en `dist/` que todo script inline es código
+        ejecutable y no una cadena. Es la única forma de detectarlo. */
+import { ANALITICA } from '../../lib/site';
+
+const { ga4, clarity, sinGrabacion } = ANALITICA;
+---
+
+<script is:inline define:vars={{ ga4, clarity, sinGrabacion }}>
+  (function () {
+    var CLAVE = 'consentimiento';
+
+    /* Rutas donde no se graba sesión JAMÁS, pase lo que pase con el
+       consentimiento. Aquí entran los formularios sensibles y cualquier canal
+       que prometa anonimato por escrito: si una página promete que no se graba,
+       no se graba, y eso no puede depender de un ajuste en un panel externo. */
+    var vetada = sinGrabacion.some(function (r) {
+      return location.pathname.indexOf(r) === 0;
+    });
+
+    function cargarGa4() {
+      if (!ga4) return;
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ga4;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
+      window.gtag = gtag;
+      gtag('js', new Date());
+      /* `anonymize_ip` y sin señales de publicidad: es analítica de medición, no
+         de remarketing. Si algún día hace falta remarketing, es un
+         consentimiento distinto y hay que pedirlo aparte. */
+      gtag('config', ga4, { anonymize_ip: true, allow_google_signals: false });
+    }
+
+    function cargarClarity() {
+      if (!clarity || vetada) return;
+      window.clarity =
+        window.clarity ||
+        function () {
+          (window.clarity.q = window.clarity.q || []).push(arguments);
+        };
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.clarity.ms/tag/' + clarity;
+      document.head.appendChild(s);
+    }
+
+    function activar() {
+      cargarGa4();
+      cargarClarity();
+    }
+
+    if (localStorage.getItem(CLAVE) === 'aceptado') activar();
+    /* `once` para que dos clics en el botón no carguen gtag dos veces. */
+    else document.addEventListener('consentimiento:aceptado', activar, { once: true });
+  })();
+</script>

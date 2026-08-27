@@ -1,0 +1,60 @@
+---
+/* Rejilla asimétrica: celdas de texto y foto que no miden lo mismo.
+   overflow-clip y no hidden: las fotos pueden llevar reveal. */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+export type CeldaMosaico = {
+  texto?: string;
+  imagen?: ImageMetadata;
+  alt?: string;
+  ancho?: 1 | 2;
+};
+
+interface Props {
+  items: CeldaMosaico[];
+  patron?: 'trenzado' | 'destacado';
+  class?: string;
+}
+
+const { items, patron = 'trenzado', class: extra } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <div
+      data-slot="mosaico"
+      class:list={['revela-grupo grid gap-px bg-marca-clara/20 md:grid-cols-3', extra]}
+    >
+      {items.map((celda, i) => {
+        const span = celda.ancho === 2 || (patron === 'destacado' && i === 0);
+        if (celda.imagen && celda.alt) {
+          return (
+            <div class:list={['overflow-clip', span && 'md:col-span-2']}>
+              <Image
+                src={celda.imagen}
+                alt={celda.alt}
+                widths={[480, 800, 1200]}
+                sizes={span ? '(min-width: 768px) 66vw, 100vw' : '(min-width: 768px) 33vw, 100vw'}
+                class="h-full min-h-64 w-full object-cover md:min-h-80"
+              />
+            </div>
+          );
+        }
+        if (celda.texto) {
+          return (
+            <p
+              class:list={[
+                'flex min-h-40 items-end bg-marca p-8 font-display font-semibold uppercase tracking-[0.08em] text-white',
+                span ? 'text-h2 md:col-span-2' : 'text-h3',
+              ]}
+            >
+              {celda.texto}
+            </p>
+          );
+        }
+        return null;
+      })}
+    </div>
+  )
+}

@@ -1,0 +1,304 @@
+---
+/* EL FORMULARIO DE CONTACTO. Cuatro campos y ni uno más.
+
+   Funciona SIN JavaScript: es un `<form method="post">` de verdad contra el
+   endpoint configurado, y sin JS el navegador hace el envío nativo y aterriza en
+   `/gracias`. El script que hay abajo sólo MEJORA eso —envía por fetch y pinta el
+   acuse sin recargar—, no lo habilita. Un formulario que sólo funciona si el JS
+   carga es un formulario que a veces no funciona.
+
+   Tres decisiones que parecen detalles y no lo son:
+
+   · `autocomplete` en cada campo. El navegador rellena nombre, correo y teléfono
+     de un tirón, y en móvil eso es la diferencia entre enviar y abandonar.
+   · `inputmode` y `type` correctos. `type="tel"` saca el teclado numérico;
+     `type="email"` valida sin una línea de JS.
+   · La validación se apoya en `:user-invalid` y no en `:invalid`. `:invalid`
+     marca en rojo un campo vacío que nadie ha tocado todavía — regaña antes de
+     que el visitante haya hecho nada.
+
+   ANTI-SPAM SIN CAPTCHA: campo trampa oculto para lectores de máquina más un
+   sello de tiempo. Un bot rellena todo y envía en menos de tres segundos; un
+   humano no. Ninguna de las dos cosas pide nada al visitante, que es la razón
+   por la que no hay un captcha aquí: el captcha lo paga quien sí es humano. */
+import Boton from '../ui/Boton.astro';
+import { FORMULARIO, ORG } from '../../lib/site';
+
+interface Props {
+  titulo?: string;
+  bajada?: string;
+  /** Se envía como campo oculto: sirve para saber DESDE QUÉ página escribió
+      alguien sin tener que mirar el referer. */
+  origen?: string;
+  /** Sin la columna de correo/teléfono: el look de Cotízalo es sólo la ficha. */
+  compacto?: boolean;
+}
+
+const { titulo = 'Cotízalo', bajada, origen = Astro.url.pathname, compacto = false } = Astro.props;
+
+/* Sin webhook todavía el POST nativo cae al correo. Es peor que un CRM, y
+   mejor que un formulario que no se pinta: el look aprobado cierra con esta
+   ficha y no podemos esperar al endpoint para que la página tenga conversión. */
+const destino = FORMULARIO.endpoint || `mailto:${ORG.email}`;
+
+const modelos = [
+  { valor: 't5', etiqueta: 'ARCFOX T5' },
+  { valor: 't1', etiqueta: 'ARCFOX T1' },
+  { valor: 's5', etiqueta: 'ARCFOX S5' },
+];
+---
+
+{
+  destino ? (
+    <div
+      data-slot="formulario"
+      class:list={[compacto ? 'grid gap-8' : 'grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20']}
+    >
+      <div>
+        <h2
+          class:list={[
+            'revela-titular equilibra font-display text-h2 font-semibold uppercase tracking-[0.14em]',
+            compacto ? 'text-white' : 'text-marca',
+          ]}
+        >
+          {titulo}
+        </h2>
+        {bajada && (
+          <p class:list={['revela mt-4 max-w-[46ch] text-lead', compacto ? 'text-white/75' : 'text-tinta/75']}>
+            {bajada}
+          </p>
+        )}
+
+        {
+          !compacto && (
+            <dl class="revela mt-10 flex flex-col gap-4 text-small">
+              <div>
+                <dt class="text-tinta/55">Correo</dt>
+                <dd class="mt-1">
+                  <a href={`mailto:${ORG.email}`} class="enlace-subrayado text-marca">
+                    {ORG.email}
+                  </a>
+                </dd>
+              </div>
+              {ORG.telefono && (
+                <div>
+                  <dt class="text-tinta/55">Teléfono</dt>
+                  <dd class="mt-1">
+                    <a href={`tel:${ORG.telefono}`} class="enlace-subrayado text-marca">
+                      {ORG.telefonoLegible}
+                    </a>
+                  </dd>
+                </div>
+              )}
+            </dl>
+          )
+        }
+      </div>
+
+      <form
+        class="revela campo-claro rounded-[var(--radius-lg)] border border-linea bg-superficie p-6 md:p-9"
+        method="post"
+        action={destino}
+        data-gracias={FORMULARIO.gracias}
+        data-correo={ORG.email}
+      >
+        <input type="hidden" name="origen" value={origen} />
+        {/* El sello de tiempo lo escribe el script al cargar. Sin JS se queda
+            vacío y el endpoint no puede aplicar la regla de los tres segundos —
+            correcto: mejor aceptar un envío sin comprobar que descartar a alguien
+            que navega sin JavaScript. */}
+        <input type="hidden" name="sello" value="" />
+
+        {/* El campo trampa. `aria-hidden` + `tabindex="-1"` lo saca del alcance de
+            un lector de pantalla y del tabulador; el CSS lo saca de la vista sin
+            `display: none`, que es lo primero que detecta un bot decente. */}
+        <div class="trampa" aria-hidden="true">
+          <label>
+            No rellenar
+            <input type="text" name={FORMULARIO.trampa} tabindex="-1" autocomplete="off" />
+          </label>
+        </div>
+
+        <div class="flex flex-col gap-5">
+          <label class="flex flex-col gap-2">
+            <span class="text-small font-medium text-marca">Nombre</span>
+            <input
+              type="text"
+              name="nombre"
+              required
+              autocomplete="name"
+              class="campo"
+              placeholder="Tu nombre"
+            />
+          </label>
+
+          <label class="flex flex-col gap-2">
+            <span class="text-small font-medium text-marca">Teléfono</span>
+            <input
+              type="tel"
+              name="telefono"
+              required
+              autocomplete="tel"
+              inputmode="tel"
+              class="campo"
+              placeholder="09…"
+            />
+          </label>
+
+          <label class="flex flex-col gap-2">
+            <span class="text-small font-medium text-marca">Email</span>
+            <input
+              type="email"
+              name="email"
+              required
+              autocomplete="email"
+              inputmode="email"
+              class="campo"
+              placeholder="tu@correo.com"
+            />
+          </label>
+
+          <label class="flex flex-col gap-2">
+            <span class="text-small font-medium text-marca">Ciudad</span>
+            <input
+              type="text"
+              name="ciudad"
+              required
+              autocomplete="address-level2"
+              class="campo"
+              placeholder="Quito, Guayaquil…"
+            />
+          </label>
+
+          <label class="flex flex-col gap-2">
+            <span class="text-small font-medium text-marca">¿Qué modelo te interesa?</span>
+            <select name="modelo" required class="campo">
+              <option value="" disabled selected>Elige un modelo</option>
+              {modelos.map((m) => <option value={m.valor}>{m.etiqueta}</option>)}
+            </select>
+          </label>
+        </div>
+
+        <div class="mt-7 flex flex-col gap-4">
+          <Boton tipo="submit" tamano="lg" class="w-full justify-center">Enviar →</Boton>
+          {/* `aria-live="polite"` y no `assertive`: el acuse no es una alarma. Y
+              vive FUERA del bloque que se oculta al enviar, porque una región
+              viva que aparece de la nada a veces no se anuncia. */}
+          <p class="acuse text-small" role="status" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  ) : null
+}
+
+<style>
+  /* Los campos se estilan aquí y no con utilidades repetidas en seis sitios: son
+     seis controles con exactamente el mismo aspecto, y la variante que se olvida
+     de una utilidad es el defecto clásico de un formulario. */
+  .campo {
+    width: 100%;
+    /* 44px de alto mínimo (WCAG 2.5.8) y 16px de letra: por debajo de 16px iOS
+       hace zoom al enfocar el campo y descuadra la página entera. */
+    min-height: 44px;
+    padding: 11px 14px;
+    font-size: 1rem;
+    font-family: inherit;
+    color: var(--color-tinta);
+    background: var(--color-fondo);
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-md);
+    transition: border-color 180ms var(--ease-out);
+  }
+  .campo::placeholder {
+    color: color-mix(in srgb, var(--color-tinta) 45%, transparent);
+  }
+  .campo:hover {
+    border-color: color-mix(in srgb, var(--color-marca) 40%, var(--color-linea));
+  }
+  /* `:user-invalid` sólo marca lo que el visitante ya ha tocado o intentado
+     enviar. `:invalid` marcaría en rojo un formulario recién cargado. */
+  .campo:user-invalid {
+    /* La paleta está cerrada: un rojo suelto sería un décimo token. */
+    border-color: var(--color-marca);
+  }
+
+  /* Fuera de la vista sin `display: none` ni `visibility: hidden`: los dos son la
+     primera señal que busca un bot para saber qué campo saltarse. */
+  .trampa {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: clip;
+  }
+
+  .acuse:empty {
+    display: none;
+  }
+  .acuse[data-estado='ok'] {
+    color: var(--color-marca);
+  }
+  .acuse[data-estado='error'] {
+    color: var(--color-marca);
+  }
+</style>
+
+<script>
+  /* Mejora progresiva, no requisito. El formulario ya funciona sin esto.
+
+     Va sin `is:inline` para que Astro lo procese y lo agrupe, y SIN condicional
+     alrededor: un <script> escrito dentro de `{condición && (…)}` lo parsea Astro
+     como JSX y acaba en el HTML como una CADENA de texto que nunca se ejecuta.
+     Es un fallo silencioso —el marcado se ve perfecto— y por eso hay un
+     verificador en `npm run check` que lo busca en `dist/`. */
+  const formularios = document.querySelectorAll<HTMLFormElement>('form[data-gracias]');
+
+  formularios.forEach((form) => {
+    const sello = form.querySelector<HTMLInputElement>('input[name="sello"]');
+    if (sello) sello.value = String(Date.now());
+
+    const acuse = form.querySelector<HTMLElement>('.acuse');
+    const boton = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+    form.addEventListener('submit', async (evento) => {
+      if (!form.reportValidity()) return;
+      evento.preventDefault();
+
+      /* `aria-busy` y no `disabled`: un botón deshabilitado PIERDE EL FOCO, y
+         quien navega con teclado se queda sin saber dónde está. Con aria-busy el
+         botón sigue enfocable y anuncia que está trabajando. */
+      boton?.setAttribute('aria-busy', 'true');
+      if (acuse) {
+        acuse.textContent = 'Enviando…';
+        acuse.removeAttribute('data-estado');
+      }
+
+      try {
+        const respuesta = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+        });
+        if (!respuesta.ok) throw new Error(String(respuesta.status));
+
+        form.reset();
+        if (acuse) {
+          acuse.textContent = 'Recibido. Te respondemos dentro de un día hábil.';
+          acuse.dataset.estado = 'ok';
+        }
+      } catch {
+        /* El mensaje de error DA UNA SALIDA. «Ha ocurrido un error» deja al
+           visitante sin nada que hacer con la información. */
+        if (acuse) {
+          acuse.innerHTML =
+            'No se pudo enviar. Escríbenos directamente a <a class="enlace-subrayado" href="mailto:' +
+            (form.dataset.correo ?? '') +
+            '">correo</a> o inténtalo de nuevo.';
+          acuse.dataset.estado = 'error';
+        }
+      } finally {
+        boton?.removeAttribute('aria-busy');
+      }
+    });
+  });
+</script>

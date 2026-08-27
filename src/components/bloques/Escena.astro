@@ -1,0 +1,141 @@
+---
+/* Una sección a sangre: fotografía de fondo, copy encima, opcionalmente chips
+   de dato. Es el «capítulo» que el hero de portada no puede repetir — un sitio
+   de producto necesita más de una pantalla completa, y repetir HeroImagen
+   rompería la regla de un solo LCP.
+
+   `primera` apaga el reveal y usa `.deriva-hero` + eager: un candidato LCP no
+   puede nacer en opacity 0. El resto usa `.deriva-fondo` y lazy, que es el
+   vocabulario que ya existía y nadie cableaba. */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  imagen: ImageMetadata;
+  alt: string;
+  titulo: string;
+  bajada?: string;
+  rotulo?: string;
+  datos?: { valor: string; etiqueta: string }[];
+  tono?: 'oscuro' | 'claro';
+  altura?: 'media' | 'completa';
+  anclaje?: 'centro' | 'pie';
+  /** Sólo la primera escena de la página. Sin esto, el LCP se descalifica. */
+  primera?: boolean;
+  /** El auto viaja de la portada a esta ficha. Un nombre, una sola vez. */
+  transicion?: string;
+  id?: string;
+  class?: string;
+}
+
+const {
+  imagen,
+  alt,
+  titulo,
+  bajada,
+  rotulo,
+  datos = [],
+  tono = 'oscuro',
+  altura = 'completa',
+  anclaje = 'pie',
+  primera = false,
+  transicion,
+  id,
+  class: extra,
+} = Astro.props;
+
+const oscuro = tono === 'oscuro';
+const mira = !primera;
+---
+
+<section
+  data-slot="escena"
+  data-campo={oscuro ? 'marca' : 'suelo'}
+  data-mira={mira ? '' : undefined}
+  {id}
+  class:list={[
+    'relative isolate overflow-clip',
+    oscuro && 'campo-oscuro bg-marca text-white',
+    !oscuro && 'bg-fondo text-marca',
+    altura === 'completa' ? 'min-h-[92svh]' : 'min-h-[60svh]',
+    anclaje === 'pie' ? 'flex items-end' : 'flex items-center',
+    extra,
+  ]}
+>
+  <div class:list={[primera ? 'deriva-hero' : 'deriva-fondo', 'absolute inset-0 -z-10']}>
+    <Image
+      src={imagen}
+      {alt}
+      widths={[640, 1024, 1440, 1920]}
+      sizes="100vw"
+      loading={primera ? 'eager' : 'lazy'}
+      fetchpriority={primera ? 'high' : undefined}
+      data-transicion={transicion}
+      style={transicion ? `view-transition-name: ${transicion}` : undefined}
+      class:list={[primera && 'entra-imagen', 'h-full w-full object-cover']}
+    />
+  </div>
+
+  <div
+    class:list={[
+      'absolute inset-0 -z-10',
+      oscuro
+        ? 'bg-gradient-to-t from-marca/85 via-marca/40 to-transparent'
+        : 'bg-gradient-to-t from-fondo/80 via-fondo/30 to-transparent',
+    ]}
+    aria-hidden="true"
+  >
+  </div>
+
+  {/* Cama oscura bajo la cabecera flotante: sin esto, el logo y el CTA
+      blanco se pierden sobre una foto de estudio clara. */}
+  {
+    primera && oscuro && (
+      <div class="absolute inset-x-0 top-0 -z-10 h-36 bg-gradient-to-b from-marca/75 to-transparent" aria-hidden="true"></div>
+    )
+  }
+
+  <div class:list={['medida w-full', anclaje === 'pie' ? 'pb-20 pt-32 max-lg:pb-[calc(85px+2rem)] md:pb-28' : 'py-20 md:py-28']}>
+    {rotulo && <p class:list={['eyebrow', oscuro ? 'text-white/70' : 'text-marca/60']}>{rotulo}</p>}
+
+    {
+      primera ? (
+        <h1 class="mt-4 max-w-[18ch] equilibra font-display text-display font-bold">{titulo}</h1>
+      ) : (
+        <h2 class="revela-titular mt-4 max-w-[18ch] equilibra font-display text-mega font-bold">{titulo}</h2>
+      )
+    }
+
+    {bajada && (
+      <p class:list={['revela mt-6 max-w-[52ch] text-lead', oscuro ? 'text-white/85' : 'text-tinta/80']}>
+        {bajada}
+      </p>
+    )}
+
+    {
+      datos.length > 0 && (
+        <dl class="revela mt-10 grid grid-cols-2 gap-6 border-t border-current/15 pt-8 md:grid-cols-4">
+          {datos.map((d) => (
+            <div>
+              <dd class="text-stat font-bold tabular-nums">{d.valor}</dd>
+              <dt class="mt-1 text-eyebrow uppercase tracking-[0.14em] text-current/55">{d.etiqueta}</dt>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+  </div>
+
+  {
+    mira && oscuro && (
+      <p class="aviso-mira" aria-hidden="true">
+        Mueve el cursor
+      </p>
+    )
+  }
+</section>
+
+<script>
+  import { iniciarMira } from '../../lib/mira';
+  iniciarMira();
+</script>

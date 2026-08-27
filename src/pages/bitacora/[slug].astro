@@ -1,0 +1,136 @@
+---
+/* El artículo. Es la página que más trabaja para GEO, y las cuatro cosas que lo
+   hacen citable están aquí y no en el texto:
+
+   1. `Article` con `author` como `Person` y `dateModified`. Sin firma no hay
+      atribución posible, y sin fecha de revisión un motor no sabe si esto es lo
+      más nuevo que tiene sobre el tema.
+   2. `FAQPage` desde el frontmatter, cuando el artículo trae preguntas. Es la vía
+      más directa para que una respuesta concreta acabe citada literalmente.
+   3. El cuerpo es HTML real, generado en construcción. Un artículo que se hidrata
+      con JavaScript es un artículo que la mitad de los rastreadores no lee.
+   4. La medida de lectura y el ritmo los pone `.prosa`, así que el markdown se
+      escribe sin pensar en maquetación.
+
+   `borrador: true` conserva la URL —para revisar— pero añade `noindex` y sale del
+   índice. Igual que `publico: false` en un servicio. */
+import Base from '../../layouts/Base.astro';
+import Seccion from '../../components/bloques/Seccion.astro';
+import Figura from '../../components/ui/Figura.astro';
+import Faq from '../../components/bloques/Faq.astro';
+import Cierre from '../../components/bloques/Cierre.astro';
+
+import { coleccion, renderizar } from '../../lib/contenido';
+import { imagenDeEntrada } from '../../lib/imagenes';
+import { fechaLarga } from '../../lib/ui';
+import { articulo, faq, grafo, migas, organizacion, pagina, sitioWeb } from '../../lib/schema';
+
+/* Sin anotar con `GetStaticPaths`: esa anotación aplana los props al tipo
+   genérico del resultado y `Astro.props` llega como `unknown`. */
+export async function getStaticPaths() {
+  const articulos = await coleccion('articulos');
+  return articulos.map((entrada) => ({ params: { slug: entrada.id }, props: { entrada } }));
+}
+
+const { entrada } = Astro.props;
+const { data } = entrada;
+const { Content } = await renderizar(entrada);
+
+const portada = imagenDeEntrada('articulos', entrada.id, {
+  asset: data.portada,
+  alt: data.portadaAlt,
+  generada: data.portadaGenerada,
+});
+
+const path = `/bitacora/${entrada.id}`;
+
+const schema = grafo(
+  organizacion(),
+  sitioWeb(),
+  pagina({ path, titulo: data.titulo, descripcion: data.seoDescripcion }),
+  migas([
+    { nombre: 'Bitácora', path: '/bitacora' },
+    { nombre: data.titulo, path },
+  ]),
+  articulo({
+    titulo: data.titulo,
+    descripcion: data.seoDescripcion,
+    path,
+    fecha: data.fecha,
+    actualizado: data.actualizado,
+    autor: data.autor,
+    cargo: data.cargo,
+  }),
+  ...(data.faq.length ? [faq(data.faq)] : []),
+);
+---
+
+<Base
+  titulo={data.titulo}
+  descripcion={data.seoDescripcion}
+  {path}
+  {schema}
+  noindex={data.borrador}
+  barraAccion={false}
+>
+  {/* La cabecera del artículo no usa `Encabezado`: aquí el h1 va acompañado de
+      autoría y fechas, que son datos y no una bajada. */}
+  <Seccion aire="apretado">
+    <div class="max-w-[68ch]">
+      {data.categoria && <p class="eyebrow entra text-marca-clara">{data.categoria}</p>}
+
+      <h1 class="entra entra-2 mt-4 equilibra text-h1 font-bold text-marca">{data.titulo}</h1>
+
+      <p class="entra entra-3 mt-6 text-lead text-tinta/75">{data.resumen}</p>
+
+      {/* La firma y la fecha, en `<time datetime>` para que sean legibles por
+          máquina sin repetir el dato en un atributo suelto. */}
+      <div class="entra entra-4 mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-small text-tinta/60">
+        <span class="font-medium text-marca">{data.autor}</span>
+        {data.cargo && <span>· {data.cargo}</span>}
+        <span>·</span>
+        <time datetime={data.fecha.toISOString()}>{fechaLarga(data.fecha)}</time>
+        {
+          data.actualizado && (
+            <span>
+              · revisado el <time datetime={data.actualizado.toISOString()}>{fechaLarga(data.actualizado)}</time>
+            </span>
+          )
+        }
+      </div>
+    </div>
+  </Seccion>
+
+  {
+    portada && (
+      <Seccion aire="apretado">
+        {/* `prioritaria` porque en un artículo la portada ES el LCP. Una sola por
+            página. */}
+        <Figura imagen={portada} proporcion="ancha" prioritaria sizes="(min-width: 1240px) 1240px, 100vw" />
+      </Seccion>
+    )
+  }
+
+  <Seccion aire="normal">
+    <div class="prosa">
+      <Content />
+    </div>
+  </Seccion>
+
+  {
+    data.faq.length > 0 && (
+      <Seccion campo="superficie">
+        <div class="max-w-[68ch]">
+          <h2 class="equilibra text-h2 font-bold text-marca">Preguntas</h2>
+          <div class="mt-10">
+            {/* `grupo` propio: si esta página tuviera dos acordeones, compartir el
+                nombre haría que abrir uno cerrara el otro. */}
+            <Faq items={data.faq} grupo="faq-articulo" />
+          </div>
+        </div>
+      </Seccion>
+    )
+  }
+
+  <Cierre campo="tinte" titulo="¿Te resuena?" bajada="Si esto te toca de cerca, hablemos." />
+</Base>

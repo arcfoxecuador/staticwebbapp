@@ -1,0 +1,86 @@
+---
+/* Filas de índice: una lista donde cada línea es un destino. Es el patrón
+   editorial que mejor aguanta veinte elementos sin parecer un muro, porque no
+   pide una caja por elemento.
+
+   Usa `.revela-grupo` y no `.tira` — regla 6 de motion.css: son filas APILADAS, y
+   una fila apilada entra desde abajo. El escalonado real lo da la línea de tiempo
+   nombrada del contenedor; si cada hija llevara su propio `view()`, el desfase
+   sería de tres píxeles y no se vería.
+
+   El número NO se escribe en el contenido: lo pone el CSS con un contador, así
+   que insertar un elemento en medio no obliga a renumerar nada a mano. */
+interface Props {
+  items: { titulo: string; bajada?: string; href: string; meta?: string }[];
+  /** Numera las filas. En un índice de contenidos sí; en una lista de enlaces
+      donde el orden no significa nada, no — un número implica secuencia. */
+  numerada?: boolean;
+  class?: string;
+}
+
+const { items, numerada = false, class: extra } = Astro.props;
+---
+
+<ul data-slot="lista-indice" class:list={['revela-grupo flex flex-col', extra]}>
+  {
+    items.map((item) => (
+      <li class="border-t border-linea last:border-b">
+        <a
+          href={item.href}
+          class="tarjeta group flex items-baseline gap-6 py-6 md:gap-10"
+        >
+          {
+            numerada && (
+              <span
+                class="fila-numero shrink-0 text-small font-semibold tabular-nums text-marca-clara"
+                aria-hidden="true"
+              />
+            )
+          }
+
+          <span class="flex-1">
+            <span class="block equilibra text-subtitulo font-bold text-marca">{item.titulo}</span>
+            {item.bajada && <span class="mt-2 block max-w-[62ch] text-small text-tinta/70">{item.bajada}</span>}
+          </span>
+
+          {item.meta && <span class="hidden shrink-0 text-small text-tinta/55 md:block">{item.meta}</span>}
+
+          <svg
+            class="flecha shrink-0 text-marca"
+            width="20"
+            height="20"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M3 8h10M9 4l4 4-4 4"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  /* El contador vive en el CSS y no en el marcado, y `is:global` no hace falta
+     porque el selector está dentro del ámbito del componente. `counter-reset` en
+     la lista y `counter-increment` en cada fila: insertar un elemento en medio no
+     obliga a renumerar nada. */
+  ul {
+    counter-reset: fila;
+  }
+  li {
+    counter-increment: fila;
+  }
+  .fila-numero::before {
+    /* `decimal-leading-zero` da 01, 02… — el formato de índice editorial. Con más
+       de 99 elementos deja de rellenar, que es el comportamiento correcto. */
+    content: counter(fila, decimal-leading-zero);
+  }
+</style>

@@ -1,0 +1,159 @@
+---
+/* Dos formas, un solo contenido.
+
+   `riel` — la fila que desborda. Sirve cuando hay cuatro o más fichas de
+   tecnología y el visitante elige con el dedo. `data-foco` sólo tiene sentido
+   si hay recorrido: tres columnas que caben en pantalla se quedan atenuadas
+   para siempre, que es justo lo que aplanaba la portada.
+
+   `bandas` — capítulos a sangre, zigzag. Es la forma de las tres razones:
+   cada una ocupa una pantalla y se descubre con el scroll, no un tríptico
+   de catálogo. */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Riel from './Riel.astro';
+
+export type ItemDestacado = {
+  titulo: string;
+  puntos: string[];
+  imagen?: ImageMetadata;
+  alt?: string;
+};
+
+interface Props {
+  items: ItemDestacado[];
+  etiqueta: string;
+  forma?: 'riel' | 'bandas';
+  class?: string;
+}
+
+const { items, etiqueta, forma = 'riel', class: extra } = Astro.props;
+---
+
+{
+  items.length > 0 && forma === 'bandas' && (
+    <div data-slot="destacados" class:list={['destacados', extra]}>
+      {items.map((item, i) => (
+        <article class:list={['banda', i % 2 === 1 && 'banda-inv']}>
+          {
+            item.imagen && item.alt && (
+              <div class="banda-foto">
+                <Image
+                  src={item.imagen}
+                  alt={item.alt}
+                  widths={[640, 1024, 1440, 1920]}
+                  sizes="(min-width: 1024px) 58vw, 100vw"
+                  class="revela-imagen h-full min-h-[42svh] w-full object-cover lg:min-h-[72svh]"
+                />
+              </div>
+            )
+          }
+          <div class="banda-copy">
+            <p class="destacado-num revela-cifra" aria-hidden="true"></p>
+            <h3 class="revela-titular mt-4 font-display text-h2 font-bold text-marca">{item.titulo}</h3>
+            {
+              item.puntos.length > 0 && (
+                <ul class="revela mt-5 max-w-[46ch] space-y-3 text-lead text-tinta/70">
+                  {item.puntos.map((p) => (
+                    <li>{p}</li>
+                  ))}
+                </ul>
+              )
+            }
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+{
+  items.length > 0 && forma === 'riel' && (
+    <div data-slot="destacados" class:list={['destacados', extra]}>
+      <Riel total={items.length} {etiqueta}>
+        {items.map((item) => (
+          <li class="destacado">
+            {item.imagen && item.alt && (
+              <Image
+                src={item.imagen}
+                alt={item.alt}
+                widths={[480, 800, 1200]}
+                sizes="(min-width: 1024px) 40vw, 85vw"
+                class="aspect-video w-full object-cover"
+              />
+            )}
+            <p class="destacado-num" aria-hidden="true"></p>
+            <h3 class="mt-3 font-display text-h3 font-bold text-marca">{item.titulo}</h3>
+            {item.puntos.length > 0 && (
+              <ul class="mt-4 space-y-2 text-small text-tinta/75">
+                {item.puntos.map((p) => (
+                  <li>{p}</li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </Riel>
+    </div>
+  )
+}
+
+<style>
+  .destacados {
+    counter-reset: destacado;
+  }
+
+  .destacado,
+  .banda {
+    counter-increment: destacado;
+  }
+
+  .destacado {
+    padding-block-end: 8px;
+  }
+
+  .destacado-num::before {
+    content: counter(destacado, decimal-leading-zero);
+    font-family: var(--font-display);
+    font-size: var(--text-stat);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-marca);
+    line-height: 1;
+  }
+
+  .banda {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .banda-foto {
+    overflow: clip;
+  }
+
+  .banda-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 2.5rem 1.25rem 3rem;
+  }
+
+  @media (width >= 64rem) {
+    .banda {
+      grid-template-columns: 1.2fr 0.8fr;
+      min-height: 72svh;
+    }
+
+    .banda-inv {
+      grid-template-columns: 0.8fr 1.2fr;
+    }
+
+    .banda-inv .banda-foto {
+      order: 2;
+    }
+
+    .banda-copy {
+      padding: 3.5rem 3.5rem 4rem;
+    }
+  }
+</style>

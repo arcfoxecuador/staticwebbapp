@@ -1,0 +1,170 @@
+---
+/* Intercambia una imagen grande eligiendo una de N. Los radios nativos son
+   la fuente de verdad: teclado, foco y estado inicial viven en el HTML. El
+   cruce es un fundido CSS —opacity + escala—. El translate y el clip-path
+   se quedaron fuera: si se interrumpen, la foto se parte y se queda así.
+
+   La isla no anima el cruce. Marca el view-transition-name de la foto
+   visible y, en gama e interior (`data-pasa`), marca el siguiente radio
+   cada tres segundos. Sin script se queda en la primera foto.
+
+   Con un solo ítem no dibuja el conmutador: sería un radio sin alternativa.
+   `forma: modelo` es el escenario de gama — ficha ancha, bajada y enlace a la
+   ficha, no una pestaña de 12 px y otra fila de flechas que dicen lo mismo. */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+export type ItemConmutador = {
+  etiqueta: string;
+  imagen: ImageMetadata;
+  alt: string;
+  /** Color CSS para el swatch. Sin él, el círculo usa tinta al 40%. */
+  muestra?: string;
+  bajada?: string;
+  href?: string;
+  /** Nombre de view-transition: el auto viaja de la portada a su ficha. */
+  transicion?: string;
+};
+
+interface Props {
+  items: ItemConmutador[];
+  forma?: 'circulo' | 'texto' | 'modelo';
+  marca?: string;
+  titulo?: string;
+  rotulo?: string;
+  nombre?: string;
+  /** La foto llena el encuadre. Para interiores y para la gama de portada. */
+  lleno?: boolean;
+  class?: string;
+}
+
+const {
+  items,
+  forma = 'circulo',
+  marca,
+  titulo,
+  rotulo,
+  nombre = `conmutador-${Math.random().toString(36).slice(2, 8)}`,
+  lleno = false,
+  class: extra,
+} = Astro.props;
+
+const unico = items.length < 2;
+const porItem = forma === 'modelo';
+---
+
+{
+  items.length > 0 && (
+    <div
+      data-slot="conmutador"
+      data-lleno={lleno ? '' : undefined}
+      data-forma={forma}
+      data-pasa={forma === 'modelo' || forma === 'texto' ? '' : undefined}
+      class:list={['conmutador', extra]}
+    >
+      {(rotulo || titulo) && (
+        <div class="medida mb-6 text-center md:mb-10">
+          {/* El título se revela solo. Poner `.revela` en el conmutador entero
+              mide `entry` contra 70svh de foto: en móvil el H2 asoma abajo y
+              no se puede leer hasta haber bajado casi toda la sección. */}
+          {rotulo && <p class="eyebrow revela text-tinta/50">{rotulo}</p>}
+          {titulo && <h2 class="revela-titular mt-3 font-display text-h1 font-bold text-marca">{titulo}</h2>}
+        </div>
+      )}
+
+      <div class="conmutador-cuerpo">
+        {!unico &&
+          items.map((_, i) => (
+            <input
+              type="radio"
+              name={nombre}
+              id={`${nombre}-${i}`}
+              class="conmutador-radio"
+              checked={i === 0}
+            />
+          ))}
+
+        {marca && !porItem && (
+          <p class="marca-agua" aria-hidden="true">
+            {marca}
+          </p>
+        )}
+
+        {porItem && (
+          <div class="marcas" aria-hidden="true">
+            {items.map((item) => (
+              <p class="marca-agua">{item.etiqueta}</p>
+            ))}
+          </div>
+        )}
+
+        <div class="pila">
+          {items.map((item, i) => (
+            <div class="pila-item">
+              <Image
+                src={item.imagen}
+                alt={item.alt}
+                widths={[640, 1024, 1440, 1920]}
+                sizes="100vw"
+                loading={i === 0 ? 'eager' : 'lazy'}
+                data-transicion={item.transicion}
+                class:list={['h-full w-full', lleno ? 'object-cover' : 'object-contain']}
+              />
+            </div>
+          ))}
+        </div>
+
+        {!unico && (
+          <fieldset class="controles">
+            <legend class="sr-only">{titulo ?? rotulo ?? 'Elegir variante'}</legend>
+            {items.map((item, i) =>
+              forma === 'circulo' ? (
+                <label
+                  for={`${nombre}-${i}`}
+                  class="swatch"
+                  style={item.muestra ? `--muestra: ${item.muestra}` : undefined}
+                >
+                  <span class="sr-only">{item.etiqueta}</span>
+                  <span class="swatch-nombre" aria-hidden="true">
+                    {item.etiqueta}
+                  </span>
+                </label>
+              ) : forma === 'modelo' ? (
+                <label for={`${nombre}-${i}`} class="ficha-modelo">
+                  <span class="ficha-modelo-nombre">{item.etiqueta}</span>
+                  {item.bajada && <span class="ficha-modelo-bajada">{item.bajada}</span>}
+                  {item.href && (
+                    <a href={item.href} class="ficha-modelo-ir">
+                      Ver ficha <span class="flecha" aria-hidden="true">→</span>
+                    </a>
+                  )}
+                </label>
+              ) : (
+                <label for={`${nombre}-${i}`} class="pestana">
+                  {item.etiqueta}
+                </label>
+              ),
+            )}
+          </fieldset>
+        )}
+
+        {unico && items[0] && (
+          <p class="mt-6 text-center text-eyebrow uppercase tracking-[0.16em] text-tinta/55">
+            {items[0].etiqueta}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+<script>
+  /* Isla, no requisito. El cuerpo vive en lib/ para que Tailwind no interprete
+     los keyframes como CSS. Aquí sólo se arranca, y FUERA del condicional
+     de arriba: un script dentro de una expresión de Astro llega a dist/
+     como cadena y nunca corre. */
+  import { iniciarConmutadores } from '../../lib/conmutador';
+  import { iniciarMira } from '../../lib/mira';
+  iniciarConmutadores();
+  iniciarMira();
+</script>

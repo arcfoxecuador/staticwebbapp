@@ -1,0 +1,50 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/bloques/Hero.astro';
+import Seccion from '../components/bloques/Seccion.astro';
+import Encabezado from '../components/bloques/Encabezado.astro';
+import Rejilla from '../components/bloques/Rejilla.astro';
+import Tarjeta from '../components/bloques/Tarjeta.astro';
+import Pasos from '../components/bloques/Pasos.astro';
+import Cierre from '../components/bloques/Cierre.astro';
+import { grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
+
+const titulo = 'Postventa';
+const descripcion =
+  'Servicio y recambios de ARCFOX en Ecuador, a través de la red de concesionarios oficiales.';
+
+const pasos = [
+  { titulo: 'Cuéntanos el modelo', texto: 'T5, T1 o S5, y qué necesita: revisión, recambio o diagnóstico.' },
+  { titulo: 'Te asignamos el punto', texto: 'El concesionario oficial más cercano confirma fecha y alcance.' },
+  { titulo: 'Atención de marca', texto: 'Protocolo del fabricante, no un taller genérico.' },
+];
+
+const schema = grafo(
+  organizacion(),
+  sitioWeb(),
+  pagina({ path: '/postventa', titulo, descripcion }),
+  migas([{ nombre: titulo, path: '/postventa' }]),
+);
+---
+
+<Base {titulo} {descripcion} path="/postventa" {schema}>
+  <Hero rotulo="Cuidado del auto" titulo="Postventa oficial" bajada={descripcion} />
+
+  <Seccion>
+    <Encabezado titulo="Qué cubre la red" bajada="Los servicios concretos de cada sede se confirman al abrir. Esto es el marco, no un taller inventado." />
+    <Rejilla class="mt-12" columnas={3}>
+      <Tarjeta titulo="Mantenimiento" bajada="Revisiones del vehículo eléctrico en puntos oficiales, no en un taller genérico." />
+      <Tarjeta titulo="Recambios" bajada="Piezas de la marca, pedidas a través del concesionario." />
+      <Tarjeta titulo="Diagnóstico" bajada="Lectura de sistemas y batería con el protocolo del fabricante." />
+    </Rejilla>
+  </Seccion>
+
+  <Seccion campo="tinte">
+    <Encabezado rotulo="Cómo se pide" titulo="Tres pasos, sin inventar un taller" />
+    <div class="mt-12">
+      <Pasos items={pasos} />
+    </div>
+  </Seccion>
+
+  <Cierre titulo="¿Necesitas servicio?" bajada="Cuéntanos ciudad y modelo. Te indicamos el punto oficial." />
+</Base>

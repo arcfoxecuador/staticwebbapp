@@ -1,0 +1,71 @@
+---
+/* El acordeón. `<details>` nativo: abre y cierra sin JavaScript, es navegable por
+   teclado de fábrica y —esto es lo que importa para SEO— SU CONTENIDO ESTÁ EN EL
+   HTML aunque esté cerrado. Un acordeón hecho con JavaScript que inyecta las
+   respuestas al abrir es un acordeón cuyas respuestas Google no indexa.
+
+   LA MISMA LISTA ALIMENTA EL BLOQUE Y EL `FAQPage` DEL JSON-LD. No es una
+   comodidad: es la única forma de garantizar que la respuesta que se cita y la
+   que se lee sean la misma frase. Si el JSON-LD se escribiera aparte, divergirían
+   —siempre divergen— y un dato estructurado que contradice el texto visible es
+   marcado engañoso.
+
+   La página hace: `faq(FAQ)` de schema.ts sobre esta misma constante.
+
+   `name` compartido convierte el grupo en un acordeón EXCLUSIVO: abrir una
+   respuesta cierra la anterior. Es HTML nativo desde 2024 y evita que la página
+   crezca hasta cinco pantallas si alguien abre todo. */
+import { FAQ } from '../../lib/site';
+
+interface Props {
+  items?: readonly { p: string; r: string }[];
+  /** Un grupo por página. Con dos acordeones exclusivos en la misma página, cada
+      uno necesita su propio nombre o se cierran entre sí. */
+  grupo?: string;
+}
+
+const { items = FAQ, grupo = 'faq' } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <div data-slot="faq" class="revela-grupo flex flex-col">
+      {items.map((item) => (
+        <details name={grupo} class="group border-t border-linea last:border-b">
+          <summary
+            class="flex cursor-pointer list-none items-baseline justify-between gap-6 py-6 text-h3 font-bold text-marca"
+          >
+            {item.p}
+            {/* El signo gira en vez de cambiar de glifo: un `+` que se convierte
+                en `−` parpadea, y el giro dice lo mismo con movimiento continuo. */}
+            <svg
+              class="mt-1 shrink-0 transition-transform duration-200 group-open:rotate-45"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" />
+            </svg>
+          </summary>
+          {/* La respuesta se compone a `text-lead` y con medida en `ch`: es prosa,
+              no una etiqueta, y una respuesta que se lee bien es una respuesta que
+              se puede citar entera. */}
+          <p class="respuesta max-w-[68ch] pb-7 text-lead text-tinta/80">{item.r}</p>
+        </details>
+      ))}
+    </div>
+  )
+}
+
+<style>
+  /* `clip-path` y no `height`: la altura no está en la lista de propiedades
+     animables del sistema, y `details[open]` ya la reserva por su cuenta, así que
+     el recorte no mete ninguna caja en el layout. El keyframe vive en motion.css
+     para que el bloque de `prefers-reduced-motion` de ese archivo lo apague junto
+     con todo lo demás. */
+  details[open] > .respuesta {
+    animation: revelar-respuesta 280ms var(--ease-out) both;
+  }
+</style>

@@ -1,0 +1,43 @@
+---
+/* La marca. Se monta DOS veces por documento —cabecera y pie—, y ese hecho tiene
+   una consecuencia que hay que conocer antes de tocarlo: NO se le puede poner
+   `view-transition-name`. Un nombre duplicado hace que Chrome ABORTE la
+   transición de página entera, no sólo la de este elemento.
+
+   Hay dos PNG oficiales, uno por tono. Recolorear con filtros deforma el
+   wordmark y rompe el área de seguridad del brandbook. */
+import { ORG } from '../../lib/site';
+
+interface Props {
+  /** En campo oscuro la marca va en blanco. */
+  tono?: 'marca' | 'blanco';
+  /** La marca del pie no es un enlace a la misma página en la que estás. */
+  enlace?: boolean;
+  /** Sólo el sello. En el héroe de portada el wordmark del auto ya está en
+      la foto: repetir ARCFOX entero es el logo doble. */
+  soloSello?: boolean;
+  class?: string;
+}
+
+const { tono = 'marca', enlace = true, soloSello = false, class: extra } = Astro.props;
+const src = tono === 'blanco' ? '/marca/logo-blanco.png' : '/marca/logo-oficial.png';
+const Etiqueta = enlace ? 'a' : 'span';
+---
+
+<Etiqueta
+  data-slot="marca"
+  href={enlace ? '/' : undefined}
+  aria-label={enlace ? `${ORG.nombreCorto} — ir a la portada` : undefined}
+  class:list={['inline-flex items-center', extra]}
+>
+  <img
+    src={src}
+    alt={ORG.nombreCorto}
+    height="28"
+    width={soloSello ? '28' : '192'}
+    class:list={[
+      'h-7',
+      soloSello ? 'w-7 object-cover object-left' : 'w-auto',
+    ]}
+  />
+</Etiqueta>

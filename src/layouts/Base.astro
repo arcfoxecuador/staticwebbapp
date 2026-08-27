@@ -1,0 +1,93 @@
+---
+/* El envoltorio de TODAS las páginas. Una página nunca escribe <html>, <head>,
+   cabecera ni pie: los recibe. Así una etiqueta nueva en el <head> entra en las
+   cuarenta páginas a la vez, que es lo contrario de lo que pasa cuando cada
+   plantilla monta su propio documento. */
+import '../styles/global.css';
+
+import BaseHead from '../components/seo/BaseHead.astro';
+import Analitica from '../components/seo/Analitica.astro';
+import BannerCookies from '../components/seo/BannerCookies.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import BarraAccion from '../components/layout/BarraAccion.astro';
+import Asistente from '../components/ui/Asistente.astro';
+import { ANALITICA, ASISTENTE } from '../lib/site';
+import { IDIOMA } from '../lib/schema';
+
+interface Props {
+  titulo: string;
+  descripcion: string;
+  path: string;
+  schema?: string;
+  noindex?: boolean;
+  imagen?: string;
+  /** La cabecera flota sobre el hero en vez de ocupar su propia banda. Para
+      páginas con un hero oscuro a sangre. */
+  cabeceraFlotante?: boolean;
+  /** La barra de acción fija de móvil. Enciéndela en las páginas de conversión
+      y apágala en la de contacto — donde el CTA ya es el contenido, la barra
+      tapa el formulario y compite consigo misma. */
+  barraAccion?: boolean;
+}
+
+const {
+  titulo,
+  descripcion,
+  path,
+  schema,
+  noindex = false,
+  imagen,
+  cabeceraFlotante = false,
+  barraAccion = true,
+} = Astro.props;
+
+/* Si no hay ningún identificador configurado, no se monta ni el script de
+   analítica ni el banner: un aviso de cookies en un sitio que no pone cookies
+   es una molestia sin motivo, y además obliga al visitante a decidir sobre algo
+   que no existe. */
+const hayAnalitica = Boolean(ANALITICA.ga4 || ANALITICA.clarity);
+---
+
+<!doctype html>
+<html lang={IDIOMA}>
+  <head>
+    <BaseHead {titulo} {descripcion} {path} {schema} {noindex} {imagen} />
+  </head>
+  <body>
+    {/* El primer elemento enfocable del documento. No es opcional. */}
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+    {/* `aria-hidden` porque es información redundante para quien no ve la
+        pantalla: un lector de pantalla ya sabe dónde está en el documento. */}
+    <div class="progreso-lectura" aria-hidden="true"></div>
+
+    <Header flotante={cabeceraFlotante} ruta={path} />
+
+    <main id="contenido">
+      <slot />
+    </main>
+
+    <Footer />
+
+    {barraAccion && <BarraAccion />}
+    {ASISTENTE.activo && <Asistente />}
+    {hayAnalitica && <Analitica />}
+    {hayAnalitica && <BannerCookies />}
+  </body>
+</html>
+
+<style is:global>
+  /* `clip` y NUNCA `hidden`, y la razón está en la cabecera de motion.css:
+     `overflow: hidden` convierte al elemento en contenedor de scroll, y en el
+     <body> eso deja inerte TODA línea de tiempo `view()` del sitio — es decir,
+     mataría el sistema de motion completo desde una sola declaración.
+     `clip` recorta igual y no crea scrollport.
+
+     Hace falta porque las utilidades `.tira` desplazan sus hijos lateralmente
+     al entrar, y ese recorrido asoma por el borde derecho en pantallas
+     estrechas. */
+  body {
+    overflow-x: clip;
+  }
+</style>

@@ -1,0 +1,901 @@
+@import "tailwindcss";
+@import "./motion.css";
+
+/* Las dos familias del brandbook, servidas desde este dominio. Eurostile para
+   titulares (el look aprobado va en versales); DIN Next para el resto. */
+@font-face {
+  font-family: "Eurostile Next";
+  src: url("/fonts/eurostile-next-semibold.otf") format("opentype");
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DIN Next";
+  src: url("/fonts/din-next-light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DIN Next";
+  src: url("/fonts/din-next-regular.otf") format("opentype");
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DIN Next";
+  src: url("/fonts/din-next-bold.ttf") format("truetype");
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── TOKENS ────────────────────────────────────────────────────────────────
+   Nueve ranuras de color, y ninguna más. No es minimalismo por gusto: una
+   paleta abierta es una paleta que en la página doce ya tiene catorce azules,
+   ninguno idéntico y ninguno decidido. Estas nueve son ROLES, no colores — cada
+   proyecto rellena los hexadecimales y no toca nada más.
+
+     marca          el color de la identidad. Titulares, enlaces, superficies
+                    oscuras. Suele ser el más oscuro y saturado.
+     marca-clara    el segundo de la identidad. Detalles, iconos, la barra de
+                    lectura. Tiene que verse SOBRE `marca` y sobre blanco.
+     acento         reservado al CTA primario. Si aparece en otro sitio, es un
+                    error. Ésa es toda su razón de ser: que cuando aparezca,
+                    signifique «púlsame».
+     acento-hover   un escalón visible por encima de `acento`.
+     tinte          el claro de marca. Selección de texto, destacados suaves.
+     fondo          el suelo de la página. NO es blanco: ver el comentario del
+                    <body>, es lo que permite elevar sin sombras.
+     superficie     el blanco de las tarjetas.
+     linea          filetes y bordes.
+     tinta          el texto. Nunca negro puro: un #000 sobre blanco produce
+                    más contraste del que el ojo quiere leer durante 1.800
+                    palabras.
+
+   Antes de cambiar uno, mide. Los pares que importan son texto/fondo (4,5:1
+   para cuerpo, 3:1 para 24px+) y borde/fondo (3:1, WCAG 1.4.11). */
+
+@theme {
+  --color-marca: #0b0d12;
+  --color-marca-clara: #8b93a0;
+  --color-acento: #f4f6f8;
+  --color-acento-hover: #ffffff;
+  --color-tinte: #e8eef2;
+  --color-fondo: #eef1f4;
+  --color-superficie: #ffffff;
+  --color-linea: #d3d9df;
+  --color-tinta: #1a1d22;
+
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  /* Dos familias. La de display carga sólo los titulares, así que puede
+     permitirse carácter; la de texto se lee en párrafos largos y tiene que
+     desaparecer. Las dos son variables y se sirven desde el propio dominio
+     (`@fontsource-variable`, importadas en Base.astro) — NUNCA desde un CDN:
+     una petición a un tercero en la ruta crítica del primer pintado, con su
+     handshake y su punto de fallo, para ahorrar 40 kB que ya están en caché. */
+  --font-display: "Eurostile Next", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DIN Next", ui-sans-serif, system-ui, sans-serif;
+
+  /* ── Escala fluida ───────────────────────────────────────────────────────
+     `clamp()` en vez de saltos por breakpoint. Un titular que cambia de tamaño
+     de golpe a los 768px es un titular que alguien va a ver justo en el punto
+     donde no cabe; con clamp no hay punto donde no cabe.
+
+     La progresión de escritorio es 96/76/40/32/24/18/16/14/13, con razón ~1,3
+     constante. Ese «~1,3 constante» es lo que hace que la jerarquía se lea sin
+     pensar: cada nivel es visiblemente distinto del vecino y ninguno salta al
+     doble. Si añades un tamaño, cálculo primero y arbitrario después. */
+  --text-mega: clamp(3.5rem, 1.5rem + 8.9vw, 7.5rem);
+  --text-mega--line-height: 0.95;
+  --text-mega--letter-spacing: -0.025em;
+
+  --text-display: clamp(2.5rem, 1.4rem + 4.9vw, 6rem);
+  --text-display--line-height: 1.04;
+  --text-display--letter-spacing: -0.015em;
+
+  --text-h1: clamp(2.5rem, 1.6rem + 4vw, 4.75rem);
+  --text-h1--line-height: 1.06;
+  --text-h1--letter-spacing: -0.02em;
+
+  --text-h2: clamp(1.75rem, 1.3rem + 2vw, 2.5rem);
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.01em;
+
+  --text-subtitulo: clamp(1.625rem, 1.35rem + 1.2vw, 2rem);
+  --text-subtitulo--line-height: 1.18;
+  --text-subtitulo--letter-spacing: -0.01em;
+
+  --text-h3: clamp(1.25rem, 1.1rem + 0.7vw, 1.5rem);
+  --text-h3--line-height: 1.28;
+
+  /* La bajada. Su trabajo es ser el escalón intermedio entre el titular y el
+     cuerpo, y para eso tiene que VERSE: a 17px contra un cuerpo de 16 la
+     diferencia es ruido de medio punto y el escalón no existe. 19→22px sí.
+     No descuadra nada si las anchuras de bajada se escriben en `ch`
+     (`max-w-[52ch]`): la columna crece con la letra y sigue midiendo las mismas
+     palabras por línea. */
+  --text-lead: clamp(1.1875rem, 1.05rem + 0.5vw, 1.375rem);
+  --text-lead--line-height: 1.5;
+
+  /* Fijo y no fluido a propósito: es el tamaño del valor numérico dentro de una
+     ficha, y una cifra que cambia de cuerpo con el ancho de la ventana rompe la
+     alineación óptica de una columna de cifras. */
+  --text-dato: 1.125rem;
+  --text-dato--line-height: 1.35;
+
+  --text-stat: clamp(2rem, 1.3rem + 3.1vw, 2.75rem);
+  --text-stat--line-height: 1.1;
+  --text-stat--letter-spacing: -0.01em;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+
+  /* 1,6 y no 1,45: la letra pequeña aparece en avisos y pies, a línea larga, y
+     cuanto menor es la letra y más larga la línea, más interlineado hace falta
+     para que el ojo no salte de renglón. */
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.6;
+
+  --text-eyebrow: 0.8125rem;
+  --text-eyebrow--line-height: 1.25;
+  --text-eyebrow--letter-spacing: 0.08em;
+}
+
+/* ── UTILIDADES ────────────────────────────────────────────────────────────
+   Cinco, y cada una existe porque su alternativa era repetir lo mismo en
+   veinte sitios. Si añades una sexta, que sea por el mismo motivo. */
+
+/* La medida del contenido. UN contenedor para todo el sitio: dos anchos
+   distintos en dos secciones se leen como un fallo de maquetación incluso
+   cuando nadie sabe decir por qué. */
+@utility medida {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+
+/* El enlace con filete. El de 1px vive SIEMPRE, no sólo en hover: así el
+   enlace se ve como enlace antes de que nadie pase por encima. La segunda
+   línea, a opacidad plena, se despliega desde la izquierda — el hover confirma
+   el destino sin cambiar el color ni mover el texto. */
+@utility enlace-subrayado {
+  position: relative;
+  /* Sin esto, dentro de una rejilla el enlace se estira a todo el ancho de la
+     celda y el filete se dibuja mucho más largo que el texto. */
+  width: fit-content;
+  padding-bottom: 8px;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: currentColor;
+  }
+  &::before {
+    opacity: 0.4;
+  }
+  &::after {
+    opacity: 1;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 260ms var(--ease-out);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .enlace-subrayado:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+/* Equilibrado a mano, para los titulares que NO son un titular en el árbol. La
+   regla de la capa base cubre h1..h4 y summary, pero un sistema tiene rótulos
+   grandes escritos como <span> por estructura —dentro de una etiqueta, de una
+   fila de índice, de un enlace— y no por jerarquía. Ahí no se puede subir el
+   elemento a <h_> sólo para ganar el reparto de líneas: cambiaría el esquema de
+   encabezados que lee un lector de pantalla. */
+@utility equilibra {
+  text-wrap: balance;
+}
+
+/* El cuerpo de un artículo. Es la única superficie del sitio donde el HTML lo
+   escribe markdown y no un componente, así que el ritmo no lo puede poner la
+   página: tiene que vivir aquí.
+
+   La medida es 68ch y no las 62 de una bajada. Una bajada son tres líneas que
+   se leen de un vistazo; esto son mil ochocientas palabras seguidas, y por
+   debajo de ~65ch el ojo hace tantos retornos de línea que cansa. 68 queda
+   dentro de la horquilla clásica y por debajo del techo de 75.
+
+   Y el espacio ANTES de un subtítulo es el doble que el de después. Un h2 no
+   flota entre dos párrafos: pertenece al que abre. */
+@utility prosa {
+  max-width: 68ch;
+  font-size: var(--text-lead);
+  line-height: 1.75;
+  color: color-mix(in srgb, var(--color-tinta) 85%, transparent);
+
+  & > * + * {
+    margin-block-start: 1.4em;
+  }
+
+  & h2 {
+    max-width: 22ch;
+    margin-block-start: 2.4em;
+    margin-block-end: 0;
+    font-size: var(--text-h3);
+    line-height: var(--text-h3--line-height);
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--color-marca);
+  }
+  /* El primer subtítulo no arrastra el hueco de arriba: no separa nada, sólo
+     abriría un vacío contra la cabecera del artículo. */
+  & > h2:first-child {
+    margin-block-start: 0;
+  }
+  & h2 + * {
+    margin-block-start: 1.2em;
+  }
+
+  & ul {
+    padding-inline-start: 0;
+    list-style: none;
+  }
+  & li {
+    position: relative;
+    padding-inline-start: 26px;
+  }
+  & li + li {
+    margin-block-start: 0.7em;
+  }
+  /* El punto se alinea con la PRIMERA línea del texto, no con el centro del
+     item — con `list-style` nativo no hay forma de fijarlo. `0.62em` es la mitad
+     del interlineado menos el radio, medido sobre `text-lead`. */
+  & li::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 6px;
+    inset-block-start: 0.62em;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-marca-clara);
+  }
+
+  & strong {
+    font-weight: 700;
+    color: var(--color-marca);
+  }
+
+  /* Los enlaces del cuerpo no pueden usar `enlace-subrayado`: esa utilidad es
+     `width: fit-content` y un enlace en mitad de un párrafo es texto en línea,
+     así que se llevaría el filete a un bloque propio y partiría la frase. */
+  & a {
+    color: var(--color-marca);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, var(--color-marca) 40%, transparent);
+    transition: text-decoration-color 200ms var(--ease-out);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .prosa a:hover {
+    text-decoration-color: var(--color-marca);
+  }
+}
+
+/* El rótulo en versalitas. Es DECORATIVO: no es un encabezado y no debe
+   escribirse como <h_>. Va antes de un titular para decir de qué va la sección
+   en dos palabras. */
+@utility eyebrow {
+  font-size: var(--text-eyebrow);
+  line-height: var(--text-eyebrow--line-height);
+  letter-spacing: var(--text-eyebrow--letter-spacing);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* A sangre: el patrón que antes se resolvía a mano en cada página (un riel,
+   una escena). `100vw` + el margen negativo centra el bloque en la ventana
+   aunque viva dentro de `medida`. */
+@utility sangra {
+  width: 100vw;
+  max-width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+/* El conmutador. Los radios van ANTES de `.pila` para que `:checked ~`
+   funcione sin JavaScript. Ocho reglas cubren una paleta de producto; si
+   un noveno color entra, añade la novena — no un bucle en JS. */
+.conmutador-cuerpo {
+  position: relative;
+}
+
+/* `position:fixed` y no `absolute` arriba de la pila: el label nativo
+   enfoca el radio, y si el radio vive 70svh más arriba el navegador
+   scroll-a-foco. La página salta. Fijo en el viewport, el foco no mueve. */
+.conmutador-radio {
+  position: fixed;
+  inset: 0 auto auto 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.conmutador .pila {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  overflow: clip;
+  min-height: 28rem;
+  container-type: inline-size;
+}
+
+.conmutador[data-lleno] .pila {
+  height: 70svh;
+  min-height: 70svh;
+}
+
+/* Apiladas, no con display:none: el fundido necesita que el fotograma exista. */
+.conmutador .pila-item {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(1.05);
+  transition:
+    opacity 560ms var(--ease-out),
+    transform 800ms var(--ease-suave),
+    visibility 560ms;
+}
+
+.conmutador .pila-item:first-child,
+.conmutador .conmutador-radio:nth-of-type(1):checked ~ .pila > .pila-item:nth-child(1),
+.conmutador .conmutador-radio:nth-of-type(2):checked ~ .pila > .pila-item:nth-child(2),
+.conmutador .conmutador-radio:nth-of-type(3):checked ~ .pila > .pila-item:nth-child(3),
+.conmutador .conmutador-radio:nth-of-type(4):checked ~ .pila > .pila-item:nth-child(4),
+.conmutador .conmutador-radio:nth-of-type(5):checked ~ .pila > .pila-item:nth-child(5),
+.conmutador .conmutador-radio:nth-of-type(6):checked ~ .pila > .pila-item:nth-child(6),
+.conmutador .conmutador-radio:nth-of-type(7):checked ~ .pila > .pila-item:nth-child(7),
+.conmutador .conmutador-radio:nth-of-type(8):checked ~ .pila > .pila-item:nth-child(8) {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.conmutador .conmutador-radio:nth-of-type(1):checked ~ .pila > .pila-item,
+.conmutador .conmutador-radio:nth-of-type(2):checked ~ .pila > .pila-item,
+.conmutador .conmutador-radio:nth-of-type(3):checked ~ .pila > .pila-item,
+.conmutador .conmutador-radio:nth-of-type(4):checked ~ .pila > .pila-item,
+.conmutador .conmutador-radio:nth-of-type(5):checked ~ .pila > .pila-item,
+.conmutador .conmutador-radio:nth-of-type(6):checked ~ .pila > .pila-item,
+.conmutador .conmutador-radio:nth-of-type(7):checked ~ .pila > .pila-item,
+.conmutador .conmutador-radio:nth-of-type(8):checked ~ .pila > .pila-item {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(1.05);
+}
+
+.conmutador .conmutador-radio:nth-of-type(1):checked ~ .pila > .pila-item:nth-child(1),
+.conmutador .conmutador-radio:nth-of-type(2):checked ~ .pila > .pila-item:nth-child(2),
+.conmutador .conmutador-radio:nth-of-type(3):checked ~ .pila > .pila-item:nth-child(3),
+.conmutador .conmutador-radio:nth-of-type(4):checked ~ .pila > .pila-item:nth-child(4),
+.conmutador .conmutador-radio:nth-of-type(5):checked ~ .pila > .pila-item:nth-child(5),
+.conmutador .conmutador-radio:nth-of-type(6):checked ~ .pila > .pila-item:nth-child(6),
+.conmutador .conmutador-radio:nth-of-type(7):checked ~ .pila > .pila-item:nth-child(7),
+.conmutador .conmutador-radio:nth-of-type(8):checked ~ .pila > .pila-item:nth-child(8) {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.conmutador[data-lleno] .pila-item:first-child img,
+.conmutador[data-lleno] .conmutador-radio:nth-of-type(1):checked ~ .pila > .pila-item:nth-child(1) img,
+.conmutador[data-lleno] .conmutador-radio:nth-of-type(2):checked ~ .pila > .pila-item:nth-child(2) img,
+.conmutador[data-lleno] .conmutador-radio:nth-of-type(3):checked ~ .pila > .pila-item:nth-child(3) img,
+.conmutador[data-lleno] .conmutador-radio:nth-of-type(4):checked ~ .pila > .pila-item:nth-child(4) img,
+.conmutador[data-lleno] .conmutador-radio:nth-of-type(5):checked ~ .pila > .pila-item:nth-child(5) img {
+  animation: recorre-foto 16s var(--ease-out) both;
+}
+
+@keyframes recorre-foto {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+.conmutador .marca-agua {
+  position: absolute;
+  inset-inline: 0;
+  top: 12%;
+  z-index: 0;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--text-mega);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: var(--color-marca);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.conmutador .marcas .marca-agua {
+  opacity: 0;
+  transition: opacity 560ms var(--ease-out);
+}
+
+.conmutador .marcas .marca-agua:first-child,
+.conmutador .conmutador-radio:nth-of-type(1):checked ~ .marcas .marca-agua:nth-child(1),
+.conmutador .conmutador-radio:nth-of-type(2):checked ~ .marcas .marca-agua:nth-child(2),
+.conmutador .conmutador-radio:nth-of-type(3):checked ~ .marcas .marca-agua:nth-child(3) {
+  opacity: 0.08;
+}
+
+.conmutador .conmutador-radio:nth-of-type(1):checked ~ .marcas .marca-agua,
+.conmutador .conmutador-radio:nth-of-type(2):checked ~ .marcas .marca-agua,
+.conmutador .conmutador-radio:nth-of-type(3):checked ~ .marcas .marca-agua {
+  opacity: 0;
+}
+
+.conmutador .conmutador-radio:nth-of-type(1):checked ~ .marcas .marca-agua:nth-child(1),
+.conmutador .conmutador-radio:nth-of-type(2):checked ~ .marcas .marca-agua:nth-child(2),
+.conmutador .conmutador-radio:nth-of-type(3):checked ~ .marcas .marca-agua:nth-child(3) {
+  opacity: 0.08;
+}
+
+.conmutador .controles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-block-start: 2rem;
+  border: 0;
+  padding: 0;
+}
+
+.conmutador[data-forma='modelo'] .controles {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px;
+  margin-block-start: 0;
+  background: var(--color-linea);
+}
+
+@media (width >= 48rem) {
+  .conmutador[data-forma='modelo'] .controles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* En 390 las tres fichas apiladas + 70svh no caben en una pantalla: se ve
+   el techo del auto o se ven las pestañas, nunca las dos. La gama se lee
+   en fila, como en escritorio, y la foto baja a media pantalla. */
+@media (width < 48rem) {
+  .conmutador[data-forma='modelo'] .controles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .conmutador[data-forma='modelo'][data-lleno] .pila {
+    height: 46svh;
+    min-height: 14rem;
+  }
+
+  .conmutador[data-forma='modelo'] .ficha-modelo {
+    min-height: 72px;
+    gap: 2px;
+    padding: 0.8rem 0.55rem 0.9rem;
+  }
+
+  .conmutador[data-forma='modelo'] .ficha-modelo-nombre {
+    font-size: var(--text-lead);
+    letter-spacing: 0.08em;
+  }
+
+  .conmutador[data-forma='modelo'] .ficha-modelo-bajada {
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+  }
+
+  .conmutador[data-forma='modelo'] .ficha-modelo-ir {
+    margin-block-start: 2px;
+    letter-spacing: 0.1em;
+  }
+
+  .conmutador[data-forma='modelo'] .marcas .marca-agua {
+    top: 8%;
+    font-size: clamp(3.25rem, 26vw, 7rem);
+  }
+
+  .conmutador[data-forma='modelo'][data-lleno] .pila-item img {
+    object-position: 50% 60%;
+  }
+}
+
+.conmutador .ficha-modelo {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 88px;
+  padding: 1.25rem 1.5rem 1.5rem;
+  background: var(--color-superficie);
+  cursor: pointer;
+  transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out);
+}
+
+.conmutador .ficha-modelo::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 2px;
+  background: var(--color-marca);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 420ms var(--ease-out);
+}
+
+.conmutador-radio:nth-of-type(1):checked ~ .controles .ficha-modelo:nth-of-type(1)::before,
+.conmutador-radio:nth-of-type(2):checked ~ .controles .ficha-modelo:nth-of-type(2)::before,
+.conmutador-radio:nth-of-type(3):checked ~ .controles .ficha-modelo:nth-of-type(3)::before {
+  transform: scaleY(1);
+  background: var(--color-superficie);
+}
+
+.conmutador .ficha-modelo-nombre {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-marca);
+}
+
+.conmutador .ficha-modelo-bajada {
+  font-size: var(--text-small);
+  color: color-mix(in srgb, var(--color-tinta) 60%, transparent);
+}
+
+.conmutador .ficha-modelo-ir {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-block-start: 4px;
+  min-height: 44px;
+  font-size: var(--text-eyebrow);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-marca);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 180ms var(--ease-out),
+    color 180ms var(--ease-out);
+}
+
+.conmutador-radio:nth-of-type(1):checked ~ .controles .ficha-modelo:nth-of-type(1),
+.conmutador-radio:nth-of-type(2):checked ~ .controles .ficha-modelo:nth-of-type(2),
+.conmutador-radio:nth-of-type(3):checked ~ .controles .ficha-modelo:nth-of-type(3) {
+  background: var(--color-marca);
+  color: white;
+}
+
+.conmutador-radio:nth-of-type(1):checked ~ .controles .ficha-modelo:nth-of-type(1) .ficha-modelo-nombre,
+.conmutador-radio:nth-of-type(2):checked ~ .controles .ficha-modelo:nth-of-type(2) .ficha-modelo-nombre,
+.conmutador-radio:nth-of-type(3):checked ~ .controles .ficha-modelo:nth-of-type(3) .ficha-modelo-nombre,
+.conmutador-radio:nth-of-type(1):checked ~ .controles .ficha-modelo:nth-of-type(1) .ficha-modelo-bajada,
+.conmutador-radio:nth-of-type(2):checked ~ .controles .ficha-modelo:nth-of-type(2) .ficha-modelo-bajada,
+.conmutador-radio:nth-of-type(3):checked ~ .controles .ficha-modelo:nth-of-type(3) .ficha-modelo-bajada,
+.conmutador-radio:nth-of-type(1):checked ~ .controles .ficha-modelo:nth-of-type(1) .ficha-modelo-ir,
+.conmutador-radio:nth-of-type(2):checked ~ .controles .ficha-modelo:nth-of-type(2) .ficha-modelo-ir,
+.conmutador-radio:nth-of-type(3):checked ~ .controles .ficha-modelo:nth-of-type(3) .ficha-modelo-ir {
+  color: white;
+}
+
+.conmutador-radio:nth-of-type(1):checked ~ .controles .ficha-modelo:nth-of-type(1) .ficha-modelo-ir,
+.conmutador-radio:nth-of-type(2):checked ~ .controles .ficha-modelo:nth-of-type(2) .ficha-modelo-ir,
+.conmutador-radio:nth-of-type(3):checked ~ .controles .ficha-modelo:nth-of-type(3) .ficha-modelo-ir {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .conmutador .ficha-modelo:hover {
+    background: var(--color-tinte);
+  }
+
+  .conmutador-radio:nth-of-type(1):checked ~ .controles .ficha-modelo:nth-of-type(1):hover,
+  .conmutador-radio:nth-of-type(2):checked ~ .controles .ficha-modelo:nth-of-type(2):hover,
+  .conmutador-radio:nth-of-type(3):checked ~ .controles .ficha-modelo:nth-of-type(3):hover {
+    background: var(--color-marca);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conmutador .pila-item,
+  .conmutador .ficha-modelo-ir,
+  .conmutador .marcas .marca-agua {
+    transition: none;
+    transform: none;
+  }
+
+  .conmutador .ficha-modelo::before {
+    transition: none;
+  }
+
+  .conmutador .pila-item img {
+    animation: none !important;
+  }
+}
+
+.conmutador .swatch {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* El disco es 28px; la caja es 44 para el tap. El anillo vive en el
+   ::before para no agrandar el color al agrandar el blanco. */
+.conmutador .swatch::before {
+  content: '';
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--muestra, var(--color-tinta));
+  outline: 1px solid color-mix(in srgb, var(--color-tinta) 18%, transparent);
+}
+
+.conmutador .swatch-nombre {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--text-eyebrow);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-tinta);
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.conmutador[data-forma='texto'] .controles {
+  position: relative;
+}
+
+.conmutador .pestana {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: var(--text-eyebrow);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-tinta) 55%, transparent);
+  border-bottom: 1px solid transparent;
+}
+
+.conmutador-radio:nth-of-type(1):checked ~ .controles .swatch:nth-of-type(1)::before,
+.conmutador-radio:nth-of-type(2):checked ~ .controles .swatch:nth-of-type(2)::before,
+.conmutador-radio:nth-of-type(3):checked ~ .controles .swatch:nth-of-type(3)::before,
+.conmutador-radio:nth-of-type(4):checked ~ .controles .swatch:nth-of-type(4)::before,
+.conmutador-radio:nth-of-type(5):checked ~ .controles .swatch:nth-of-type(5)::before,
+.conmutador-radio:nth-of-type(6):checked ~ .controles .swatch:nth-of-type(6)::before,
+.conmutador-radio:nth-of-type(7):checked ~ .controles .swatch:nth-of-type(7)::before,
+.conmutador-radio:nth-of-type(8):checked ~ .controles .swatch:nth-of-type(8)::before {
+  outline: 2px solid var(--color-marca);
+  outline-offset: 3px;
+}
+
+.conmutador-radio:nth-of-type(1):checked ~ .controles .swatch:nth-of-type(1) .swatch-nombre,
+.conmutador-radio:nth-of-type(2):checked ~ .controles .swatch:nth-of-type(2) .swatch-nombre,
+.conmutador-radio:nth-of-type(3):checked ~ .controles .swatch:nth-of-type(3) .swatch-nombre,
+.conmutador-radio:nth-of-type(4):checked ~ .controles .swatch:nth-of-type(4) .swatch-nombre,
+.conmutador-radio:nth-of-type(5):checked ~ .controles .swatch:nth-of-type(5) .swatch-nombre,
+.conmutador-radio:nth-of-type(6):checked ~ .controles .swatch:nth-of-type(6) .swatch-nombre,
+.conmutador-radio:nth-of-type(7):checked ~ .controles .swatch:nth-of-type(7) .swatch-nombre,
+.conmutador-radio:nth-of-type(8):checked ~ .controles .swatch:nth-of-type(8) .swatch-nombre {
+  opacity: 1;
+}
+
+.conmutador-radio:nth-of-type(1):checked ~ .controles .pestana:nth-of-type(1),
+.conmutador-radio:nth-of-type(2):checked ~ .controles .pestana:nth-of-type(2),
+.conmutador-radio:nth-of-type(3):checked ~ .controles .pestana:nth-of-type(3),
+.conmutador-radio:nth-of-type(4):checked ~ .controles .pestana:nth-of-type(4),
+.conmutador-radio:nth-of-type(5):checked ~ .controles .pestana:nth-of-type(5),
+.conmutador-radio:nth-of-type(6):checked ~ .controles .pestana:nth-of-type(6),
+.conmutador-radio:nth-of-type(7):checked ~ .controles .pestana:nth-of-type(7),
+.conmutador-radio:nth-of-type(8):checked ~ .controles .pestana:nth-of-type(8) {
+  color: var(--color-marca);
+  border-bottom-color: var(--color-marca);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+
+    /* SIN `scroll-behavior: smooth`, y esto se midió antes de quitarlo.
+
+       Con `smooth`, Chrome intenta el salto al fragmento de forma suave durante
+       la carga, y CUALQUIER cambio de maquetación lo cancela: con imágenes
+       diferidas, se cancela siempre. El resultado medido fue que ningún enlace
+       con fragmento entre páginas desplazaba — la página se quedaba arriba y el
+       ancla cientos de píxeles por debajo del borde. Con `auto`, caen exactas.
+
+       No era un caso de laboratorio: el CTA de la cabecera apuntaba a un ancla
+       y llevaba roto sin que nadie lo notara.
+
+       Lo que se pierde es el desplazamiento suave al pulsar un ancla de la MISMA
+       página. En el salto al contenido, además, instantáneo es mejor: un
+       desplazamiento animado en un enlace de accesibilidad es justo lo que
+       molesta a quien lo usa. */
+  }
+  body {
+    /* EL SUELO ES MATERIAL, NO AUSENCIA — y de esta línea depende que el sitio
+       no necesite una sola sombra.
+
+       `fondo` está unos pocos puntos de luminancia por debajo del blanco, y ese
+       único escalón es lo que permite que cada tarjeta blanca se ELEVE sin un
+       borde y sin una sombra. Es como elevan las referencias buenas: con
+       luminancia, no con desenfoque.
+
+       Si el escalón no se distingue en un panel sin calibrar, con el brillo a la
+       mitad y el filtro nocturno encendido, la respuesta es OSCURECER ESTA
+       LÍNEA — no añadir sombras. Basta cambiar un token. */
+    background: var(--color-fondo);
+    color: var(--color-tinta);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+
+  /* `balance` reparte las líneas de un titular para que la última no quede con
+     una palabra sola; `pretty` hace lo propio en prosa. `summary` entra en la
+     primera lista porque las preguntas de un FAQ son titulares compuestos a
+     tamaño de titular, y una viuda justo en la pregunta es una viuda en lo
+     único que alguien lee para decidir si abre. */
+  h1, h2, h3, h4, summary { text-wrap: balance; }
+  p, li, dd, figcaption, blockquote { text-wrap: pretty; }
+
+  /* FOCO VISIBLE. Dos tokens según el campo, y la razón es medible.
+
+     Un anillo de foco necesita 3:1 contra lo que tiene DETRÁS (WCAG 1.4.11), y
+     el color de acento —que suele ser el más luminoso de la paleta— no lo
+     consigue sobre blanco ni, sobre todo, sobre sí mismo: el anillo del CTA
+     primario dibujado en su propio color es literalmente invisible.
+
+     De ahí las dos reglas: `marca` por defecto, y `acento` sólo dentro de
+     `.campo-oscuro`, donde el fondo es la marca oscura. */
+  :focus-visible {
+    outline: 3px solid var(--color-marca);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  .campo-oscuro :focus-visible {
+    outline-color: var(--color-acento);
+  }
+  /* `.campo-oscuro` selecciona el ANCESTRO, no el fondo real de lo que recibe el
+     foco — y dentro de un campo oscuro hay superficies BLANCAS anidadas: una
+     tarjeta, una ficha, un formulario. Sus enlaces heredaban el anillo de acento
+     dibujado sobre blanco, es decir, ninguno. `.campo-claro` marca esas
+     superficies y devuelve el anillo de marca. No hay color nuevo: son los dos
+     tokens de siempre, elegidos por el fondo REAL en vez de por el ancestro. */
+  .campo-oscuro .campo-claro :focus-visible,
+  .campo-oscuro .campo-claro:focus-visible {
+    outline-color: var(--color-marca);
+  }
+
+  ::selection {
+    background: var(--color-tinte);
+    color: var(--color-tinta);
+  }
+
+  /* La barra de acción fija de móvil mide 85px reales (52 de botón + 32 de
+     relleno + 1 de filete). El hueco se reserva en el <body> y no dentro de
+     <main>: colgado de la página deja una franja en blanco encima del pie y aun
+     así la barra tapa el copyright. El área segura del iPhone se suma aparte,
+     porque la barra también se desplaza con ella. */
+  @media (width < 64rem) {
+    body:has(.barra-accion) {
+      padding-bottom: calc(85px + env(safe-area-inset-bottom));
+    }
+    /* WCAG 2.2 SC 2.4.11, Focus Not Obscured. El relleno de arriba reserva el
+       hueco en el FLUJO, pero la barra es `fixed bottom-0`: cuando el foco de
+       teclado avanza a un enlace fuera de pantalla, el navegador lo desplaza
+       hasta el borde inferior del viewport —justo donde está la barra— y el
+       elemento enfocado queda tapado al 100%.
+       `scroll-padding-bottom` sólo mueve el DESTINO del desplazamiento: no
+       altera un píxel de la maqueta pintada. Va en <html> porque el contenedor
+       de scroll es la raíz, no el <body>. */
+    html:has(.barra-accion) {
+      scroll-padding-bottom: calc(85px + env(safe-area-inset-bottom));
+    }
+  }
+
+  /* ── EL AIRE ANTES DEL PIE ──────────────────────────────────────────────────
+     El pie necesita separación porque casi siempre viene después de una sección
+     clara. Pero el último bloque de casi todas las páginas es el cierre en campo
+     `marca`, que es exactamente el color del pie: ahí esos 96 píxeles dejan una
+     franja del suelo entre dos bandas idénticas, y eso no se lee como aire sino
+     como un hueco sin rellenar.
+
+     Las dos reglas viven aquí, y no como `mt-24` en el marcado del pie, por un
+     motivo de cascada que se paga caro descubrir a mano: las utilidades de
+     Tailwind están en `@layer utilities`, que gana a `@layer base` POR CAPA y no
+     por especificidad. Con `mt-24` escrito en el componente, la anulación de abajo
+     no se aplica nunca, por específica que sea.
+
+     La condición es una relación entre HERMANOS que ninguno de los dos componentes
+     puede ver: `Cierre` no sabe si es el último bloque y `Footer` no sabe qué hay
+     encima. `:has()` sí lo sabe, sin una línea de JavaScript. El filete de
+     reemplazo mantiene el corte legible: sin él las dos bandas se funden en un
+     bloque de 660px sin estructura. */
+  main + footer {
+    margin-top: --spacing(24);
+  }
+
+  main:has(> [data-slot='cierre'][data-campo='marca']:last-child) + footer {
+    margin-top: 0;
+    border-top: 1px solid color-mix(in oklab, white 15%, transparent);
+  }
+
+  /* Salto al contenido, para teclado y lector de pantalla. Es el primer
+     elemento enfocable del documento y no se negocia. */
+  .saltar {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    padding: 12px 20px;
+    background: var(--color-acento);
+    color: var(--color-marca);
+    font-weight: 500;
+  }
+  .saltar:focus {
+    left: 0;
+  }
+}

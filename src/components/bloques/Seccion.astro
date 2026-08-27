@@ -1,0 +1,50 @@
+---
+/* El envoltorio de cada sección. Existe para que el RITMO VERTICAL del sitio sea
+   una decisión y no la suma de cuarenta márgenes escritos a ojo: si el aire entre
+   secciones se escribe en cada página, en la página seis ya hay tres valores
+   distintos y el sitio respira mal sin que nadie sepa señalar dónde.
+
+   `campo` es la superficie. La regla es UNA superficie dominante por sección: dos
+   campos compitiendo en la misma banda es lo que hace que una página se lea como
+   un collage. */
+import { variantes } from '../../lib/ui';
+
+interface Props {
+  campo?: 'suelo' | 'superficie' | 'marca' | 'tinte';
+  /** El aire vertical. `apretado` para bandas de servicio, `amplio` para las
+      secciones que abren o cierran una página. */
+  aire?: 'apretado' | 'normal' | 'amplio';
+  /** Ancla para enlaces con fragmento. */
+  id?: string;
+  /** `false` cuando el contenido necesita ir a sangre (una fotografía, un riel
+      horizontal): entonces la medida la pone el hijo. */
+  contenido?: boolean;
+  class?: string;
+}
+
+const seccion = variantes('', {
+  variants: {
+    campo: {
+      suelo: '',
+      superficie: 'bg-superficie',
+      /* `campo-oscuro` no es decorativo: es lo que cambia el color del anillo de
+         foco a acento en global.css. Sin esa clase, un enlace enfocado sobre
+         marca oscura dibuja un anillo de marca sobre marca, o sea invisible. */
+      marca: 'bg-marca text-white campo-oscuro',
+      tinte: 'bg-tinte',
+    },
+    aire: {
+      apretado: 'py-12 md:py-16',
+      normal: 'py-20 md:py-28',
+      amplio: 'py-24 md:py-36',
+    },
+  },
+  defaultVariants: { campo: 'suelo', aire: 'normal' },
+});
+
+const { campo, aire, id, contenido = true, class: extra } = Astro.props;
+---
+
+<section data-slot="seccion" data-campo={campo ?? 'suelo'} {id} class={seccion({ campo, aire, class: extra })}>
+  {contenido ? <div class="medida"><slot /></div> : <slot />}
+</section>

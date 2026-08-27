@@ -1,0 +1,62 @@
+{
+  "_note": "Guía de marca para el panel y los agentes. Se edita en Marca (guía IA). El build del sitio NO la lee.",
+  "identity": {
+    "legalName": "ARCFOX Ecuador",
+    "type": "Marca de vehículos 100% eléctricos",
+    "tagline": "Distintos por naturaleza",
+    "foundedYear": "",
+    "city": "Quito",
+    "country": "Ecuador",
+    "accreditation": ""
+  },
+  "offering": {
+    "modality": "",
+    "methodology": "",
+    "startDates": "",
+    "programAreas": ["SUV 100% eléctricos"]
+  },
+  "audience": "Quien busca un SUV eléctrico para uso diario en Ecuador: diseño, autonomía y recarga, con cifras y condiciones que se confirman en el concesionario local.",
+  "personas": [],
+  "voice": {
+    "tone": "claro, concreto y de producto",
+    "do": [
+      "Habla de tú.",
+      "Frases cortas: una idea por frase.",
+      "Nombra modelos y hechos que existan en Ecuador: T5, T1, S5, 100% eléctricos, BAIC.",
+      "Si una cifra no está confirmada para Ecuador, remite al concesionario.",
+      "Cierra con Cotízalo o un test drive."
+    ],
+    "dont": [
+      "Datos inventados.",
+      "Precios, autonomías o equipamiento copiados de otro país.",
+      "Promesas que no se pueden cumplir.",
+      "ALL CAPS o varios signos de exclamación."
+    ]
+  },
+  "mission": "",
+  "vision": "",
+  "valueProps": [
+    "Vehículos 100% eléctricos de BAIC en Ecuador",
+    "SUV de diseño, autonomía y recarga para uso diario",
+    "Cifras y condiciones comerciales se confirman en el concesionario"
+  ],
+  "differentiators": [],
+  "keyPhrases": ["Distintos por naturaleza"],
+  "boilerplate": "ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV de diseño, autonomía y recarga para uso diario.",
+  "terminology": [
+    { "prefer": "vehículos 100% eléctricos", "avoid": "híbridos", "note": "T5, T1 y S5 son a batería: no llevan combustión ni híbrido." },
+    { "prefer": "concesionario", "avoid": "agencia", "note": "" }
+  ],
+  "ctas": [{ "label": "Cotízalo", "when": "Cierre de página y barra de acción" }],
+  "rules": [
+    "No inventes datos, cifras, precios, autonomías ni testimonios.",
+    "Un dato de otro país no se publica como si fuera de Ecuador.",
+    "Si falta un dato clave, dilo o pide la información; no lo rellenes con supuestos."
+  ],
+  "compliance": [
+    "Las imágenes son ilustrativas. Las cifras publicadas corresponden a la homologación global de ARCFOX; la versión, el equipamiento y las condiciones comerciales para Ecuador se confirman en el concesionario oficial."
+  ],
+  "sources": "Sitio arcfox.com.ec, fichas de T5 / T1 / S5 y comunicados oficiales de ARCFOX Ecuador. Ante la duda, prioriza la información local sobre webs de otros países.",
+  "seoKeywords": ["ARCFOX Ecuador", "SUV eléctrico Ecuador", "ARCFOX T5", "ARCFOX T1", "ARCFOX S5"],
+  "imageGuide": []
+}

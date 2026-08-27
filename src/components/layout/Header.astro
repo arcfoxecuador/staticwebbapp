@@ -1,0 +1,156 @@
+---
+/* La cabecera. Sin una línea de JavaScript: el cajón de móvil y el desplegable
+   de Modelos son `<details>`, que abren y cierran solos.
+
+   A la derecha va el logo de BAIC, no el CTA. El look aprobado lo pone ahí
+   porque ARCFOX se presenta como marca del grupo, no como un botón de cotizar
+   competiendo con el menú. El cotizar vive en la barra de móvil y al cierre. */
+import Marca from '../ui/Marca.astro';
+import { NAV } from '../../lib/site';
+
+interface Props {
+  /** Flota sobre el hero en vez de ocupar su propia banda. */
+  flotante?: boolean;
+  /** La ruta canónica de la página. En el build estático `Astro.url.pathname`
+      no siempre es `/` en la portada, y el recorte del sello depende de eso. */
+  ruta?: string;
+}
+const { flotante = false, ruta = Astro.url.pathname } = Astro.props;
+const activa = (href: string) => (href === '/' ? ruta === '/' : ruta.startsWith(href));
+---
+
+<header
+  class:list={[
+    'z-50 w-full',
+    flotante
+      ? 'absolute inset-x-0 top-0 campo-oscuro'
+      : 'relative border-b border-linea bg-superficie',
+  ]}
+>
+  <div class="medida flex items-center justify-between gap-6 py-4">
+    <Marca tono={flotante ? 'blanco' : 'marca'} soloSello={flotante && ruta === '/'} />
+
+    <nav class="hidden lg:block" aria-label="Navegación principal">
+      <ul class="flex items-center gap-7">
+        {
+          NAV.map((zona) => (
+            <li class="relative">
+              {zona.hijos ? (
+                <details class="group/nav">
+                  <summary
+                    class:list={[
+                      'flex cursor-pointer list-none items-center gap-1.5 text-small font-medium uppercase tracking-[0.14em]',
+                      flotante ? 'text-white/85 hover:text-white' : 'text-tinta/75 hover:text-marca',
+                      activa(zona.href) && (flotante ? 'text-white' : 'text-marca'),
+                    ]}
+                  >
+                    {zona.texto}
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                      <path d="M2 3.5 5 6.5 8 3.5" stroke="currentColor" stroke-width="1.4" />
+                    </svg>
+                  </summary>
+                  <ul class="absolute left-0 top-full z-50 mt-3 min-w-64 border border-linea bg-superficie campo-claro py-2">
+                    {zona.hijos.map((hijo) => (
+                      <li>
+                        <a
+                          href={hijo.href}
+                          class="block px-4 py-3 text-small text-tinta hover:bg-tinte"
+                        >
+                          <span class="block font-semibold text-marca">{hijo.texto}</span>
+                          {hijo.bajada && (
+                            <span class="mt-0.5 block text-tinta/55">{hijo.bajada}</span>
+                          )}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ) : (
+                <a
+                  href={zona.href}
+                  aria-current={activa(zona.href) ? 'page' : undefined}
+                  class:list={[
+                    'text-small font-medium uppercase tracking-[0.14em]',
+                    flotante ? 'text-white/85 hover:text-white' : 'text-tinta/75 hover:text-marca',
+                    activa(zona.href) && (flotante ? 'text-white' : 'text-marca'),
+                  ]}
+                >
+                  {zona.texto}
+                </a>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <img
+      src={flotante ? '/marca/baic-blanco.png' : '/marca/baic.png'}
+      alt="BAIC"
+      width="108"
+      height="30"
+      class="hidden h-7 w-auto lg:block"
+    />
+
+    <details class="group lg:hidden">
+      <summary
+        class:list={[
+          'flex min-h-[44px] min-w-[44px] cursor-pointer list-none items-center justify-center rounded-[var(--radius-md)]',
+          flotante ? 'text-white' : 'text-marca',
+        ]}
+        aria-label="Abrir el menú"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M3 6h18M3 12h18M3 18h18"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            class="transition-opacity group-open:opacity-0"
+          />
+          <path
+            d="M6 6l12 12M18 6L6 18"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            class="opacity-0 transition-opacity group-open:opacity-100"
+          />
+        </svg>
+      </summary>
+
+      <div class="absolute inset-x-0 top-full z-50 border-b border-linea bg-superficie campo-claro">
+        <nav class="medida py-6" aria-label="Navegación principal">
+          <ul class="flex flex-col gap-1">
+            {
+              NAV.map((zona) => (
+                <li>
+                  <a
+                    href={zona.href}
+                    aria-current={activa(zona.href) ? 'page' : undefined}
+                    class:list={[
+                      'flex min-h-[44px] items-center text-lead font-medium uppercase tracking-[0.12em]',
+                      activa(zona.href) ? 'text-marca' : 'text-tinta/80',
+                    ]}
+                  >
+                    {zona.texto}
+                  </a>
+                  {zona.hijos && (
+                    <ul class="mb-2 ml-3 border-l border-linea pl-4">
+                      {zona.hijos.map((hijo) => (
+                        <li>
+                          <a href={hijo.href} class="flex min-h-[44px] items-center text-small text-tinta/70">
+                            {hijo.texto}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </div>
+    </details>
+  </div>
+</header>
