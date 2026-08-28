@@ -147,6 +147,20 @@ const protocolo = [
        contra el pequeño contenedor del CTA. */
     if (raiz.dataset.modo === 'flotante') document.body.append(superficie);
 
+    /* En Android el teclado reduce el viewport visual, pero un elemento fixed
+       puede seguir anclado al viewport de layout y quedar detrás del teclado.
+       La diferencia entre ambos viewports levanta sólo la paleta flotante. */
+    const ajustarAlTeclado = () => {
+      if (raiz.dataset.modo !== 'flotante') return;
+      const vista = window.visualViewport;
+      const teclado = vista ? Math.max(0, window.innerHeight - vista.height - vista.offsetTop) : 0;
+      superficie.style.setProperty('--desplazamiento-teclado', `${teclado}px`);
+    };
+
+    window.visualViewport?.addEventListener('resize', ajustarAlTeclado);
+    window.visualViewport?.addEventListener('scroll', ajustarAlTeclado);
+    ajustarAlTeclado();
+
     const numeroVisible = () => Math.min(indice + 1, 7);
 
     const finalizar = () => {
@@ -185,6 +199,7 @@ const protocolo = [
       if (paso.opciones) {
         entrada.hidden = true;
         opciones.hidden = false;
+        opciones.dataset.cantidad = String(paso.opciones.length);
         ayuda.textContent = 'Elige una respuesta · usa ← → y Enter';
         paso.opciones.forEach((texto, opcionIndice) => {
           const boton = document.createElement('button');
@@ -197,6 +212,7 @@ const protocolo = [
         opciones.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
       } else {
         opciones.hidden = true;
+        delete opciones.dataset.cantidad;
         entrada.hidden = false;
         valor.type = paso.tipo ?? 'text';
         valor.setAttribute('autocomplete', paso.autocomplete ?? 'off');
@@ -204,6 +220,10 @@ const protocolo = [
         valor.placeholder = paso.clave === 'instagram' ? '@usuario' : 'Escribe aquí…';
         ayuda.textContent = 'Enter para confirmar';
         valor.focus({ preventScroll: true });
+        ajustarAlTeclado();
+        if (raiz.dataset.modo === 'integrado') {
+          superficie.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }
     };
 
@@ -267,7 +287,10 @@ const protocolo = [
   .comando-superficie.flotante {
     position: fixed;
     z-index: 50;
-    bottom: max(1rem, env(safe-area-inset-bottom));
+    bottom: max(
+      calc(1rem + var(--desplazamiento-teclado, 0px)),
+      calc(env(safe-area-inset-bottom) + var(--desplazamiento-teclado, 0px))
+    );
     left: 50%;
     width: min(calc(100vw - 2rem), 54rem);
     margin: 0;
@@ -366,7 +389,9 @@ const protocolo = [
   }
 
   .comando-opciones :global(button) {
-    flex: 0 0 auto;
+    /* Si las respuestas caben, reparten todo el ancho; si no, conservan su
+       tamaño legible y activan el desplazamiento horizontal del contenedor. */
+    flex: 1 0 auto;
     min-height: 3.25rem;
     padding-inline: 1.1rem;
     border: 0;
@@ -452,6 +477,15 @@ const protocolo = [
 
     .comando-usuario .comando-autor {
       display: none;
+    }
+
+    .comando-opciones[data-cantidad='2'] :global(button),
+    .comando-opciones[data-cantidad='3'] :global(button),
+    .comando-opciones[data-cantidad='4'] :global(button) {
+      flex: 1 1 0;
+      min-width: 0;
+      padding-inline: 0.5rem;
+      white-space: normal;
     }
   }
 
