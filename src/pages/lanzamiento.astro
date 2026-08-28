@@ -1,42 +1,8 @@
 ---
-/* LA PUERTA DE LANZAMIENTO conserva la composición cerrada de la campaña —una
-   sola acción, una sola lectura, ningún destino secundario que compita con el
-   cuestionario— y le suma las tres cosas que le faltaban para no ser un cartel:
-   el coche, el reloj y un campo que respira.
-
-   POR QUÉ HAY UNA FOTOGRAFÍA. La versión anterior era campo CSS puro, y la
-   razón escrita era la nitidez a cualquier resolución sin sumar una imagen a la
-   ruta crítica. Se sostenía mientras la página sólo tenía que decir una frase.
-   Con el contador dentro, la página pide al visitante que ESPERE algo, y una
-   espera sin objeto es una espera sin motivo: el campo degradado no dice qué se
-   abre el 15 de septiembre.
-
-   POR QUÉ UN DETALLE Y NO EL COCHE. Aquí estuvo `s5-puerta.webp` —la puerta
-   abierta, el habitáculo, el volante y la pantalla encendida— y enseñaba
-   demasiado. Una página que cuenta los días hasta algo no puede haber enseñado
-   ya ese algo: el plano abierto contesta la pregunta que el reloj está
-   haciendo, y sin pregunta el contador pasa a ser un adorno. Un detalle deja la
-   respuesta para el 15 de septiembre, que es el único día en que contestarla
-   vale algo.
-
-   POR QUÉ ESTE DETALLE. `s5-aleta-sin-emblema.png` parte de la misma fotografía
-   que abre followdafox: el alerón y la firma luminosa permiten reconocer la
-   campaña sin enseñar el vehículo completo. La única edición del recurso es
-   retirar la palabra ARCFOX de la carrocería y reconstruir ese tramo con el
-   mismo material y reflejo. El emblema integrado en la luz también se reconstruye
-   con el mismo vidrio negro; así no hace falta esconderlo con una mancha y se
-   conserva el auto correcto sin revelar todavía ningún identificador de marca.
-
-   El fondo de esta serie es el mismo degradado frío→cálido que el campo CSS de
-   la página estaba imitando a mano: la fotografía y el campo son la misma
-   superficie, y el velo no tiene que disimular ninguna costura. Las fotos de
-   estudio claro (`t5-perfil`, `t5-45-gris`) exigirían apagarlas tanto que
-   dejarían de ser una fotografía.
-
-   El coste de la ruta crítica se paga donde se debe: `widths` responsivos,
-   `eager` + `fetchpriority="high"` porque ES el elemento LCP, y `.entra-imagen`
-   sin `opacity` para no descalificarla del cálculo. */
-import { Image } from 'astro:assets';
+/* LA PUERTA DE LANZAMIENTO conserva la composición cerrada de la campaña: una
+   sola acción, una sola lectura y el campo azul→morado de la diagramación. El
+   cliente decidió no mostrar todavía el vehículo; la intriga queda en el reloj,
+   las marcas de registro y el rastro digital, sin identificadores de producto. */
 
 import Teaser from '../layouts/Teaser.astro';
 import IoZen from '../components/ui/IoZen.astro';
@@ -44,8 +10,6 @@ import Marca from '../components/ui/Marca.astro';
 import CuentaAtras from '../components/ui/CuentaAtras.astro';
 import { LANZAMIENTO } from '../lib/site';
 import { grafo, organizacion, pagina, sitioWeb } from '../lib/schema';
-
-import aleta from '../assets/s5-aleta-sin-emblema.png';
 
 const schema = grafo(
   organizacion(),
@@ -78,27 +42,6 @@ const lineasTitular = [
     data-slot="puerta-lanzamiento"
     class="puerta campo-oscuro relative isolate flex min-h-svh items-center justify-center overflow-clip bg-marca px-5 py-10 text-white"
   >
-    {/* LA FOTOGRAFÍA. Va en su propia capa por debajo del contenido y por
-        encima del campo: el degradado CSS sigue existiendo y es lo que sostiene
-        el color en el tramo que el velo apaga. */}
-    <div class="foto-puerta">
-      <Image
-        src={aleta}
-        alt="Detalle de la zaga de un vehículo en penumbra: el alerón y la firma luminosa trasera encendida."
-        widths={[640, 1024, 1440, 1920]}
-        sizes="100vw"
-        loading="eager"
-        fetchpriority="high"
-        class="entra-imagen respira-puerta"
-      />
-      {/* El velo hace UN trabajo y hay que medirlo por él: dejar el centro lo
-          bastante oscuro para que el titular blanco pase de 7:1 sin apagar la
-          esquina donde está la luz. Radial y no lineal porque el texto está
-          centrado, no arriba: una rampa vertical dejaría el centro medio claro
-          justo donde cae el <h1>. */}
-      <div class="velo-puerta" aria-hidden="true"></div>
-    </div>
-
     {/* LAS CUATRO MARCAS recuperan el sistema completo de la diapositiva 10:
         cruz central, esquinas incompletas y rastro digital. No son estrellas ni
         partículas; cada grupo marca una coordenada del encuadre. */}
@@ -218,87 +161,6 @@ const lineasTitular = [
         color-mix(in oklab, var(--color-campana-calida) 72%, var(--color-marca)) 78%,
         color-mix(in oklab, var(--color-campana-calida) 46%, var(--color-marca)) 100%
       );
-  }
-
-  /* ── LA CAPA FOTOGRÁFICA ────────────────────────────────────────────────── */
-
-  .foto-puerta {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    /* `clip` y nunca `hidden`: `hidden` convierte la capa en contenedor de
-       scroll y deja inerte cualquier `view()` del documento. */
-    overflow: clip;
-    pointer-events: none;
-  }
-
-  /* EL AUTO ES UNA APARICIÓN DENTRO DEL CAMPO, no una fotografía completa.
-     La escala de grises conserva el volumen del metal y entrega todo el color a
-     la campaña; la máscara radial deja sólo el detalle y lo pierde sin borde. */
-  .foto-puerta img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    /* El centro conserva el alerón y la firma de luz cuando `cover` recorta los
-       laterales en móvil; el emblema se apaga en el velo, no en el encuadre. */
-    object-position: 50% 50%;
-    filter: grayscale(1) contrast(1.04) blur(0.75px);
-    opacity: 0.76;
-    transform: scale(1.005);
-    mask-image: radial-gradient(
-      ellipse 90% 76% at 48% 34%,
-      black 0 34%,
-      rgb(0 0 0 / 58%) 56%,
-      transparent 80%
-    );
-  }
-
-  /* El radial es la cama del texto y el lineal devuelve el azul–morado por
-     encima del detalle monocromo. Las paradas no coinciden con las de la
-     máscara, así que el ojo no encuentra una franja. */
-  .velo-puerta {
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(
-        ellipse 72% 66% at 50% 55%,
-        color-mix(in oklab, var(--color-marca) 62%, transparent) 0%,
-        color-mix(in oklab, var(--color-marca) 30%, transparent) 58%,
-        transparent 100%
-      ),
-      linear-gradient(
-        112deg,
-        color-mix(in oklab, var(--color-campana-fria) 42%, transparent) 0%,
-        color-mix(in oklab, var(--color-marca) 12%, transparent) 48%,
-        color-mix(in oklab, var(--color-campana-calida) 50%, transparent) 100%
-      );
-  }
-
-  /* LA RESPIRACIÓN DE LA FOTO. 28 segundos y un 2% de recorrido: es la única
-     forma de que un fondo estático no se lea como una imagen pegada sin que el
-     movimiento llegue a competir con nada. Se compone con `.entra-imagen`
-     —`posarse`, 1500ms— porque van en tiempos distintos: la foto se posa al
-     cargar y sólo después empieza a derivar.
-
-     ES UN BUCLE INFINITO Y EL SISTEMA LOS PROHÍBE en el primer pantallazo. La
-     excepción está acotada a esta página y a esta amplitud: la regla existe
-     porque un pulso que se expande compite con el titular para siempre, y aquí
-     el delta es un 2% de escala repartido en medio minuto sobre una fotografía
-     ya velada al 62%. Si alguien lo percibe mirando la página, está mal medido
-     y hay que bajarlo, no discutirlo. */
-  .respira-puerta {
-    animation:
-      posarse 1500ms var(--ease-out) both,
-      respirar-puerta 28s var(--ease-in-out) 1500ms infinite alternate;
-  }
-
-  @keyframes respirar-puerta {
-    from {
-      transform: scale(1) translate3d(0, 0, 0);
-    }
-    to {
-      transform: scale(1.02) translate3d(-1%, 0, 0);
-    }
   }
 
   /* ── EL MARCO Y SUS CUATRO CRUCES ───────────────────────────────────────── */
@@ -595,12 +457,10 @@ const lineasTitular = [
   }
 
   /* REDUCED MOTION: se conserva lo que informa y se quita lo que se mueve. El
-     reloj sigue contando —unas cifras que cambian son información, no
-     movimiento— y la fotografía deja de derivar y de posarse. */
+     reloj sigue contando: unas cifras que cambian son información, no motion. */
   @media (prefers-reduced-motion: reduce) {
     .puerta .entra,
-    .puerta .entra-titular-hero,
-    .puerta .respira-puerta {
+    .puerta .entra-titular-hero {
       animation: none !important;
       opacity: 1 !important;
       transform: none !important;
