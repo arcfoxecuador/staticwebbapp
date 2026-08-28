@@ -98,13 +98,42 @@ const lineasTitular = [
       <div class="velo-puerta" aria-hidden="true"></div>
     </div>
 
-    {/* LAS CUATRO CRUCES recuperan el lenguaje de registro de la diagramación
-        original. Quietas y sin halo: son coordenadas del marco, no destellos. */}
+    {/* LAS CUATRO MARCAS recuperan el sistema completo de la diapositiva 10:
+        cruz central, esquinas incompletas y rastro digital. No son estrellas ni
+        partículas; cada grupo marca una coordenada del encuadre. */}
     <div class="marco" aria-hidden="true">
-      <span class="cruz cruz-noroeste"></span>
-      <span class="cruz cruz-noreste"></span>
-      <span class="cruz cruz-suroeste"></span>
-      <span class="cruz cruz-sureste"></span>
+      <span class="marca-registro marca-noroeste" style="--retardo:900ms">
+        <span class="esquina esquina-noroeste"></span>
+        <span class="esquina esquina-noreste"></span>
+        <span class="esquina esquina-suroeste"></span>
+        <span class="esquina esquina-sureste"></span>
+        <span class="cruz"></span>
+        <span class="rastro-registro"></span>
+      </span>
+      <span class="marca-registro marca-noreste" style="--retardo:1080ms">
+        <span class="esquina esquina-noroeste"></span>
+        <span class="esquina esquina-noreste"></span>
+        <span class="esquina esquina-suroeste"></span>
+        <span class="esquina esquina-sureste"></span>
+        <span class="cruz"></span>
+        <span class="rastro-registro"></span>
+      </span>
+      <span class="marca-registro marca-suroeste" style="--retardo:1260ms">
+        <span class="esquina esquina-noroeste"></span>
+        <span class="esquina esquina-noreste"></span>
+        <span class="esquina esquina-suroeste"></span>
+        <span class="esquina esquina-sureste"></span>
+        <span class="cruz"></span>
+        <span class="rastro-registro"></span>
+      </span>
+      <span class="marca-registro marca-sureste" style="--retardo:1440ms">
+        <span class="esquina esquina-noroeste"></span>
+        <span class="esquina esquina-noreste"></span>
+        <span class="esquina esquina-suroeste"></span>
+        <span class="esquina esquina-sureste"></span>
+        <span class="cruz"></span>
+        <span class="rastro-registro"></span>
+      </span>
     </div>
 
     <div class="contenido-puerta relative z-10 flex w-full flex-col items-center text-center">
@@ -285,41 +314,75 @@ const lineasTitular = [
     transform: translate(-50%, -50%);
   }
 
-  .cruz {
+  .marca-registro {
     position: absolute;
-    width: 1.125rem;
-    height: 1.125rem;
-    /* Cada marca se registra una vez al montar el marco. La escala corta y sin
-       giro mantiene el gesto técnico del signo “+”; un parpadeo continuo lo
-       volvería a convertir en el destello que se decidió retirar. */
-    animation: registrar-cruz 700ms var(--ease-out) both;
+    width: 3.5rem;
+    height: 3.5rem;
+    color: currentColor;
   }
 
-  .cruz:nth-child(1) {
-    animation-delay: 900ms;
+  /* Las esquinas se trazan primero. `scale` nace desde el vértice que les
+     corresponde para que parezca que el marco se calibra, no que aparece una
+     caja decorativa. */
+  .esquina {
+    position: absolute;
+    width: 0.7rem;
+    height: 0.7rem;
+    opacity: 0;
+    animation: trazar-esquina 520ms var(--ease-out) var(--retardo) both;
   }
 
-  .cruz:nth-child(2) {
-    animation-delay: 1080ms;
+  .esquina-noroeste {
+    top: 0;
+    left: 0;
+    border-top: 1px solid currentColor;
+    border-left: 1px solid currentColor;
+    transform-origin: top left;
   }
 
-  .cruz:nth-child(3) {
-    animation-delay: 1260ms;
+  .esquina-noreste {
+    top: 0;
+    right: 0;
+    border-top: 1px solid currentColor;
+    border-right: 1px solid currentColor;
+    transform-origin: top right;
   }
 
-  .cruz:nth-child(4) {
-    animation-delay: 1440ms;
+  .esquina-suroeste {
+    bottom: 0;
+    left: 0;
+    border-bottom: 1px solid currentColor;
+    border-left: 1px solid currentColor;
+    transform-origin: bottom left;
   }
 
-  @keyframes registrar-cruz {
+  .esquina-sureste {
+    right: 0;
+    bottom: 0;
+    border-right: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+    transform-origin: bottom right;
+  }
+
+  @keyframes trazar-esquina {
     from {
       opacity: 0;
-      transform: scale(0.65);
+      transform: scale(0.2);
     }
     to {
-      opacity: 1;
+      opacity: 0.8;
       transform: scale(1);
     }
+  }
+
+  .cruz {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 1.125rem;
+    height: 1.125rem;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.65);
+    animation: registrar-cruz 420ms var(--ease-out) calc(var(--retardo) + 320ms) both;
   }
 
   .cruz::before,
@@ -342,24 +405,63 @@ const lineasTitular = [
     height: 100%;
   }
 
-  .cruz-noroeste {
+  @keyframes registrar-cruz {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.65);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  /* Tres columnas discontinuas bastan para citar el rastro digital de la
+     referencia. Son parte de la marca y se quedan quietas al terminar; no hay
+     lluvia ni partículas en movimiento continuo. */
+  .rastro-registro {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1px;
+    height: 4.5rem;
+    color: currentColor;
+    background: repeating-linear-gradient(to bottom, currentColor 0 2px, transparent 2px 6px);
+    box-shadow: -0.75rem 0.5rem 0 currentColor, 0.85rem -0.35rem 0 currentColor;
+    opacity: 0;
+    transform: translate(-50%, -50%) scaleY(0.45);
+    animation: revelar-rastro 620ms var(--ease-out) calc(var(--retardo) + 470ms) both;
+  }
+
+  @keyframes revelar-rastro {
+    to {
+      opacity: 0.1;
+      transform: translate(-50%, -50%) scaleY(1);
+    }
+  }
+
+  .marca-noroeste {
     top: 0;
     left: 0;
+    transform: translate(-50%, -50%);
   }
 
-  .cruz-noreste {
+  .marca-noreste {
     top: 0;
     right: 0;
+    transform: translate(50%, -50%);
   }
 
-  .cruz-suroeste {
+  .marca-suroeste {
     bottom: 0;
     left: 0;
+    transform: translate(-50%, 50%);
   }
 
-  .cruz-sureste {
+  .marca-sureste {
     right: 0;
     bottom: 0;
+    transform: translate(50%, 50%);
   }
 
   /* ── EL CONTENIDO ───────────────────────────────────────────────────────── */
@@ -496,12 +598,29 @@ const lineasTitular = [
   @media (prefers-reduced-motion: reduce) {
     .puerta .entra,
     .puerta .entra-titular-hero,
-    .puerta .respira-puerta,
-    .puerta .cruz {
+    .puerta .respira-puerta {
       animation: none !important;
       opacity: 1 !important;
       transform: none !important;
       clip-path: none !important;
+    }
+
+    .puerta .esquina {
+      animation: none !important;
+      opacity: 0.8 !important;
+      transform: scale(1) !important;
+    }
+
+    .puerta .cruz {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: translate(-50%, -50%) scale(1) !important;
+    }
+
+    .puerta .rastro-registro {
+      animation: none !important;
+      opacity: 0.1 !important;
+      transform: translate(-50%, -50%) scaleY(1) !important;
     }
   }
 </style>
