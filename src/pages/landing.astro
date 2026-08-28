@@ -1,183 +1,100 @@
 ---
-/* LA LANDING DE EXPECTATIVA. Una pantalla: marca, titular, cuenta atrás,
-   el chat y el cierre. En el sitio principal vive en `/landing` y no se
-   promociona; en followdafox.com es la home (ver `scripts/dist-landing.mjs`).
-
-   POR QUÉ LA COMPOSICIÓN ES UNA BANDA Y NO UN VELO SOBRE LA FOTO. El hero del
-   sitio pone el texto ENCIMA de la fotografía y salva el contraste con un
-   degradado. Aquí no se puede: lo único que esta foto tiene que decir es la luz
-   encendida en la oscuridad, y el degradado que hiciera legible un titular de
-   tres líneas caería justo sobre esa luz. Así que la fotografía ocupa una banda
-   a sangre arriba, se disuelve en `marca` por el borde inferior, y el texto vive
-   sobre campo sólido — 15:1 de contraste sin apagar la imagen.
-
-   POR QUÉ ESTA FOTO Y NO `t5-faro.webp`. El faro del T5 está fotografiado sobre
-   fondo de estudio CLARO: en campo oscuro hay que apagarlo tanto que deja de ser
-   un faro encendido y pasa a ser un gris. `s5-aleta.webp` ya es lo que la página
-   necesita — la firma luminosa encendida en penumbra y, dentro de ella, el sello
-   del zorro sobre la palabra ARCFOX. Es material de banco de la marca, no una
-   imagen generada, así que la sección no se declara `data-generada`. */
-import { Image } from 'astro:assets';
-
+/* FOLLOW THE FOX publica el protocolo como experiencia principal. No hay auto,
+   marca, contador, redes ni widget: en esta variante la encuesta ES la landing
+   y ocupa el centro del campo azul→morado sin abrir ninguna capa adicional. */
 import Teaser from '../layouts/Teaser.astro';
-import Marca from '../components/ui/Marca.astro';
-import IoZen from '../components/ui/IoZen.astro';
-import CuentaAtras from '../components/ui/CuentaAtras.astro';
-import { ORG, TEASER } from '../lib/site';
+import ProtocoloComando from '../components/ui/ProtocoloComando.astro';
+import { TEASER } from '../lib/site';
 import { grafo, organizacion, pagina, sitioWeb } from '../lib/schema';
 
-import aleta from '../assets/s5-aleta.webp';
-
-/* El `path` sale de `TEASER` y no está escrito aquí: tiene que ser el MISMO que
-   el canonical del <head>, o el `@id` del nodo de página apuntaría a una URL
-   que en el dominio teaser no existe. */
 const schema = grafo(
   organizacion(),
   sitioWeb(),
   pagina({ path: TEASER.path, titulo: TEASER.titulo, descripcion: TEASER.bajada }),
 );
-
-/* El nombre de cada red se DERIVA de su URL en vez de escribirse al lado: la
-   lista de perfiles ya vive en `ORG.redes` —de ahí sale también el `sameAs` del
-   JSON-LD— y una segunda lista de etiquetas sería la que se olvida de crecer
-   cuando entre un cuarto perfil. Se pintan en versales por CSS, que es lo que
-   convierte `tiktok` en TIKTOK sin una tabla de mayúsculas. */
-const REDES = ORG.redes.map((url) => ({
-  url,
-  nombre: new URL(url).hostname.replace(/^www\./, '').split('.')[0],
-}));
 ---
 
 <Teaser titulo={TEASER.titulo} descripcion={TEASER.bajada} {schema}>
   <section
     data-slot="teaser"
-    class="campo-oscuro relative isolate flex min-h-svh flex-col bg-marca overflow-clip"
+    class="protocolo-landing campo-oscuro relative isolate grid min-h-svh place-items-center overflow-clip bg-marca"
   >
-    {/* LA BANDA FOTOGRÁFICA. `-z-10` para que el texto de abajo pueda solaparla
-        en pantallas cortas sin que la foto le pase por encima. */}
-    <div class="absolute inset-x-0 top-0 -z-10 h-[34svh] overflow-clip md:h-[42svh]">
-      <Image
-        src={aleta}
-        alt="Zaga del ARCFOX S5 en penumbra: el alerón y la firma luminosa encendida sobre la palabra ARCFOX."
-        widths={[640, 1024, 1440, 1920]}
-        sizes="100vw"
-        loading="eager"
-        fetchpriority="high"
-        class="entra-imagen h-full w-full object-cover object-[50%_58%]"
-      />
-      {/* El velo hace tres trabajos con un solo elemento: oscurece la franja de
-          arriba para que la marca blanca se lea, deja limpio el tramo donde está
-          la luz, y cierra en `marca` sólido por abajo para que la banda se
-          disuelva en el campo sin costura. Va en CSS y no en utilidades porque
-          Tailwind sólo da tres paradas y aquí hacen falta seis. */}
-      <div class="velo absolute inset-0" aria-hidden="true"></div>
+    <h1 class="sr-only">Follow the fox</h1>
+    <div class="campo-protocolo" aria-hidden="true"></div>
+    <div class="marcas-protocolo" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
     </div>
-
-    {/* El relleno de abajo suma el área segura del teléfono: es la única página
-        del sitio que ocupa la pantalla entera, así que su última línea cae justo
-        donde el indicador de inicio del iPhone se pone encima. */}
-    <div
-      class="medida relative flex min-h-svh flex-col gap-8 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-6 md:gap-10 md:pb-12 md:pt-8"
-    >
-      {/* 1. LA MARCA. `enlace` sólo en el sitio principal: en followdafox.com la
-          portada ES esta página, así que un logo que enlaza a `/` sería un
-          enlace a sí misma. */}
-      <header class="entra">
-        <Marca tono="blanco" enlace={!TEASER.soloLanding} />
-      </header>
-
-      {/* 2. TITULAR Y BAJADA. `mt-auto` y no `justify-center`: el bloque se
-          ancla al pie del encuadre, debajo de la banda, y en una pantalla corta
-          crece hacia abajo en vez de meterse dentro de la fotografía. */}
-      <div class="mt-auto">
-        {/* Sin `opacity` en el gesto de entrada: el <h1> es candidato a elemento
-            LCP y nacer transparente lo descalifica del cálculo.
-            `.entra-titular-hero` usa `transform` + `clip-path`, que no cuentan. */}
-        <h1
-          class="entra-titular-hero equilibra max-w-[28ch] font-display text-h1 font-bold uppercase tracking-[0.02em] text-white"
-        >
-          {TEASER.titular}
-        </h1>
-
-        <p class="entra entra-2 mt-6 max-w-[48ch] text-lead text-white/75">{TEASER.bajada}</p>
-
-        {/* 3. LA CUENTA ATRÁS. Maqueta, estilos y el script viven en el
-            componente: la puerta de lanzamiento cuenta hacia el mismo instante
-            y dos copias del `setInterval` eran dos sitios que arreglar. */}
-        <CuentaAtras
-          class="entra entra-3 mt-10"
-          destinoISO={TEASER.destinoISO}
-          fechaVisible={TEASER.fechaVisible}
-          llegada={TEASER.llegada}
-          unidades={TEASER.unidades}
-        />
-
-        {
-          TEASER.iozen && (
-            /* El CTA es el chat: sin él esta página es un cartel. El componente
-               carga el script de ioZen; condicionar AQUÍ el componente —y no un
-               <script> suelto— es lo que evita que el loader llegue al HTML
-               como una cadena. */
-            <div class="entra entra-4 mt-8">
-              <IoZen bot={TEASER.iozen} />
-            </div>
-          )
-        }
-      </div>
-
-      {/* 5. EL CIERRE. Las redes se quedan SIEMPRE: el dominio se llama
-          followdafox y el chat no las sustituye. */}
-      <div class="entra entra-4 flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
-        <p class="eyebrow text-white/55">{ORG.tagline}</p>
-
-        <nav
-          class="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-x-6"
-          aria-label={TEASER.redesRotulo}
-        >
-          <span class="eyebrow text-white/55">{TEASER.redesRotulo}</span>
-          <span class="flex items-center gap-x-5">
-            {
-              REDES.map((red) => (
-                /* `min-h-11` es el 44px de WCAG 2.5.5. El filete de
-                   `enlace-subrayado` vive en el padding-bottom, así que la
-                   altura extra se gana hacia arriba y no separa la línea del
-                   texto. */
-                <a
-                  href={red.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="enlace-subrayado eyebrow inline-flex min-h-11 items-end text-white"
-                >
-                  {red.nombre}
-                </a>
-              ))
-            }
-          </span>
-        </nav>
-      </div>
+    <div class="relative z-10 w-full">
+      <ProtocoloComando modo="integrado" />
     </div>
   </section>
-
 </Teaser>
 
 <style>
-  /* El velo de la banda fotográfica. Cinco paradas, todas del token `marca`:
-     penumbra arriba para la marca blanca, limpio en el tramo de la luz, sólido
-     al final para que la foto y el campo sean la misma superficie. */
-  .velo {
-    background: linear-gradient(
-      to bottom,
-      color-mix(in oklab, var(--color-marca) 78%, transparent) 0%,
-      color-mix(in oklab, var(--color-marca) 14%, transparent) 26%,
-      transparent 58%,
-      /* La parada de 78% existe para que el cierre no se vea. Con un salto
-         directo de transparente a `marca` en el último 8%, el borde inferior de
-         la banda dibujaba una línea horizontal sobre el lado claro de la
-         fotografía: la rampa era más corta que el degradado de la propia foto. */
-      color-mix(in oklab, var(--color-marca) 30%, transparent) 78%,
-      color-mix(in oklab, var(--color-marca) 86%, transparent) 93%,
-      var(--color-marca) 100%
-    );
+  .protocolo-landing {
+    padding-block: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-bottom));
   }
 
+  .campo-protocolo {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent 0 34px,
+        color-mix(in oklab, var(--color-campana-fria) 8%, transparent) 34px 35px
+      ),
+      radial-gradient(
+        ellipse 68% 110% at 5% 50%,
+        color-mix(in oklab, var(--color-campana-fria) 72%, var(--color-marca)),
+        transparent 72%
+      ),
+      linear-gradient(
+        112deg,
+        color-mix(in oklab, var(--color-campana-fria) 48%, var(--color-marca)),
+        var(--color-marca) 52%,
+        color-mix(in oklab, var(--color-campana-calida) 50%, var(--color-marca))
+      );
+  }
+
+  .marcas-protocolo {
+    position: absolute;
+    inset: clamp(1rem, 5vw, 4rem);
+    pointer-events: none;
+  }
+
+  .marcas-protocolo span {
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    opacity: 0.3;
+  }
+
+  .marcas-protocolo span::before,
+  .marcas-protocolo span::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--color-superficie);
+  }
+
+  .marcas-protocolo span::after {
+    transform: rotate(90deg);
+  }
+
+  .marcas-protocolo span:nth-child(2) {
+    right: 0;
+  }
+
+  .marcas-protocolo span:nth-child(3) {
+    bottom: 0;
+  }
+
+  .marcas-protocolo span:nth-child(4) {
+    right: 0;
+    bottom: 0;
+  }
 </style>

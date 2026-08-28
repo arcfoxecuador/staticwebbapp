@@ -5,7 +5,7 @@
    las marcas de registro y el rastro digital, sin identificadores de producto. */
 
 import Teaser from '../layouts/Teaser.astro';
-import IoZen from '../components/ui/IoZen.astro';
+import ProtocoloComando from '../components/ui/ProtocoloComando.astro';
 import Marca from '../components/ui/Marca.astro';
 import CuentaAtras from '../components/ui/CuentaAtras.astro';
 import { LANZAMIENTO } from '../lib/site';
@@ -117,19 +117,9 @@ const lineasTitular = [
         unidades={LANZAMIENTO.unidades}
       />
 
-      {
-        LANZAMIENTO.iozen && (
-          <div class="entra entra-4">
-            <IoZen
-              bot={LANZAMIENTO.iozen}
-              rotulo={LANZAMIENTO.cta}
-              variante="fantasma"
-              etiqueta={LANZAMIENTO.chatEtiqueta}
-              class="puerta-cta"
-            />
-          </div>
-        )
-      }
+      <div class="entra entra-4">
+        <ProtocoloComando rotulo={LANZAMIENTO.cta} />
+      </div>
     </div>
   </section>
 </Teaser>
