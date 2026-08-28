@@ -27,32 +27,65 @@ const protocolo = [
   {
     clave: 'momento',
     pregunta: '¿Cuál describe mejor tu momento?',
-    opciones: ['Cambiaré de auto este año', 'Tal vez el próximo año', 'Solo estoy explorando'],
+    opciones: [
+      'Estoy pensando cambiar de auto este año.',
+      'Tal vez el próximo año.',
+      'Solo estoy explorando cosas nuevas.',
+    ],
   },
   {
     clave: 'novedad',
-    pregunta: 'Cuando ves algo nuevo…',
-    opciones: ['Quiero ser de los primeros', 'Espero opiniones antes', 'Prefiero lo conocido'],
+    pregunta: 'Cuando ves algo nuevo...',
+    opciones: ['Quiero ser de los primeros en probarlo.', 'Espero opiniones antes.', 'Prefiero lo conocido.'],
   },
   {
     clave: 'experiencias',
-    pregunta: '¿Qué experiencias disfrutas más?',
-    opciones: ['Eventos privados', 'Lanzamientos', 'Gastronomía', 'Tecnología e innovación', 'Música'],
+    pregunta: '¿Qué tipo de experiencias disfrutas más?',
+    opciones: [
+      'Eventos privados.',
+      'Lanzamientos.',
+      'Experiencias gastronómicas.',
+      'Tecnología e innovación.',
+      'Música.',
+    ],
   },
   {
     clave: 'tecnologia',
-    pregunta: '¿Qué tecnología elegirías en tu próximo auto?',
-    opciones: ['Híbrido o eléctrico', 'Combustión', 'Aún no lo decido'],
+    pregunta: '¿Qué tipo de tecnología optarías en tu próximo auto?',
+    opciones: ['Híbrido, eléctrico', 'Combustión', 'Aún no lo decido'],
   },
   {
     clave: 'ciudad',
     pregunta: '¿En qué ciudad estás?',
     opciones: ['Quito', 'Guayaquil', 'Cuenca', 'Otra'],
   },
-  { clave: 'nombre', pregunta: '¿A nombre de quién reservamos el acceso?', tipo: 'text', autocomplete: 'name' },
-  { clave: 'correo', pregunta: '¿A qué correo enviamos la confirmación?', tipo: 'email', autocomplete: 'email' },
-  { clave: 'whatsapp', pregunta: 'Escribe tu número de WhatsApp', tipo: 'tel', autocomplete: 'tel' },
-  { clave: 'instagram', pregunta: 'Por último, ¿cuál es tu usuario de Instagram?', tipo: 'text' },
+  {
+    clave: 'nombre',
+    pregunta: 'Danos tu usuario de Instagram y número de WhatsApp para enviar tu invitación',
+    tipo: 'text',
+    autocomplete: 'name',
+    placeholder: 'Nombre',
+  },
+  {
+    clave: 'correo',
+    pregunta: 'Danos tu usuario de Instagram y número de WhatsApp para enviar tu invitación',
+    tipo: 'email',
+    autocomplete: 'email',
+    placeholder: 'Correo',
+  },
+  {
+    clave: 'whatsapp',
+    pregunta: 'Danos tu usuario de Instagram y número de WhatsApp para enviar tu invitación',
+    tipo: 'tel',
+    autocomplete: 'tel',
+    placeholder: 'WhatsApp',
+  },
+  {
+    clave: 'instagram',
+    pregunta: 'Danos tu usuario de Instagram y número de WhatsApp para enviar tu invitación',
+    tipo: 'text',
+    placeholder: 'Usuario de Instagram',
+  },
 ] as const;
 ---
 
@@ -121,6 +154,7 @@ const protocolo = [
     opciones?: string[];
     tipo?: string;
     autocomplete?: string;
+    placeholder?: string;
   }
 
   document.querySelectorAll<HTMLElement>('[data-protocolo-comando]').forEach((raiz) => {
@@ -217,7 +251,7 @@ const protocolo = [
         valor.type = paso.tipo ?? 'text';
         valor.setAttribute('autocomplete', paso.autocomplete ?? 'off');
         valor.value = '';
-        valor.placeholder = paso.clave === 'instagram' ? '@usuario' : 'Escribe aquí…';
+        valor.placeholder = paso.placeholder ?? 'Escribe aquí…';
         ayuda.textContent = 'Enter para confirmar';
         valor.focus({ preventScroll: true });
         ajustarAlTeclado();
@@ -479,13 +513,22 @@ const protocolo = [
       display: none;
     }
 
-    .comando-opciones[data-cantidad='2'] :global(button),
-    .comando-opciones[data-cantidad='3'] :global(button),
-    .comando-opciones[data-cantidad='4'] :global(button) {
-      flex: 1 1 0;
+    .comando-opciones {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      overflow: visible;
+    }
+
+    .comando-opciones :global(button) {
       min-width: 0;
       padding-inline: 0.5rem;
       white-space: normal;
+    }
+
+    /* En listas impares, la última respuesta usa la fila completa; así no hay
+       una celda vacía que parezca una opción ausente o deshabilitada. */
+    .comando-opciones :global(button:last-child:nth-child(odd)) {
+      grid-column: 1 / -1;
     }
   }
 
