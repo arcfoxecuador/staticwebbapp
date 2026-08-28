@@ -11,11 +11,18 @@ import CuentaAtras from '../components/ui/CuentaAtras.astro';
 import { LANZAMIENTO } from '../lib/site';
 import { grafo, organizacion, pagina, sitioWeb } from '../lib/schema';
 
+interface Props {
+  modoFormulario?: 'integrado' | 'flotante';
+  pathPagina?: string;
+}
+
+const { modoFormulario = 'flotante', pathPagina = LANZAMIENTO.path } = Astro.props;
+
 const schema = grafo(
   organizacion(),
   sitioWeb(),
   pagina({
-    path: LANZAMIENTO.path,
+    path: pathPagina,
     titulo: LANZAMIENTO.titulo,
     descripcion: LANZAMIENTO.bajada,
   }),
@@ -35,7 +42,7 @@ const lineasTitular = [
 <Teaser
   titulo={LANZAMIENTO.titulo}
   descripcion={LANZAMIENTO.bajada}
-  path={LANZAMIENTO.path}
+  path={pathPagina}
   {schema}
 >
   <section
@@ -118,7 +125,7 @@ const lineasTitular = [
       />
 
       <div class="entra entra-4">
-        <ProtocoloComando rotulo={LANZAMIENTO.cta} />
+        <ProtocoloComando rotulo={LANZAMIENTO.cta} modo={modoFormulario} />
       </div>
     </div>
   </section>
