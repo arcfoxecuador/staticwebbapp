@@ -4,19 +4,34 @@
    cuestionario— y le suma las tres cosas que le faltaban para no ser un cartel:
    el coche, el reloj y un campo que respira.
 
-   POR QUÉ AHORA HAY UNA FOTOGRAFÍA. La versión anterior era campo CSS puro, y
-   la razón escrita era la nitidez a cualquier resolución sin sumar una imagen a
-   la ruta crítica. Se sostenía mientras la página sólo tenía que decir una
-   frase. Con el contador dentro, la página pide al visitante que ESPERE algo, y
-   una espera sin objeto es una espera sin motivo: el campo degradado no dice
-   qué se abre el 15 de septiembre. `s5-puerta.webp` sí, y de forma literal —es
-   la puerta del S5 abierta— sin que nadie tenga que escribirlo en el titular.
+   POR QUÉ HAY UNA FOTOGRAFÍA. La versión anterior era campo CSS puro, y la
+   razón escrita era la nitidez a cualquier resolución sin sumar una imagen a la
+   ruta crítica. Se sostenía mientras la página sólo tenía que decir una frase.
+   Con el contador dentro, la página pide al visitante que ESPERE algo, y una
+   espera sin objeto es una espera sin motivo: el campo degradado no dice qué se
+   abre el 15 de septiembre.
 
-   POR QUÉ ESTA FOTO Y NO EL PERFIL O LA VISTA DE TRES CUARTOS. El fondo de esta
-   serie es el mismo degradado frío→cálido que el campo CSS de la página estaba
-   imitando a mano: la fotografía y el campo son la misma superficie, y el velo
-   no tiene que disimular ninguna costura. Las fotos de estudio claro (`t5-perfil`,
-   `t5-45-gris`) exigirían apagarlas tanto que dejarían de ser una fotografía.
+   POR QUÉ UN DETALLE Y NO EL COCHE. Aquí estuvo `s5-puerta.webp` —la puerta
+   abierta, el habitáculo, el volante y la pantalla encendida— y enseñaba
+   demasiado. Una página que cuenta los días hasta algo no puede haber enseñado
+   ya ese algo: el plano abierto contesta la pregunta que el reloj está
+   haciendo, y sin pregunta el contador pasa a ser un adorno. Un detalle deja la
+   respuesta para el 15 de septiembre, que es el único día en que contestarla
+   vale algo.
+
+   POR QUÉ ESTE DETALLE. `s5-aleta.webp` es la MISMA fotografía que el teaser de
+   followdafox, y eso no es reciclaje: quien llega por un enlace de campaña y
+   luego por el otro tiene que reconocer la superficie, igual que reconoce la
+   misma cifra en el reloj. Dice de quién es el coche sin nombrar un modelo —la
+   firma luminosa trasera y la palabra ARCFOX en la zaga— y bajo `luminosity`
+   esas barras de luz son lo más brillante del encuadre: el ojo lee una luz
+   encendida en la penumbra, que es lo que una espera necesita mirar.
+
+   El fondo de esta serie es el mismo degradado frío→cálido que el campo CSS de
+   la página estaba imitando a mano: la fotografía y el campo son la misma
+   superficie, y el velo no tiene que disimular ninguna costura. Las fotos de
+   estudio claro (`t5-perfil`, `t5-45-gris`) exigirían apagarlas tanto que
+   dejarían de ser una fotografía.
 
    El coste de la ruta crítica se paga donde se debe: `widths` responsivos,
    `eager` + `fetchpriority="high"` porque ES el elemento LCP, y `.entra-imagen`
@@ -30,7 +45,7 @@ import CuentaAtras from '../components/ui/CuentaAtras.astro';
 import { LANZAMIENTO } from '../lib/site';
 import { grafo, organizacion, pagina, sitioWeb } from '../lib/schema';
 
-import puerta from '../assets/s5-puerta.webp';
+import aleta from '../assets/s5-aleta.webp';
 
 const schema = grafo(
   organizacion(),
@@ -141,8 +156,8 @@ const VERTICES = [
         el color en el tramo que el velo apaga. */}
     <div class="foto-puerta">
       <Image
-        src={puerta}
-        alt="Puerta delantera abierta del ARCFOX S5: el habitáculo, el volante y la pantalla encendida vistos desde fuera."
+        src={aleta}
+        alt="Detalle de la zaga del ARCFOX S5: el alerón levantado y la firma luminosa trasera encendida sobre la palabra ARCFOX."
         widths={[640, 1024, 1440, 1920]}
         sizes="100vw"
         loading="eager"
@@ -327,17 +342,30 @@ const VERTICES = [
      él, y de paso el titular blanco recupera un fondo de croma controlado.
 
      Funciona porque la sección es `isolate`: el mezclado se resuelve contra el
-     fondo de `.puerta` y no se escapa al `<body>`. */
+     fondo de `.puerta` y no se escapa al `<body>`.
+
+     LA OPACIDAD SUBIÓ DE 0.72 A 0.85 AL CAMBIAR DE FOTO, y no es un ajuste de
+     gusto. El 0.72 estaba medido sobre un habitáculo iluminado, donde sobraba
+     luz que apagar. Esta imagen es chapa oscura con una sola zona brillante —la
+     firma trasera—: al 0.72 lo único que la página tenía que enseñar quedaba por
+     debajo del umbral. El techo no lo pone el ojo sino el contraste del titular
+     blanco sobre el pixel más claro que le queda detrás; medido a 0.85 sobre la
+     imagen ya velada da 14.0:1 en escritorio y 12.2:1 en 390 px, muy por encima
+     del 7:1 que el velo promete. */
   .foto-puerta img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* 68% horizontal: la puerta abierta y el habitáculo caen en el tercio
-       derecho, fuera de la columna de texto. El coche se ve entero sin que
-       ninguna de sus líneas cruce por detrás del titular. */
-    object-position: 68% 46%;
+    /* EL ENCUADRE LO DECIDE EL BOLSILLO, NO EL ESCRITORIO. La foto es 3:2 largo
+       (1920×1271) y un escritorio típico ronda 16:9: con `cover` apenas sobra
+       ancho que recortar, así que ahí el 78% y el 50% dan la misma imagen —se
+       comprobó con las dos. En 390×844 el recorte deja ver menos de un tercio
+       del ancho original, y ESE tercio es toda la decisión: a 78% la ventana cae
+       sobre la firma luminosa y la palabra ARCFOX, por debajo del CTA; a 50%
+       cae sobre chapa lisa y la página pierde lo único que tenía que enseñar. */
+    object-position: 78% 55%;
     mix-blend-mode: luminosity;
-    opacity: 0.72;
+    opacity: 0.85;
   }
 
   /* EL VELO LLEVA EL COLOR DE LA CAMPAÑA Y VA POR ENCIMA DE LA FOTO. Es la
