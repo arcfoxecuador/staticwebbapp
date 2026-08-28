@@ -202,9 +202,9 @@ const lineasTitular = [
     pointer-events: none;
   }
 
-  /* LA FOTO ES EL FONDO, no una textura mezclada con otro fondo. Mantener su
-     color y su opacidad evita la costura visual de coche arriba y degradado
-     abajo; la legibilidad se resuelve con un único velo continuo por encima. */
+  /* EL AUTO ES UNA APARICIÓN DENTRO DEL CAMPO, no una fotografía completa.
+     La escala de grises conserva el volumen del metal y entrega todo el color a
+     la campaña; la máscara radial deja sólo el detalle y lo pierde sin borde. */
   .foto-puerta img {
     width: 100%;
     height: 100%;
@@ -212,22 +212,35 @@ const lineasTitular = [
     /* El centro conserva el emblema, el alerón y la firma de luz cuando `cover`
        recorta los laterales en móvil. */
     object-position: 50% 50%;
-    opacity: 1;
+    filter: grayscale(1) contrast(1.05);
+    opacity: 0.78;
+    mask-image: radial-gradient(
+      ellipse 90% 76% at 48% 34%,
+      black 0 34%,
+      rgb(0 0 0 / 58%) 56%,
+      transparent 80%
+    );
   }
 
-  /* Un oscurecimiento parejo une toda la fotografía. El radial sólo refuerza la
-     cama del texto en el centro; no introduce otro color ni divide la pantalla. */
+  /* El radial es la cama del texto y el lineal devuelve el azul–morado por
+     encima del detalle monocromo. Las paradas no coinciden con las de la
+     máscara, así que el ojo no encuentra una franja. */
   .velo-puerta {
     position: absolute;
     inset: 0;
     background:
       radial-gradient(
         ellipse 72% 66% at 50% 55%,
-        color-mix(in oklab, var(--color-marca) 76%, transparent) 0%,
-        color-mix(in oklab, var(--color-marca) 52%, transparent) 58%,
-        color-mix(in oklab, var(--color-marca) 28%, transparent) 100%
+        color-mix(in oklab, var(--color-marca) 62%, transparent) 0%,
+        color-mix(in oklab, var(--color-marca) 30%, transparent) 58%,
+        transparent 100%
       ),
-      color-mix(in oklab, var(--color-marca) 24%, transparent);
+      linear-gradient(
+        112deg,
+        color-mix(in oklab, var(--color-campana-fria) 42%, transparent) 0%,
+        color-mix(in oklab, var(--color-marca) 12%, transparent) 48%,
+        color-mix(in oklab, var(--color-campana-calida) 50%, transparent) 100%
+      );
   }
 
   /* LA RESPIRACIÓN DE LA FOTO. 28 segundos y un 2% de recorrido: es la única
