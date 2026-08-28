@@ -349,12 +349,6 @@ export const LANZAMIENTO = {
   llegada: CAMPAÑA.llegada,
   unidades: CAMPAÑA.unidades,
 
-  /* EL CHAT. Mismo bot que el teaser: un id, no una URL. El botón visible
-     dice Continuar; el aria dice qué abre, porque «Continuar» solo no basta
-     para un lector de pantalla. */
-  iozen: import.meta.env.PUBLIC_IOZEN_BOT ?? 'm4zdh',
-  chatNombre: 'ARCFOX Ecuador',
-  chatEtiqueta: CAMPAÑA.chatEtiqueta,
 } as const;
 
 // ── Formulario de contacto ──────────────────────────────────────────────────

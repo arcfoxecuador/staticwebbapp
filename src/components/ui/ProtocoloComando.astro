@@ -1,0 +1,458 @@
+---
+/* PROTOTIPO LOCAL. Una sola pregunta y una sola respuesta ocupan la paleta;
+   nunca se construye un historial de chat. `respuestas` queda como objeto al
+   final del flujo para que una futura función de Vercel lo envíe a ioZen sin
+   cambiar esta interfaz. */
+import Boton from './Boton.astro';
+
+interface Props {
+  rotulo?: string;
+  modo?: 'integrado' | 'flotante';
+}
+
+const { rotulo = 'Continuar', modo = 'flotante' } = Astro.props;
+
+const protocolo = [
+  {
+    clave: 'busqueda',
+    pregunta: '¿Qué buscas en tu próximo vehículo?',
+    opciones: [
+      'Tecnología que sorprenda',
+      'Diseño que destaque',
+      'Confort para todos los días',
+      'Rendimiento',
+      'No estoy buscando vehículo por ahora',
+    ],
+  },
+  {
+    clave: 'momento',
+    pregunta: '¿Cuál describe mejor tu momento?',
+    opciones: ['Cambiaré de auto este año', 'Tal vez el próximo año', 'Solo estoy explorando'],
+  },
+  {
+    clave: 'novedad',
+    pregunta: 'Cuando ves algo nuevo…',
+    opciones: ['Quiero ser de los primeros', 'Espero opiniones antes', 'Prefiero lo conocido'],
+  },
+  {
+    clave: 'experiencias',
+    pregunta: '¿Qué experiencias disfrutas más?',
+    opciones: ['Eventos privados', 'Lanzamientos', 'Gastronomía', 'Tecnología e innovación', 'Música'],
+  },
+  {
+    clave: 'tecnologia',
+    pregunta: '¿Qué tecnología elegirías en tu próximo auto?',
+    opciones: ['Híbrido o eléctrico', 'Combustión', 'Aún no lo decido'],
+  },
+  {
+    clave: 'ciudad',
+    pregunta: '¿En qué ciudad estás?',
+    opciones: ['Quito', 'Guayaquil', 'Cuenca', 'Otra'],
+  },
+  { clave: 'nombre', pregunta: '¿A nombre de quién reservamos el acceso?', tipo: 'text', autocomplete: 'name' },
+  { clave: 'correo', pregunta: '¿A qué correo enviamos la confirmación?', tipo: 'email', autocomplete: 'email' },
+  { clave: 'whatsapp', pregunta: 'Escribe tu número de WhatsApp', tipo: 'tel', autocomplete: 'tel' },
+  { clave: 'instagram', pregunta: 'Por último, ¿cuál es tu usuario de Instagram?', tipo: 'text' },
+] as const;
+---
+
+<div class="comando" data-protocolo-comando data-modo={modo}>
+  {
+    modo === 'flotante' && (
+      <Boton
+        variante="fantasma"
+        class="puerta-cta"
+        tipo="button"
+        data-abrir-comando
+        aria-expanded="false"
+        aria-controls="protocolo-flotante"
+      >
+        {rotulo}
+      </Boton>
+    )
+  }
+
+  <div
+    id={modo === 'flotante' ? 'protocolo-flotante' : undefined}
+    class:list={['comando-superficie', modo]}
+    hidden={modo === 'flotante'}
+    aria-label="Protocolo para solicitar una invitación"
+  >
+    <form class="comando-panel">
+      <header class="comando-meta">
+        <span>FF/0915</span>
+        <span data-progreso>01 / 07</span>
+        <button type="button" data-cerrar-comando aria-label="Cerrar protocolo" hidden={modo === 'integrado'}>
+          ESC
+        </button>
+      </header>
+
+      <div class="comando-intercambio" aria-live="polite">
+        <p class="comando-mensaje comando-sistema">
+          <span class="comando-autor">PROTOCOLO</span>
+          <span data-pregunta></span>
+        </p>
+        <p class="comando-mensaje comando-usuario" data-mensaje-usuario hidden>
+          <span data-respuesta></span>
+          <span class="comando-autor">TÚ</span>
+        </p>
+      </div>
+
+      <div class="comando-control">
+        <div class="comando-opciones" data-opciones></div>
+        <label class="comando-entrada" data-entrada hidden>
+          <span class="sr-only">Escribe tu respuesta</span>
+          <input data-valor autocomplete="off" />
+          <button type="submit">↵</button>
+        </label>
+      </div>
+
+      <p class="comando-ayuda" data-ayuda>Elige una respuesta · usa ← → y Enter</p>
+    </form>
+
+    <script is:inline type="application/json" data-protocolo-config set:html={JSON.stringify(protocolo)}></script>
+  </div>
+</div>
+
+<script>
+  interface PasoComando {
+    clave: string;
+    pregunta: string;
+    opciones?: string[];
+    tipo?: string;
+    autocomplete?: string;
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-protocolo-comando]').forEach((raiz) => {
+    const superficie = raiz.querySelector<HTMLElement>('.comando-superficie');
+    const formulario = raiz.querySelector<HTMLFormElement>('.comando-panel');
+    const config = raiz.querySelector<HTMLScriptElement>('[data-protocolo-config]');
+    const pregunta = raiz.querySelector<HTMLElement>('[data-pregunta]');
+    const progreso = raiz.querySelector<HTMLElement>('[data-progreso]');
+    const opciones = raiz.querySelector<HTMLElement>('[data-opciones]');
+    const entrada = raiz.querySelector<HTMLElement>('[data-entrada]');
+    const valor = raiz.querySelector<HTMLInputElement>('[data-valor]');
+    const mensajeUsuario = raiz.querySelector<HTMLElement>('[data-mensaje-usuario]');
+    const respuesta = raiz.querySelector<HTMLElement>('[data-respuesta]');
+    const ayuda = raiz.querySelector<HTMLElement>('[data-ayuda]');
+    if (!superficie || !formulario || !config || !pregunta || !progreso || !opciones || !entrada || !valor || !mensajeUsuario || !respuesta || !ayuda) return;
+
+    const pasos = JSON.parse(config.textContent ?? '[]') as PasoComando[];
+    const respuestas: Record<string, string> = {};
+    let indice = 0;
+    let avanzando = false;
+
+    /* Un ancestro animado con `transform` redefine el bloque de un elemento
+       fixed. Sacar sólo la superficie a `<body>` evita que la paleta se mida
+       contra el pequeño contenedor del CTA. */
+    if (raiz.dataset.modo === 'flotante') document.body.append(superficie);
+
+    const numeroVisible = () => Math.min(indice + 1, 7);
+
+    const finalizar = () => {
+      pregunta.textContent = 'Tu perfil ha sido registrado. Revisa tus mensajes para recibir la invitación.';
+      progreso.textContent = 'ACCESO REGISTRADO';
+      opciones.replaceChildren();
+      entrada.hidden = true;
+      mensajeUsuario.hidden = true;
+      ayuda.textContent = 'Prototipo local · pendiente de conexión con ioZen';
+      formulario.dataset.completo = 'true';
+      formulario.dispatchEvent(new CustomEvent('protocolo:completo', { detail: respuestas }));
+    };
+
+    const elegir = (texto: string) => {
+      if (avanzando) return;
+      avanzando = true;
+      respuestas[pasos[indice]!.clave] = texto;
+      respuesta.textContent = texto;
+      mensajeUsuario.hidden = false;
+      opciones.querySelectorAll<HTMLButtonElement>('button').forEach((boton) => (boton.disabled = true));
+      setTimeout(() => {
+        indice += 1;
+        mensajeUsuario.hidden = true;
+        avanzando = false;
+        indice < pasos.length ? pintar() : finalizar();
+      }, 420);
+    };
+
+    const pintar = () => {
+      const paso = pasos[indice]!;
+      pregunta.textContent = paso.pregunta;
+      progreso.textContent = `${String(numeroVisible()).padStart(2, '0')} / 07`;
+      opciones.replaceChildren();
+      formulario.dataset.completo = 'false';
+
+      if (paso.opciones) {
+        entrada.hidden = true;
+        opciones.hidden = false;
+        ayuda.textContent = 'Elige una respuesta · usa ← → y Enter';
+        paso.opciones.forEach((texto, opcionIndice) => {
+          const boton = document.createElement('button');
+          boton.type = 'button';
+          boton.textContent = texto;
+          boton.dataset.indice = String(opcionIndice);
+          boton.addEventListener('click', () => elegir(texto));
+          opciones.append(boton);
+        });
+        opciones.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
+      } else {
+        opciones.hidden = true;
+        entrada.hidden = false;
+        valor.type = paso.tipo ?? 'text';
+        valor.setAttribute('autocomplete', paso.autocomplete ?? 'off');
+        valor.value = '';
+        valor.placeholder = paso.clave === 'instagram' ? '@usuario' : 'Escribe aquí…';
+        ayuda.textContent = 'Enter para confirmar';
+        valor.focus({ preventScroll: true });
+      }
+    };
+
+    const abrir = raiz.querySelector<HTMLElement>('[data-abrir-comando]');
+    abrir?.addEventListener('click', () => {
+      indice = 0;
+      avanzando = false;
+      Object.keys(respuestas).forEach((clave) => delete respuestas[clave]);
+      superficie.hidden = false;
+      abrir.setAttribute('aria-expanded', 'true');
+      pintar();
+    });
+
+    superficie.querySelector<HTMLElement>('[data-cerrar-comando]')?.addEventListener('click', () => {
+      superficie.hidden = true;
+      abrir?.setAttribute('aria-expanded', 'false');
+      abrir?.focus();
+    });
+
+    formulario.addEventListener('submit', (evento) => {
+      evento.preventDefault();
+      if (entrada.hidden || !valor.value.trim()) return;
+      if (valor.type === 'email' && !valor.checkValidity()) {
+        valor.reportValidity();
+        return;
+      }
+      elegir(valor.value.trim());
+    });
+
+    opciones.addEventListener('keydown', (evento) => {
+      if (!['ArrowLeft', 'ArrowRight'].includes(evento.key)) return;
+      const botones = [...opciones.querySelectorAll<HTMLButtonElement>('button')];
+      const actual = botones.indexOf(document.activeElement as HTMLButtonElement);
+      const delta = evento.key === 'ArrowRight' ? 1 : -1;
+      botones[(actual + delta + botones.length) % botones.length]?.focus();
+      evento.preventDefault();
+    });
+
+    if (raiz.dataset.modo === 'integrado') pintar();
+  });
+</script>
+
+<style>
+  .comando-superficie {
+    width: min(100% - 2rem, 54rem);
+    margin: auto;
+    border: 1px solid color-mix(in oklab, var(--color-superficie) 30%, transparent);
+    color: var(--color-superficie);
+    background: color-mix(in oklab, var(--color-marca) 94%, transparent);
+    overflow: clip;
+  }
+
+  .comando-superficie[hidden] {
+    display: none;
+  }
+
+  .comando-superficie.integrado {
+    width: min(100% - 2rem, 64rem);
+  }
+
+  .comando-superficie.flotante {
+    position: fixed;
+    z-index: 50;
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    left: 50%;
+    width: min(calc(100vw - 2rem), 54rem);
+    margin: 0;
+    transform: translateX(-50%);
+  }
+
+  .comando-panel {
+    position: relative;
+    display: grid;
+    gap: 0;
+    width: 100%;
+    min-width: 0;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 34px, color-mix(in oklab, var(--color-campana-fria) 7%, transparent) 34px 35px),
+      linear-gradient(108deg, color-mix(in oklab, var(--color-campana-fria) 22%, var(--color-marca)), color-mix(in oklab, var(--color-campana-calida) 15%, var(--color-marca)));
+  }
+
+  .comando-meta {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    min-height: 2.5rem;
+    padding-inline: 1rem;
+    border-bottom: 1px solid color-mix(in oklab, var(--color-superficie) 15%, transparent);
+    font-family: var(--font-sans);
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+  }
+
+  .comando-meta button {
+    justify-self: end;
+    border: 0;
+    color: color-mix(in oklab, var(--color-superficie) 60%, transparent);
+    background: transparent;
+    font: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
+  }
+
+  .comando-intercambio {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+    min-height: 7.25rem;
+    padding: 1.25rem 1.5rem 1rem;
+  }
+
+  .comando-mensaje {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    gap: 1rem;
+    align-items: baseline;
+    margin: 0;
+  }
+
+  .comando-usuario {
+    grid-template-columns: 1fr 2rem;
+    justify-self: end;
+    max-width: 80%;
+    text-align: right;
+    color: color-mix(in oklab, var(--color-campana-fria) 42%, var(--color-superficie));
+  }
+
+  .comando-autor {
+    font-family: var(--font-sans);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    color: color-mix(in oklab, var(--color-superficie) 40%, transparent);
+  }
+
+  [data-pregunta],
+  [data-respuesta] {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 2.4vw, 1.45rem);
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+  }
+
+  .comando-control {
+    min-width: 0;
+    border-top: 1px solid color-mix(in oklab, var(--color-superficie) 15%, transparent);
+    border-bottom: 1px solid color-mix(in oklab, var(--color-superficie) 15%, transparent);
+  }
+
+  .comando-opciones {
+    display: flex;
+    gap: 0;
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .comando-opciones::-webkit-scrollbar {
+    display: none;
+  }
+
+  .comando-opciones :global(button) {
+    flex: 0 0 auto;
+    min-height: 3.25rem;
+    padding-inline: 1.1rem;
+    border: 0;
+    border-right: 1px solid color-mix(in oklab, var(--color-superficie) 15%, transparent);
+    color: color-mix(in oklab, var(--color-superficie) 72%, transparent);
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+
+  .comando-opciones :global(button:hover),
+  .comando-opciones :global(button:focus-visible) {
+    color: var(--color-superficie);
+    background: color-mix(in oklab, var(--color-campana-fria) 20%, transparent);
+    outline: 0;
+  }
+
+  .comando-entrada {
+    display: grid;
+    grid-template-columns: 1fr 3.25rem;
+  }
+
+  .comando-entrada input,
+  .comando-entrada button {
+    min-height: 3.25rem;
+    border: 0;
+    color: var(--color-superficie);
+    background: transparent;
+    font-family: var(--font-sans);
+  }
+
+  .comando-entrada input {
+    padding-inline: 1.5rem;
+    outline: 0;
+  }
+
+  .comando-entrada button {
+    border-left: 1px solid color-mix(in oklab, var(--color-superficie) 15%, transparent);
+    cursor: pointer;
+  }
+
+  .comando-ayuda {
+    min-height: 2.25rem;
+    margin: 0;
+    padding: 0.65rem 1rem;
+    font-family: var(--font-sans);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    color: color-mix(in oklab, var(--color-superficie) 38%, transparent);
+  }
+
+  @media (max-width: 42rem) {
+    .comando-superficie {
+      width: calc(100% - 1rem);
+    }
+
+    .comando-meta {
+      padding-inline: 0.75rem;
+    }
+
+    .comando-intercambio {
+      min-height: 8.5rem;
+      padding: 1.1rem 1rem 0.85rem;
+    }
+
+    .comando-mensaje {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+      width: 100%;
+      min-width: 0;
+    }
+
+    [data-pregunta] {
+      display: block;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    .comando-usuario {
+      grid-template-columns: 1fr;
+    }
+
+    .comando-usuario .comando-autor {
+      display: none;
+    }
+  }
+
+</style>
