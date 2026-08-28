@@ -19,13 +19,13 @@
    respuesta para el 15 de septiembre, que es el único día en que contestarla
    vale algo.
 
-   POR QUÉ ESTE DETALLE. `s5-aleta-sin-nombre.webp` parte de la misma fotografía
+   POR QUÉ ESTE DETALLE. `s5-aleta-sin-emblema.png` parte de la misma fotografía
    que abre followdafox: el alerón y la firma luminosa permiten reconocer la
    campaña sin enseñar el vehículo completo. La única edición del recurso es
    retirar la palabra ARCFOX de la carrocería y reconstruir ese tramo con el
-   mismo material y reflejo. El emblema que queda en el centro también se pierde
-   bajo un velo localizado: se conserva el auto correcto sin revelar todavía
-   ningún identificador de marca.
+   mismo material y reflejo. El emblema integrado en la luz también se reconstruye
+   con el mismo vidrio negro; así no hace falta esconderlo con una mancha y se
+   conserva el auto correcto sin revelar todavía ningún identificador de marca.
 
    El fondo de esta serie es el mismo degradado frío→cálido que el campo CSS de
    la página estaba imitando a mano: la fotografía y el campo son la misma
@@ -45,7 +45,7 @@ import CuentaAtras from '../components/ui/CuentaAtras.astro';
 import { LANZAMIENTO } from '../lib/site';
 import { grafo, organizacion, pagina, sitioWeb } from '../lib/schema';
 
-import aleta from '../assets/s5-aleta-sin-nombre.webp';
+import aleta from '../assets/s5-aleta-sin-emblema.png';
 
 const schema = grafo(
   organizacion(),
@@ -242,9 +242,9 @@ const lineasTitular = [
     /* El centro conserva el alerón y la firma de luz cuando `cover` recorta los
        laterales en móvil; el emblema se apaga en el velo, no en el encuadre. */
     object-position: 50% 50%;
-    filter: grayscale(1) contrast(1.03) blur(2px);
-    opacity: 0.72;
-    transform: scale(1.01);
+    filter: grayscale(1) contrast(1.04) blur(0.75px);
+    opacity: 0.76;
+    transform: scale(1.005);
     mask-image: radial-gradient(
       ellipse 90% 76% at 48% 34%,
       black 0 34%,
@@ -260,15 +260,6 @@ const lineasTitular = [
     position: absolute;
     inset: 0;
     background:
-      /* Esta mancha coincide con el emblema de la toma y se desvanece antes de
-         tocar el alerón. No se usa una caja con blur porque delataría el retoque. */
-      radial-gradient(
-        ellipse 17% 21% at 76% 74%,
-        color-mix(in oklab, var(--color-marca) 92%, transparent) 0%,
-        color-mix(in oklab, var(--color-marca) 78%, transparent) 38%,
-        color-mix(in oklab, var(--color-marca) 28%, transparent) 70%,
-        transparent 100%
-      ),
       radial-gradient(
         ellipse 72% 66% at 50% 55%,
         color-mix(in oklab, var(--color-marca) 62%, transparent) 0%,
