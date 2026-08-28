@@ -2,7 +2,7 @@
 
 Análisis completo del CMS del sitio IIDEA (`cms-panel/`) y del trabajo hecho para
 que **se vea, se sienta y funcione como WordPress (wp-admin)**, manteniendo la
-arquitectura git-first del proyecto.
+arquitectura git-first del proyecto. 
 
 ## 1. Qué es este CMS (arquitectura)
 
