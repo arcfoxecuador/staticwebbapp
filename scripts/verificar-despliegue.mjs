@@ -80,6 +80,20 @@ if (!existsSync(RUTA)) {
   }
 }
 
+/* ── El dominio de los deploys podados ─────────────────────────────────────
+   En un deploy de una página, `dist-landing.mjs` reescribe `robots.txt` y
+   `sitemap.xml` con el dominio de ESE sitio. Si la variable de entorno llega
+   vacía —y una variable de GitHub Actions sin definir llega vacía, no
+   ausente—, ahí acaba un `<loc>/</loc>` que ningún buscador puede seguir.
+   Se comprueba sólo cuando hubo poda: el sitio completo genera su sitemap con
+   el plugin de Astro y no pasa por aquí. */
+if (existsSync('dist/sitemap.xml') && !existsSync('dist/sitemap-index.xml')) {
+  const loc = readFileSync('dist/sitemap.xml', 'utf8').match(/<loc>([^<]*)<\/loc>/)?.[1] ?? '';
+  if (!/^https?:\/\/[^/]+\//.test(loc)) {
+    fallos.push(`el sitemap del deploy podado no lleva dominio: <loc>${loc}</loc> — revisa SITE_URL`);
+  }
+}
+
 if (fallos.length) {
   console.error('✗ configuración de despliegue incompleta:');
   for (const fallo of fallos) console.error(`  · ${fallo}`);
