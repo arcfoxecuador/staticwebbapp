@@ -1,9 +1,15 @@
 ---
-/* PROTOTIPO LOCAL. Una sola pregunta y una sola respuesta ocupan la paleta;
-   nunca se construye un historial de chat. `respuestas` queda como objeto al
-   final del flujo para que una futura función de Vercel lo envíe a ioZen sin
-   cambiar esta interfaz. */
+/* LA PUERTA. Una sola pregunta y una sola respuesta ocupan la paleta; nunca se
+   construye un historial de chat. Al terminar, `respuestas` sale por POST al
+   endpoint de `PROTOCOLO` —la hoja de cálculo, vía Apps Script— y además se
+   emite `protocolo:completo`, que es el punto de enganche para ioZen o para
+   analítica sin tocar esta interfaz.
+
+   Sin endpoint configurado el flujo funciona igual pero NO dice «registrado»:
+   ver `finalizar()`. Prometer un registro que no ha ocurrido es peor que no
+   tener formulario, porque nadie se entera de que se está perdiendo gente. */
 import Boton from './Boton.astro';
+import { ORG, PROTOCOLO } from '../../lib/site';
 
 interface Props {
   rotulo?: string;
@@ -111,7 +117,12 @@ const protocolo = [
     hidden={modo === 'flotante'}
     aria-label="Protocolo para solicitar una invitación"
   >
-    <form class="comando-panel">
+    <form
+      class="comando-panel"
+      data-endpoint={PROTOCOLO.endpoint}
+      data-token={PROTOCOLO.token}
+      data-instagram={ORG.redes[0]}
+    >
       <header class="comando-meta">
         <span>FF/0915</span>
         <span data-progreso>01 / 07</span>
@@ -135,10 +146,17 @@ const protocolo = [
         <div class="comando-opciones" data-opciones></div>
         <label class="comando-entrada" data-entrada hidden>
           <span class="sr-only">Escribe tu respuesta</span>
-          <input data-valor autocomplete="off" />
+          <input data-valor autocomplete="off" aria-describedby="protocolo-error" />
           <button type="submit">↵</button>
         </label>
       </div>
+
+      {/* `role="alert"` y no el `aria-live="polite"` del acuse de contacto: esto
+          no es un aviso de cortesía, es la razón por la que el visitante no
+          avanza. Si no se anuncia al momento, quien usa lector de pantalla
+          vuelve a pulsar Enter contra una pared silenciosa. Vacío no se pinta,
+          así que no ocupa sitio mientras no hay error. */}
+      <p class="comando-error" id="protocolo-error" data-error role="alert"></p>
 
       <p class="comando-ayuda" data-ayuda>Elige una respuesta · usa ← → y Enter</p>
     </form>
@@ -148,6 +166,13 @@ const protocolo = [
 </div>
 
 <script>
+  /* La validación vive en `lib/protocolo.mjs` y no aquí porque
+     `scripts/verificar-protocolo.mjs` la prueba dentro de `npm run check`. Un
+     `.mjs` es lo único que Node puede importar sin compilar y que Vite puede
+     meter en el bundle: la regla se escribe una vez y se prueba la misma que
+     corre en el navegador. */
+  import { validar } from '../../lib/protocolo.mjs';
+
   interface PasoComando {
     clave: string;
     pregunta: string;
@@ -156,6 +181,83 @@ const protocolo = [
     autocomplete?: string;
     placeholder?: string;
   }
+
+  interface EnvioProtocolo {
+    id: string;
+    token: string;
+    origen: string;
+    sello: number;
+    intentos: number;
+    respuestas: Record<string, string>;
+  }
+
+  /* LA COLA DE UN SOLO ELEMENTO. Quien completa las diez preguntas y pierde el
+     envío por un túnel del metro es exactamente el lead que más caro sale de
+     conseguir, así que el registro fallido se guarda y se reintenta al abrir
+     cualquier página del sitio. Cinco intentos y se descarta: una entrada
+     inmortal reintentando contra un endpoint mal configurado escribe basura en
+     la hoja cada vez que el visitante vuelve. */
+  const CLAVE_COLA = 'arcfox:protocolo-pendiente';
+  const MAXIMO_INTENTOS = 5;
+
+  /* `localStorage` lanza —no devuelve null— en Safari privado y con las cookies
+     de terceros bloqueadas. Sin este envoltorio, un navegador con la privacidad
+     apretada rompería el flujo entero por no poder guardar un reintento. */
+  const guardar = (envio: EnvioProtocolo | null) => {
+    try {
+      if (envio) localStorage.setItem(CLAVE_COLA, JSON.stringify(envio));
+      else localStorage.removeItem(CLAVE_COLA);
+    } catch {
+      /* Sin almacenamiento no hay reintento. El envío en curso no se ve afectado. */
+    }
+  };
+
+  const pendiente = (): EnvioProtocolo | null => {
+    try {
+      const crudo = localStorage.getItem(CLAVE_COLA);
+      return crudo ? (JSON.parse(crudo) as EnvioProtocolo) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  /** Identificador de envío. Lo usa la hoja para NO escribir dos veces la misma
+      fila: sin él, un reintento sobre un POST que en realidad sí llegó duplica
+      al invitado, y en una lista de invitaciones eso se nota. */
+  const identificador = () =>
+    crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  const enviar = async (endpoint: string, envio: EnvioProtocolo) => {
+    try {
+      const respuesta = await fetch(endpoint, {
+        method: 'POST',
+        /* `text/plain` a propósito, y no `application/json`: mantiene el POST en
+           el terreno de las «peticiones simples», así que el navegador no manda
+           el preflight `OPTIONS` que una implementación web de Apps Script no
+           contesta. El cuerpo sigue siendo JSON; lo parsea el script de la hoja. */
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(envio),
+        /* La pestaña puede cerrarse en cuanto se lee el mensaje final. */
+        keepalive: true,
+      });
+      if (!respuesta.ok) return false;
+      const cuerpo = (await respuesta.json().catch(() => null)) as { ok?: boolean } | null;
+      return cuerpo?.ok === true;
+    } catch {
+      return false;
+    }
+  };
+
+  /* Reintento al cargar. Va fuera del bucle de instancias porque la cola es del
+     visitante, no del componente: da igual en qué página aterrice después. */
+  const reintentar = async () => {
+    const envio = pendiente();
+    const endpoint = document.querySelector<HTMLFormElement>('[data-endpoint]')?.dataset.endpoint;
+    if (!envio || !endpoint) return;
+    if (envio.intentos >= MAXIMO_INTENTOS) return guardar(null);
+    guardar({ ...envio, intentos: envio.intentos + 1 });
+    if (await enviar(endpoint, envio)) guardar(null);
+  };
 
   document.querySelectorAll<HTMLElement>('[data-protocolo-comando]').forEach((raiz) => {
     const superficie = raiz.querySelector<HTMLElement>('.comando-superficie');
@@ -169,12 +271,37 @@ const protocolo = [
     const mensajeUsuario = raiz.querySelector<HTMLElement>('[data-mensaje-usuario]');
     const respuesta = raiz.querySelector<HTMLElement>('[data-respuesta]');
     const ayuda = raiz.querySelector<HTMLElement>('[data-ayuda]');
-    if (!superficie || !formulario || !config || !pregunta || !progreso || !opciones || !entrada || !valor || !mensajeUsuario || !respuesta || !ayuda) return;
+    const error = raiz.querySelector<HTMLElement>('[data-error]');
+    if (!superficie || !formulario || !config || !pregunta || !progreso || !opciones || !entrada || !valor || !mensajeUsuario || !respuesta || !ayuda || !error) return;
 
     const pasos = JSON.parse(config.textContent ?? '[]') as PasoComando[];
     const respuestas: Record<string, string> = {};
     let indice = 0;
     let avanzando = false;
+
+    /* Sello anti-bot: milisegundos entre la carga y el envío. Diez preguntas no
+       se contestan en tres segundos, así que la hoja puede descartar cualquier
+       cosa por debajo de ese umbral sin riesgo de dejar fuera a un humano. Es la
+       misma idea del formulario de contacto, y por el mismo motivo: un captcha
+       lo paga quien sí es humano. */
+    const inicio = Date.now();
+
+    const limpiarError = () => {
+      error.textContent = '';
+      valor.removeAttribute('aria-invalid');
+    };
+
+    const mostrarError = (mensaje: string) => {
+      error.textContent = mensaje;
+      valor.setAttribute('aria-invalid', 'true');
+      /* Ni se borra el campo ni se mueve el foco: quien escribió «ana@correo»
+         quiere corregir dos letras, no volver a teclearlo entero. */
+      valor.focus({ preventScroll: true });
+    };
+
+    /* El error desaparece al primer cambio, no al reenviar. Un mensaje en rojo
+       que sigue ahí mientras ya estás corrigiendo dice que sigues equivocado. */
+    valor.addEventListener('input', limpiarError);
 
     /* Un ancestro animado con `transform` redefine el bloque de un elemento
        fixed. Sacar sólo la superficie a `<body>` evita que la paleta se mida
@@ -197,15 +324,66 @@ const protocolo = [
 
     const numeroVisible = () => Math.min(indice + 1, 7);
 
-    const finalizar = () => {
-      pregunta.textContent = 'Tu perfil ha sido registrado. Revisa tus mensajes para recibir la invitación.';
-      progreso.textContent = 'ACCESO REGISTRADO';
+    const finalizar = async () => {
       opciones.replaceChildren();
       entrada.hidden = true;
       mensajeUsuario.hidden = true;
-      ayuda.textContent = 'Prototipo local · pendiente de conexión con ioZen';
+      limpiarError();
       formulario.dataset.completo = 'true';
+      /* El evento se emite con las respuestas ya normalizadas y ANTES de saber
+         si el POST llegó: es el enganche para ioZen y para analítica, y ninguno
+         de los dos debería esperar a la hoja de cálculo. */
       formulario.dispatchEvent(new CustomEvent('protocolo:completo', { detail: respuestas }));
+
+      const endpoint = formulario.dataset.endpoint ?? '';
+      if (!endpoint) {
+        /* Sin endpoint NO se dice «registrado». En local es la señal de que
+           falta la variable; en producción, de que alguien la borró. */
+        pregunta.textContent = 'Protocolo completado.';
+        progreso.textContent = 'SIN DESTINO';
+        ayuda.textContent = 'Prototipo local · falta PUBLIC_PROTOCOLO_ENDPOINT';
+        return;
+      }
+
+      pregunta.textContent = 'Registrando tu perfil…';
+      progreso.textContent = 'ENVIANDO';
+      ayuda.textContent = '';
+
+      const envio = {
+        id: identificador(),
+        token: formulario.dataset.token ?? '',
+        origen: location.pathname,
+        sello: Date.now() - inicio,
+        intentos: 1,
+        respuestas: { ...respuestas },
+      };
+
+      /* Se guarda ANTES de intentarlo. Si el navegador se cierra a mitad del
+         POST, el registro sobrevive; si el POST va bien, se borra a la vuelta.
+         El `id` hace que un reintento sobre un envío que sí había llegado no
+         escriba una segunda fila. */
+      guardar(envio);
+
+      if (await enviar(endpoint, envio)) {
+        guardar(null);
+        pregunta.textContent = 'Tu perfil ha sido registrado. Revisa tus mensajes para recibir la invitación.';
+        progreso.textContent = 'ACCESO REGISTRADO';
+        ayuda.textContent = 'Te escribiremos por WhatsApp o Instagram';
+        return;
+      }
+
+      /* El error da una salida y no culpa al visitante: sus datos están
+         guardados y el reintento es automático. El enlace es el último recurso. */
+      pregunta.textContent = 'No pudimos confirmar tu registro. Lo reintentaremos en cuanto vuelvas a tener conexión.';
+      progreso.textContent = 'SIN CONEXIÓN';
+      const instagram = formulario.dataset.instagram ?? '';
+      ayuda.replaceChildren('Si prefieres, escríbenos por ');
+      const enlace = document.createElement('a');
+      enlace.href = instagram;
+      enlace.target = '_blank';
+      enlace.rel = 'noopener';
+      enlace.textContent = 'Instagram';
+      ayuda.append(enlace);
     };
 
     const elegir = (texto: string) => {
@@ -219,12 +397,16 @@ const protocolo = [
         indice += 1;
         mensajeUsuario.hidden = true;
         avanzando = false;
-        indice < pasos.length ? pintar() : finalizar();
+        /* `void`: el envío es asíncrono pero la interfaz ya no depende de él —
+           `finalizar()` pinta sus propios estados. */
+        if (indice < pasos.length) pintar();
+        else void finalizar();
       }, 420);
     };
 
     const pintar = () => {
       const paso = pasos[indice]!;
+      limpiarError();
       pregunta.textContent = paso.pregunta;
       progreso.textContent = `${String(numeroVisible()).padStart(2, '0')} / 07`;
       opciones.replaceChildren();
@@ -279,12 +461,20 @@ const protocolo = [
 
     formulario.addEventListener('submit', (evento) => {
       evento.preventDefault();
-      if (entrada.hidden || !valor.value.trim()) return;
-      if (valor.type === 'email' && !valor.checkValidity()) {
-        valor.reportValidity();
+      if (entrada.hidden || avanzando) return;
+
+      /* La validación del navegador se queda corta justo donde importa:
+         `type="email"` acepta `ana@correo` y `type="tel"` no valida NADA. Por
+         eso la regla es nuestra, y por eso normaliza además de comprobar — lo
+         que se guarda es lo que alguien va a marcar en WhatsApp una por una. */
+      const resultado = validar(pasos[indice]!.clave, valor.value);
+      if (!resultado.ok) {
+        mostrarError(resultado.error);
         return;
       }
-      elegir(valor.value.trim());
+
+      limpiarError();
+      elegir(resultado.valor);
     });
 
     opciones.addEventListener('keydown', (evento) => {
@@ -298,6 +488,10 @@ const protocolo = [
 
     if (raiz.dataset.modo === 'integrado') pintar();
   });
+
+  /* Al final y sin `await`: el reintento de un registro anterior no puede
+     retrasar el pintado de la puerta. */
+  void reintentar();
 </script>
 
 <style>
@@ -468,6 +662,36 @@ const protocolo = [
     cursor: pointer;
   }
 
+  /* EL ERROR NO ES ROJO, y no por estética: la paleta está cerrada y un rojo
+     suelto sería un décimo token. Es `campana-calida` ACLARADA CON BLANCO, y el
+     aclarado no es un gusto: el token vale `#32105f`, un violeta oscuro que
+     sobre este panel —también oscuro— es prácticamente ilegible. Lo comprobó
+     una captura a 390px, no el ojo mirando el código.
+
+     No introduce un décimo token: sale de dos de los nueve. Y sigue
+     distinguiéndose de las otras dos voces del panel: la pregunta va en blanco
+     puro, la ayuda en blanco al 38%. */
+  .comando-panel {
+    --error-protocolo: color-mix(in oklab, var(--color-campana-calida) 26%, var(--color-superficie));
+  }
+
+  .comando-error {
+    margin: 0;
+    padding: 0.65rem 1rem 0;
+    color: var(--error-protocolo);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: 0.04em;
+  }
+
+  /* Sin contenido no ocupa: el hueco reservado «por si acaso» descuadra la
+     paleta flotante en móvil, que ya vive pegada al teclado. */
+  .comando-error:empty {
+    display: none;
+  }
+
   .comando-ayuda {
     min-height: 2.25rem;
     margin: 0;
@@ -476,6 +700,21 @@ const protocolo = [
     font-size: 0.58rem;
     letter-spacing: 0.12em;
     color: color-mix(in oklab, var(--color-superficie) 38%, transparent);
+  }
+
+  .comando-ayuda :global(a) {
+    color: var(--color-superficie);
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  /* El campo acompaña al mensaje: quien no lee el texto pequeño ve igualmente
+     dónde está el problema. El subrayado hace el trabajo —un lavado de color
+     sobre un panel ya oscuro no se ve— y no es la única señal: el mensaje
+     escrito lo acompaña siempre, que es lo que pide no depender del color. */
+  .comando-entrada:has(input[aria-invalid='true']) {
+    background: color-mix(in oklab, var(--color-superficie) 6%, transparent);
+    box-shadow: inset 0 -2px 0 var(--error-protocolo);
   }
 
   @media (max-width: 42rem) {

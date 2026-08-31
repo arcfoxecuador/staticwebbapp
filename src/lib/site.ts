@@ -373,6 +373,34 @@ export const FORMULARIO = {
   trampa: '_ref',
 } as const;
 
+// ── Protocolo de la puerta de lanzamiento ───────────────────────────────────
+
+/* EL DESTINO DE LOS REGISTROS DE `/lanzamiento` y `/landing`. Misma decisión que
+   `FORMULARIO`, distinto destino: aquí el POST va a una implementación web de
+   Google Apps Script ligada a la hoja de cálculo (`scripts/hoja-protocolo.gs`).
+
+   POR QUÉ APPS SCRIPT Y NO UNA FUNCIÓN. El sitio es estático y no tiene
+   servidor; una función de Vercel obligaría a una cuenta de servicio, su clave
+   JSON y una dependencia de producción más. Apps Script es cero dependencias y
+   cero infraestructura, y el volumen de una lista de invitados le sobra.
+
+   `token` NO ES UN SECRETO Y NO PUEDE SERLO: lleva prefijo `PUBLIC_` porque lo
+   necesita el navegador, así que viaja en el JavaScript servido. Sirve para que
+   quien tropiece con la URL `/exec` no pueda escribir en la hoja sin haberla
+   leído de aquí; no sirve contra alguien decidido. Si algún día llega spam de
+   verdad, la respuesta no es un token más largo: es mover el POST a una función
+   con la credencial del lado del servidor.
+
+   Vacío = el protocolo funciona igual pero NO promete registro. Ver
+   `ProtocoloComando.astro`: un formulario que dice «registrado» sin que nada se
+   haya guardado es la peor de las tres opciones posibles. */
+export const PROTOCOLO = {
+  /** URL `…/exec` de la implementación web de Apps Script. */
+  endpoint: import.meta.env.PUBLIC_PROTOCOLO_ENDPOINT ?? '',
+  /** Cadena compartida con el script de la hoja. Ver el aviso de arriba. */
+  token: import.meta.env.PUBLIC_PROTOCOLO_TOKEN ?? '',
+} as const;
+
 // ── Analítica ───────────────────────────────────────────────────────────────
 
 /* Los identificadores viven en el entorno, no aquí. Este objeto sólo decide

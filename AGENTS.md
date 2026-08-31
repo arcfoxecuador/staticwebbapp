@@ -64,7 +64,8 @@ src/
 │   └── motion.css        todo el movimiento, en CSS puro con animation-timeline
 └── assets/               imágenes que Astro optimiza (ver su LEEME.md)
 public/                   favicon, marca/, og/
-scripts/                  tres verificadores de dist/ · pipeline de imágenes · og · dist-landing.mjs
+scripts/                  cuatro verificadores · pipeline de imágenes · og · dist-landing.mjs
+                          hoja-protocolo.gs NO se ejecuta aquí: se pega en Google Apps Script
 ```
 
 ### Las páginas
@@ -150,9 +151,21 @@ scripts/                  tres verificadores de dist/ · pipeline de imágenes �
   sitemap; `PUBLIC_IOZEN_BOT` (id `m4zdh`) pinta el chat como popup. Sin el
   bot no se monta y quedan las redes. `tsconfig.json` excluye `cms-panel/`
   para que `astro check` no tipe el panel.
+- **Protocolo de la puerta**: las diez preguntas de `ProtocoloComando.astro`
+  terminan en una **hoja de cálculo de Google** por POST a una implementación
+  web de Apps Script. El script a pegar en Google es `scripts/hoja-protocolo.gs`
+  —lleva dentro las instrucciones— y `CAMPOS` de ese archivo tiene que seguir
+  siendo la misma lista que las claves del protocolo: `npm run verificar` lo
+  comprueba y falla si se separan. Variables: `PUBLIC_PROTOCOLO_ENDPOINT` (URL
+  `…/exec`) y `PUBLIC_PROTOCOLO_TOKEN`, **en Environment de los dos proyectos que
+  sirven la puerta** (`arcfox-lanzamiento` y `followdafox`), no sólo en uno. Sin
+  endpoint el flujo funciona pero dice «SIN DESTINO» en vez de «registrado». La
+  validación de nombre, correo, WhatsApp e Instagram vive en
+  `src/lib/protocolo.mjs` —normaliza además de validar— y se prueba en
+  `scripts/verificar-protocolo.mjs`.
 - **Puerta de lanzamiento**: `/lanzamiento` (mismo layout `Teaser.astro`). Copy
   en `CAMPAÑA` / `LANZAMIENTO` de `site.ts` — ceja, titular y CTA «Continuar»
-  de la maqueta. CONTINUAR abre el popup de ioZen. Tercer proyecto Vercel
+  de la maqueta. CONTINUAR abre el protocolo. Tercer proyecto Vercel
   (`arcfox-lanzamiento`). Variables: `SOLO_LANZAMIENTO=1` poda `dist/` a esa
   página; `SITE_URL` fija canonical. No combinar con `SOLO_LANDING` en el mismo
   build. Fuera de `NAV`; `noindex` en arcfox.com.ec.
