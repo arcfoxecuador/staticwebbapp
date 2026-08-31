@@ -9,11 +9,13 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "build:vercel": "astro build && node scripts/dist-landing.mjs",
+    "build:despliegue": "astro build && node scripts/dist-landing.mjs",
+    "build:azure": "npm run build:despliegue",
+    "build:vercel": "npm run build:despliegue",
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check && npm run build && npm run verificar",
-    "verificar": "node scripts/verificar-scripts-inline.mjs && node scripts/verificar-enlaces.mjs && node scripts/verificar-coherencia.mjs && node scripts/verificar-protocolo.mjs",
+    "verificar": "node scripts/verificar-scripts-inline.mjs && node scripts/verificar-enlaces.mjs && node scripts/verificar-coherencia.mjs && node scripts/verificar-protocolo.mjs && node scripts/verificar-despliegue.mjs",
     "imagenes": "node scripts/imagenes.mjs",
     "og": "node scripts/og.mjs"
   },

@@ -21,7 +21,7 @@ npm install && npm run dev
 | --- | --- |
 | `npm run dev` | Servidor en `http://localhost:4321`. **`dev` no minifica**, así que hay bugs de producción invisibles aquí |
 | `npm run build` | Compila a `dist/` |
-| `npm run build:vercel` | `astro build` + poda del teaser si `SOLO_LANDING=1` |
+| `npm run build:despliegue` | `astro build` + poda si `SOLO_LANDING=1` o `SOLO_LANZAMIENTO=1`. `build:azure` y `build:vercel` son alias suyos |
 | `npm run check` | `astro check` + build + los tres verificadores de `dist/`. **Es la puerta.** |
 | `npm run preview` | Sirve `dist/` compilado |
 | `npm run imagenes` | Procesa `imagenes-entrada/` → `src/assets/` en WebP, sin EXIF |
@@ -39,7 +39,10 @@ séptima es una decisión, no un trámite: el argumento está escrito en
 
 ```
 astro.config.mjs      sitio, sitemap y la minificación de CSS APAGADA a propósito
-vercel.json           cabeceras de seguridad, cache inmutable de /_astro, cleanUrls
+public/staticwebapp.config.json  cabeceras, cache de /_astro, trailingSlash y 404 EN AZURE
+                      vive en public/ porque Azure lo exige en la raíz de dist/
+.github/workflows/    el despliegue de Azure. Las variables son de repositorio, no secretos
+vercel.json           lo mismo, para Vercel. Se borra cuando Azure esté verificado
 cms-panel/            el CMS (git, Express, agentes). No es Storyblok.
 src/config/brand.json guía de los agentes; el build del sitio no la lee
 src/
@@ -64,7 +67,7 @@ src/
 │   └── motion.css        todo el movimiento, en CSS puro con animation-timeline
 └── assets/               imágenes que Astro optimiza (ver su LEEME.md)
 public/                   favicon, marca/, og/
-scripts/                  cuatro verificadores · pipeline de imágenes · og · dist-landing.mjs
+scripts/                  cinco verificadores · pipeline de imágenes · og · dist-landing.mjs
                           hoja-protocolo.gs NO se ejecuta aquí: se pega en Google Apps Script
 ```
 
@@ -188,6 +191,45 @@ scripts/                  cuatro verificadores · pipeline de imágenes · og ·
   `npm view @bruits/satteri-darwin-arm64 versions` liste la versión que pide el
   Astro instalado; hasta entonces, quitarlo rompe la construcción en cualquier Mac
   con Apple Silicon.
+
+---
+
+## Despliegue
+
+**El destino es Azure Static Web Apps**, no Vercel. El repositorio de despliegue es
+`arcfoxecuador/staticwebbapp` (público) y el recurso, `wonderful-rock-04b0a290f`.
+
+El workflow que generó Azure venía con `output_location: ""`, que publica la RAÍZ
+DEL REPOSITORIO: para un sitio Astro eso sube los `.astro` sin construir en vez
+del HTML. Está corregido en
+`.github/workflows/azure-static-web-apps-wonderful-rock-04b0a290f.yml`, que además
+corre `npm run check` antes de desplegar — un despliegue que no pasa la puerta
+publica lo que nadie ha comprobado.
+
+**La configuración del sitio vive en `public/staticwebapp.config.json`**, no en la
+raíz: Azure la exige dentro de `output_location`, y `public/` es lo único que Astro
+copia a `dist/`. Si desapareciera, el sitio se publicaría igual pero sin cabeceras
+de seguridad, sin caché inmutable y sin 404 — sin un solo error. Por eso
+`verificar-despliegue.mjs` lo comprueba en `dist/` dentro de `npm run check`.
+
+En los deploys podados (`SOLO_LANDING`, `SOLO_LANZAMIENTO`) la poda se lleva
+`404.html`, así que `dist-landing.mjs` reescribe esa regla a `/index.html`: en un
+sitio de una página, quien llega a una URL vieja ve la página, no un error.
+
+**Las variables son de repositorio (Settings › Secrets and variables › Actions ›
+Variables), no secretos.** `SITE_URL`, `SOLO_LANDING`, `SOLO_LANZAMIENTO`,
+`PUBLIC_PROTOCOLO_ENDPOINT`, `PUBLIC_PROTOCOLO_TOKEN`, `PUBLIC_IOZEN_BOT`. Sin
+ninguna de poda se construye el sitio completo. El único secreto real es
+`AZURE_STATIC_WEB_APPS_API_TOKEN_WONDERFUL_ROCK_04B0A290F`.
+
+**Un Static Web App sirve un sitio.** Los tres destinos (sitio completo, teaser,
+puerta) necesitan tres recursos de Azure, cada uno con su workflow y su token. Hoy
+existe uno solo.
+
+**Pendiente al mover el repositorio:** `render.yaml` apunta a `GITHUB_OWNER:
+Retr1to` / `GITHUB_REPO: ARCFOX`. Si el sitio cambia de repositorio y eso no se
+actualiza, el CMS sigue publicando en el repositorio viejo y sus cambios dejan de
+llegar al sitio.
 
 ---
 
