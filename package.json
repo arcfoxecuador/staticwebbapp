@@ -13,7 +13,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check && npm run build && npm run verificar",
-    "verificar": "node scripts/verificar-scripts-inline.mjs && node scripts/verificar-enlaces.mjs && node scripts/verificar-coherencia.mjs",
+    "verificar": "node scripts/verificar-scripts-inline.mjs && node scripts/verificar-enlaces.mjs && node scripts/verificar-coherencia.mjs && node scripts/verificar-protocolo.mjs",
     "imagenes": "node scripts/imagenes.mjs",
     "og": "node scripts/og.mjs"
   },
