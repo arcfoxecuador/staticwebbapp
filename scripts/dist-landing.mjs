@@ -193,4 +193,18 @@ writeFileSync(
 `,
 );
 
+/* ── La 404 de Azure, que la poda acaba de borrar ──────────────────────── */
+/* `staticwebapp.config.json` apunta a `/404.html`, y ese archivo se ha ido con
+   el resto del sitio. Dejarlo apuntando a una página inexistente es peor que no
+   configurar nada: Azure no avisa, y cualquier URL equivocada acaba en su
+   página de error genérica en inglés. En un deploy de una sola página la
+   respuesta correcta es esa página: quien llega a `/modelos` desde un enlace
+   viejo ve la puerta, no un error. */
+const CONFIG_AZURE = join(DIST, 'staticwebapp.config.json');
+if (existsSync(CONFIG_AZURE)) {
+  const config = JSON.parse(readFileSync(CONFIG_AZURE, 'utf8'));
+  config.responseOverrides = { ...config.responseOverrides, 404: { rewrite: '/index.html' } };
+  writeFileSync(CONFIG_AZURE, `${JSON.stringify(config, null, 2)}\n`);
+}
+
 console.log(`[dist-landing] dist/ podado para ${SITE} — ${referenciados.size} archivos en _astro/`);
