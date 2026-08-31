@@ -352,7 +352,12 @@ const protocolo = [
       const envio = {
         id: identificador(),
         token: formulario.dataset.token ?? '',
-        origen: location.pathname,
+        /* CON EL DOMINIO, no sólo la ruta. La misma puerta la sirven dos
+           proyectos, y en los dos la página es la home: `location.pathname`
+           devolvía `/` en ambos, que es un dato que no distingue nada. Con el
+           anfitrión la columna responde a la pregunta que se le hace de verdad
+           — quién vino por la campaña y quién por followdafox. */
+        origen: location.host + location.pathname,
         sello: Date.now() - inicio,
         intentos: 1,
         respuestas: { ...respuestas },
