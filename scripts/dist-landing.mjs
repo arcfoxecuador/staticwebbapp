@@ -49,8 +49,14 @@ const flag = SOLO_LANDING ? 'SOLO_LANDING' : 'SOLO_LANZAMIENTO';
 const fuente = SOLO_LANDING
   ? join(DIST, 'landing.html')
   : join(DIST, 'lanzamiento.html');
+/* `||` y NO `??`. Una variable de GitHub Actions que no está definida no llega
+   como ausente: llega como CADENA VACÍA. Con `??` esa cadena pasaba el filtro,
+   `SITE` quedaba en `''` y el build moría en `new URL('')` con un
+   `ERR_INVALID_URL` que no menciona ni SITE_URL ni el despliegue. Sólo se veía
+   en CI —en local siempre se pasa un valor—, que es lo que lo hizo caro de
+   encontrar. `rutas.mjs` ya usaba `||` por esta misma razón. */
 const SITE = (
-  process.env.SITE_URL ??
+  process.env.SITE_URL ||
   (SOLO_LANDING ? 'https://followdafox.com' : 'https://arcfox-lanzamiento.vercel.app')
 ).replace(/\/+$/, '');
 
