@@ -12,7 +12,6 @@ import Cierre from '../components/bloques/Cierre.astro';
 import Formulario from '../components/bloques/Formulario.astro';
 
 import hero from '../assets/hero.webp';
-import t1Kv from '../assets/t1-kv.webp';
 import t1Kv2 from '../assets/t1-kv2.webp';
 import s5Cuarto from '../assets/s5-45.webp';
 import s5Bajo from '../assets/s5-bajo.webp';
@@ -39,7 +38,9 @@ const resolverFotogramas = (items: { archivo: string; alt: string }[]) =>
 
 const heroPorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
   t5: { imagen: hero, alt: 'SUV ARCFOX T5 eléctrico en carretera al anochecer.' },
-  t1: { imagen: t1Kv, alt: 'ARCFOX T1, SUV familiar 100% eléctrico.' },
+  /* t1-kv es la misma escena de pabellón que hero.webp: a sangre se leen
+     como el mismo auto. kv2 es la toma de dos T1 frente a la ciudad. */
+  t1: { imagen: t1Kv2, alt: 'Dos ARCFOX T1 en el escenario de marca junto al agua.' },
   s5: { imagen: s5Cuarto, alt: 'ARCFOX S5, SUV fastback 100% eléctrico.' },
 };
 
