@@ -76,7 +76,7 @@ const grupos = tablero
             const indiceTexto = textos.indexOf(celda);
             if (esFoto(celda) && celda.imagen && celda.alt) {
               return (
-                <div class="celda-foto relative min-h-64 flex-1 overflow-clip md:min-h-[32rem] md:aspect-[3/4] md:flex-none">
+                <div class="celda-foto relative min-h-64 flex-1 overflow-clip md:aspect-[4/5] md:max-h-[58svh] md:min-h-0 md:flex-none">
                   <Image
                     src={celda.imagen}
                     alt={celda.alt}

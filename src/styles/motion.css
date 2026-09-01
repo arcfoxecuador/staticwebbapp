@@ -196,16 +196,62 @@
     .tira > *:nth-child(8) { animation-range: cover 43% cover 77%; }
     .tira > *:nth-child(9) { animation-range: cover 48% cover 82%; }
 
-    /* Un tablero de seis losas mide casi un viewport. Con los rangos
-       largos de `.tira`, las dos de abajo se quedan a media apertura
-       —título recortado— justo cuando alguien se para a leerlas. */
+    /* Un tablero de casillas no puede usar los rangos largos de `.tira`.
+       Si la última losa cierra a `cover 67%`, hay que esconder la primera
+       para poder leerla. Todas terminan pronto, con un desfase corto. */
     @media (width >= 48rem) {
-      .tira-casilla > *:nth-child(1) { animation-range: cover 4% cover 20%; }
-      .tira-casilla > *:nth-child(2) { animation-range: cover 6% cover 22%; }
-      .tira-casilla > *:nth-child(3) { animation-range: cover 8% cover 24%; }
-      .tira-casilla > *:nth-child(4) { animation-range: cover 10% cover 26%; }
-      .tira-casilla > *:nth-child(5) { animation-range: cover 12% cover 28%; }
-      .tira-casilla > *:nth-child(6) { animation-range: cover 14% cover 30%; }
+      .tira-casilla > *,
+      .tira-casilla > *:nth-child(n) {
+        animation-range: cover 3% cover 16%;
+      }
+      .tira-casilla > *:nth-child(1) { animation-range: cover 2% cover 12%; }
+      .tira-casilla > *:nth-child(2) { animation-range: cover 4% cover 14%; }
+      .tira-casilla > *:nth-child(3) { animation-range: cover 6% cover 16%; }
+    }
+
+    /* TABLERO EN COLUMNAS: las losas son NIETAS. `.tira > *` anima la
+       columna y el `clip-path` recorta el titular de abajo —el que el
+       visitante está leyendo— para terminar de abrir la foto de arriba.
+       Las casillas comparten el reloj del tablero y cierran juntas. */
+    .mosaico-tablero {
+      view-timeline-name: --tablero-casillas;
+      view-timeline-axis: block;
+    }
+    .mosaico-tablero.tira > *,
+    .mosaico-tablero.tira > *:nth-child(n) {
+      animation: none;
+      opacity: 1;
+      clip-path: none;
+      transform: none;
+    }
+    .mosaico-tablero .celda-foto,
+    .mosaico-tablero .celda-texto {
+      animation: entrar-casilla linear both;
+    }
+    /* El desfase nth-child sólo vale con el reloj COMPARTIDO. Fuera de
+       `md` cada losa mide su propia `view()`, y estos `cover` —pensados
+       para el tablero entero— dejan el titular a media máscara detrás
+       de la barra de acción. */
+    @media (width >= 48rem) {
+      .mosaico-tablero .celda-foto,
+      .mosaico-tablero .celda-texto {
+        animation-timeline: --tablero-casillas;
+        animation-range: cover 2% cover 16%;
+      }
+      .mosaico-tablero > *:nth-child(1) .celda-texto { animation-range: cover 2% cover 12%; }
+      .mosaico-tablero > *:nth-child(1) .celda-foto { animation-range: cover 4% cover 14%; }
+      .mosaico-tablero > *:nth-child(2) .celda-foto { animation-range: cover 3% cover 13%; }
+      .mosaico-tablero > *:nth-child(2) .celda-texto { animation-range: cover 6% cover 16%; }
+      .mosaico-tablero > *:nth-child(3) .celda-foto { animation-range: cover 5% cover 15%; }
+      .mosaico-tablero > *:nth-child(3) .celda-texto { animation-range: cover 7% cover 17%; }
+    }
+
+    /* Losa suelta (Sobre, un CTA sobre foto): misma apertura, `entry`
+       para que no se quede a media máscara al final del documento. */
+    .losa-entra {
+      animation: entrar-casilla linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
     }
 
     /* `.tira-indice` — LA VARIANTE PARA REJILLAS QUE SE NAVEGAN, no que se leen,
@@ -315,6 +361,25 @@
         animation-name: revelar-movil;
         animation-timeline: view();
         animation-range: entry 0% entry 20%;
+      }
+      .mosaico-tablero {
+        view-timeline-name: none;
+      }
+      .mosaico-tablero.tira > *,
+      .mosaico-tablero.tira > *:nth-child(n) {
+        animation: none;
+        opacity: 1;
+        clip-path: none;
+        transform: none;
+      }
+      .mosaico-tablero > *:nth-child(n) .celda-foto,
+      .mosaico-tablero > *:nth-child(n) .celda-texto,
+      .mosaico-tablero .celda-foto,
+      .mosaico-tablero .celda-texto,
+      .losa-entra {
+        animation-name: entrar-casilla;
+        animation-timeline: view();
+        animation-range: entry 0% entry 22%;
       }
     }
   }
@@ -679,6 +744,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .revela, .revela-grupo > *, .tira > *, .tira-casilla > *, .tira-indice > *,
+  .mosaico-tablero .celda-foto, .mosaico-tablero .celda-texto, .losa-entra,
   .deriva, .deriva-hero, .entra, .entra-zorro, .llega-zorro, .traza,
   .revela-titular, .revela-cifra, .deriva-fondo, .revela-imagen,
   .entra-imagen, .entra-titular-hero, .riel > *, .riel[data-foco] > *,

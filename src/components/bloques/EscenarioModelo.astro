@@ -313,6 +313,14 @@ const { modelos } = Astro.props;
     font-weight: 600;
     color: white;
   }
+  /* Las cuatro losas caben a la vez: si el último dato cierra a
+     `cover 58%`, hay que bajar —y perder potencia— para leerlo. */
+  .barra-datos > *:nth-child(1),
+  .barra-datos > *:nth-child(2),
+  .barra-datos > *:nth-child(3),
+  .barra-datos > *:nth-child(4) {
+    animation-range: cover 4% cover 20%;
+  }
   @media (width < 48rem) {
     .plano {
       background-size: 50vw 100%, 100% 11rem;
