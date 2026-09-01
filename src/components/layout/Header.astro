@@ -14,9 +14,12 @@ interface Props {
 }
 const { flotante = false, ruta = Astro.url.pathname } = Astro.props;
 const enPortada = ruta === '/';
-const activa = (href: string) => (href === '/' ? ruta === '/' : ruta.startsWith(href));
-const idDeHijo = (href: string) => href.replace(/^\/modelos\//, '');
-const hrefDeHijo = (href: string) => (enPortada ? `/#${idDeHijo(href)}` : href);
+const activa = (href: string) => {
+  if (href.includes('#')) return false;
+  if (href === '/') return ruta === '/' || ruta.startsWith('/modelos');
+  return ruta.startsWith(href);
+};
+const idDeHijo = (href: string) => href.replace(/^\/(?:modelos\/|#)/, '');
 ---
 
 <header
@@ -76,7 +79,7 @@ const hrefDeHijo = (href: string) => (enPortada ? `/#${idDeHijo(href)}` : href);
                         {zona.hijos.map((hijo) => (
                           <li>
                             <a
-                              href={hrefDeHijo(hijo.href)}
+                              href={hijo.href}
                               data-cambia-modelo={idDeHijo(hijo.href)}
                               class="block px-4 py-3 text-small text-tinta hover:bg-tinte"
                             >
@@ -128,6 +131,11 @@ const hrefDeHijo = (href: string) => (enPortada ? `/#${idDeHijo(href)}` : href);
                         </a>
                       </li>
                     ))}
+                    <li>
+                      <a href="/modelos" class="block px-4 py-3 text-small text-tinta/70 hover:bg-tinte">
+                        Ver la gama
+                      </a>
+                    </li>
                   </ul>
                 </details>
                 )
@@ -191,7 +199,7 @@ const hrefDeHijo = (href: string) => (enPortada ? `/#${idDeHijo(href)}` : href);
               NAV.map((zona) => (
                 <li>
                   <a
-                    href={zona.href}
+                    href={enPortada && zona.hijos ? '/#escenario' : zona.href}
                     aria-current={activa(zona.href) ? 'page' : undefined}
                     class:list={[
                       'flex min-h-[44px] items-center text-lead font-medium uppercase tracking-[0.12em]',
@@ -205,7 +213,7 @@ const hrefDeHijo = (href: string) => (enPortada ? `/#${idDeHijo(href)}` : href);
                       {zona.hijos.map((hijo) => (
                         <li>
                           <a
-                            href={hrefDeHijo(hijo.href)}
+                            href={hijo.href}
                             data-cambia-modelo={enPortada ? idDeHijo(hijo.href) : undefined}
                             class="flex min-h-[44px] items-center text-small text-tinta/70"
                           >
@@ -213,6 +221,11 @@ const hrefDeHijo = (href: string) => (enPortada ? `/#${idDeHijo(href)}` : href);
                           </a>
                         </li>
                       ))}
+                      <li>
+                        <a href="/modelos" class="flex min-h-[44px] items-center text-small text-tinta/50">
+                          Ver la gama
+                        </a>
+                      </li>
                     </ul>
                   )}
                 </li>

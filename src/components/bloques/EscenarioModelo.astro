@@ -32,7 +32,7 @@ const { modelos } = Astro.props;
 
 {
   modelos.length > 0 && (
-    <section data-slot="escenario-modelo" class="escenario-modelo campo-claro bg-fondo">
+    <section id="escenario" data-slot="escenario-modelo" class="escenario-modelo campo-claro bg-fondo">
       <div class="plano" aria-hidden="true"></div>
       <div class="medida relative py-16 md:py-24">
         <div class="selector-modelo sticky top-16 z-20 revela-titular" role="group" aria-label="Cambiar modelo">
@@ -51,11 +51,11 @@ const { modelos } = Astro.props;
 
         {modelos.map((modelo, indiceModelo) => (
           <article
-            id={`panel-${modelo.id}`}
+            id={modelo.id}
             aria-label={modelo.nombre}
             data-modelo-panel={modelo.id}
             data-modelo-corto={modelo.nombre.replace(/^ARCFOX\s+/i, '')}
-            data-modelo-rotulo={modelo.rotulo}
+            data-rotulo={modelo.rotulo}
             hidden={indiceModelo !== 0}
           >
             <div

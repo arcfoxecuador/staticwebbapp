@@ -862,6 +862,12 @@
     }
   }
 
+  /* Cabecera fija de la portada: un salto a #escenario, #sobre o #cotizalo
+     no puede quedar debajo del menú. */
+  html:has(header.fixed) {
+    scroll-padding-top: 5.5rem;
+  }
+
   /* ── EL AIRE ANTES DEL PIE ──────────────────────────────────────────────────
      El pie necesita separación porque casi siempre viene después de una sección
      clara. Pero el último bloque de casi todas las páginas es el cierre en campo

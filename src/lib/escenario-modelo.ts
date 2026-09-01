@@ -26,14 +26,14 @@ const activarVistas = (id: string) => {
 const pintarNombres = (panel: HTMLElement) => {
   const nombre = panel.getAttribute('aria-label') ?? '';
   const corto = panel.dataset.modeloCorto ?? nombre;
-  const rotulo = panel.dataset.modeloRotulo ?? '';
+  const rotulo = panel.dataset.rotulo ?? '';
   document.querySelectorAll('[data-modelo-nombre]').forEach((nodo) => {
     nodo.textContent = nombre;
   });
   document.querySelectorAll('[data-modelo-nombre-corto]').forEach((nodo) => {
     nodo.textContent = corto;
   });
-  document.querySelectorAll('[data-modelo-rotulo]').forEach((nodo) => {
+  document.querySelectorAll('[data-modelo-rotulo]:not([data-modelo-panel])').forEach((nodo) => {
     nodo.textContent = rotulo;
   });
 };

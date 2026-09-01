@@ -80,13 +80,17 @@ const modelos = [
                   </a>
                 </dd>
               </div>
-              {ORG.telefono && (
+              {(ORG.telefono || ORG.telefonoLegible) && (
                 <div>
                   <dt class="text-tinta/55">Teléfono</dt>
                   <dd class="mt-1">
-                    <a href={`tel:${ORG.telefono}`} class="enlace-subrayado text-marca">
-                      {ORG.telefonoLegible}
-                    </a>
+                    {ORG.telefono ? (
+                      <a href={`tel:${ORG.telefono}`} class="enlace-subrayado text-marca">
+                        {ORG.telefonoLegible}
+                      </a>
+                    ) : (
+                      <span class="text-marca">{ORG.telefonoLegible}</span>
+                    )}
                   </dd>
                 </div>
               )}

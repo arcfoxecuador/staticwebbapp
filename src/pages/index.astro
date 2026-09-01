@@ -17,6 +17,7 @@ import t1Kv2 from '../assets/t1-kv2.webp';
 import s5Cuarto from '../assets/s5-45.webp';
 import s5Bajo from '../assets/s5-bajo.webp';
 import sobre from '../assets/sobre.webp';
+import zorro from '../assets/zorro.webp';
 import cotizar from '../assets/cotizar.webp';
 
 import { coleccion } from '../lib/contenido';
@@ -95,10 +96,10 @@ const modelos = entradas.map((entrada) => {
     colores,
     datos,
     mosaico: [
-      textos[0],
       fotos[0] ? { imagen: fotos[0].imagen, alt: fotos[0].alt } : undefined,
       fotos[1] ? { imagen: fotos[1].imagen, alt: fotos[1].alt } : undefined,
       fotos[2] ? { imagen: fotos[2].imagen, alt: fotos[2].alt } : undefined,
+      textos[0],
       textos[1],
       textos[2],
     ].filter((item): item is NonNullable<typeof item> => Boolean(item)),
@@ -126,6 +127,7 @@ const schema = grafo(
       alt: heroPorId[modelo.id]?.alt ?? modelo.nombre,
     }))}
     generada={false}
+    siguiente={{ href: '#escenario', etiqueta: 'El auto' }}
   />
 
   <EscenarioModelo {modelos} />
@@ -138,16 +140,25 @@ const schema = grafo(
     }
   </section>
 
-  <section class="sobre-portada campo-oscuro relative isolate overflow-clip bg-marca">
+  <section id="sobre" class="sobre-portada campo-oscuro relative isolate overflow-clip bg-marca">
     <Image
       src={sobre}
-      alt="ARCFOX en un paisaje nocturno junto al zorro, emblema de la marca."
+      alt="ARCFOX T5 en el escenario de marca."
       widths={[800, 1440, 1920]}
       sizes="100vw"
       class="absolute inset-0 -z-10 h-full w-full object-cover"
     />
     <div class="absolute inset-0 -z-10 bg-marca/35" aria-hidden="true"></div>
-    <a href="/nosotros" class="medida flex min-h-[72svh] flex-col items-center justify-center py-20 text-center text-white">
+    {/* La maqueta exige este emblema en primer plano y el material local no incluye
+        una fotografía de zorro, por eso se usa un recorte generado y no una campaña oficial. */}
+    <Image
+      src={zorro}
+      alt="Zorro ártico como emblema visual de ARCFOX."
+      widths={[320, 480, 640]}
+      sizes="(max-width: 767px) 13rem, min(31vw, 28rem)"
+      class="pointer-events-none absolute bottom-0 left-0 z-0 h-auto w-[clamp(13rem,31vw,28rem)] object-contain max-md:-left-12 max-md:w-52"
+    />
+    <a href="/nosotros" class="medida relative z-10 flex min-h-[72svh] flex-col items-center justify-center py-20 text-center text-white">
       <span class="revela text-eyebrow uppercase tracking-[0.18em]">Sobre ARCFOX</span>
       <img
         src="/marca/sello-blanco.png"

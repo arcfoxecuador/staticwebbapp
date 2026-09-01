@@ -24,10 +24,12 @@ export const ORG = {
   fundacion: '',
 
   email: 'contacto@arcfox.com.ec',
-  /** En E.164, sin espacios: es el formato que exigen `tel:` y schema.org. */
+  /** En E.164, sin espacios: es el formato que exigen `tel:` y schema.org.
+      Vacío mientras el número no esté cerrado: el `tel:` y el JSON-LD no
+      pueden llevar un placeholder. La página pinta `telefonoLegible`. */
   telefono: '',
-  /** Como se escribe para un humano. */
-  telefonoLegible: '',
+  /** Como se escribe para un humano. `[pendiente]` se ve a propósito. */
+  telefonoLegible: '[pendiente]',
   /** Sólo dígitos, como los quiere wa.me. Vacío = sin botón de WhatsApp. */
   whatsapp: '',
 
@@ -54,6 +56,8 @@ export type Sede = {
      ni la ficha de contacto ni `llms.txt` los mencionan. */
   calle?: string;
   region?: string;
+  /** Horario de atención. `[pendiente]` se pinta hasta que haya uno real. */
+  horario?: string;
   /** Enlace a mapas. Opcional: sin él la ficha no pinta el enlace. */
   mapa?: string;
 };
@@ -64,6 +68,24 @@ export const SEDES: Sede[] = [
     ciudad: 'Quito',
     pais: 'Ecuador',
     codigoPais: 'EC',
+    region: 'Pichincha',
+    horario: '[pendiente]',
+  },
+  {
+    nombre: 'Guayaquil',
+    ciudad: 'Guayaquil',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Guayas',
+    horario: '[pendiente]',
+  },
+  {
+    nombre: 'Cuenca',
+    ciudad: 'Cuenca',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Azuay',
+    horario: '[pendiente]',
   },
 ];
 
@@ -95,16 +117,16 @@ export const CTA = {
 export const NAV: NavZona[] = [
   {
     texto: 'Modelos',
-    href: '/modelos',
+    href: '/',
     hijos: [
-      { texto: 'ARCFOX T5', href: '/modelos/t5', bajada: 'SUV crossover 100% eléctrico' },
-      { texto: 'ARCFOX T1', href: '/modelos/t1', bajada: 'SUV familiar 100% eléctrico' },
-      { texto: 'ARCFOX S5', href: '/modelos/s5', bajada: 'SUV de líneas fastback' },
+      { texto: 'ARCFOX T5', href: '/#t5', bajada: 'SUV crossover 100% eléctrico' },
+      { texto: 'ARCFOX T1', href: '/#t1', bajada: 'SUV familiar 100% eléctrico' },
+      { texto: 'ARCFOX S5', href: '/#s5', bajada: 'SUV de líneas fastback' },
     ],
   },
   { texto: 'Concesionarios', href: '/concesionarios' },
   { texto: 'Test drive', href: '/test-drive' },
-  { texto: 'Sobre ARCFOX', href: '/nosotros' },
+  { texto: 'Sobre ARCFOX', href: '/#sobre' },
   { texto: CTA.texto, href: CTA.href },
   /* Postventa NO entra aquí a propósito: la página existe para revisar
      (`/postventa`) pero el servicio no está cerrado. Un enlace en cabecera,
@@ -183,7 +205,7 @@ export const FAQ: readonly { p: string; r: string }[] = [
   },
   {
     p: '¿Dónde puedo ver un ARCFOX o pedir un test drive?',
-    r: 'En la red de concesionarios. Completa Cotízalo o pide un test drive y te contactamos con el punto más cercano. Las direcciones se publican cuando cada sede esté abierta.',
+    r: 'En la red de concesionarios. Correo, teléfono y sedes están en Concesionarios. Completa Cotízalo o pide un test drive y te contactamos con el punto más cercano.',
   },
   {
     p: '¿Puedo copiar precios o autonomías de la web de Argentina?',

@@ -83,7 +83,9 @@ export const GET: APIRoute = async () => {
     '## Contacto',
     '',
     `- Correo: ${ORG.email}`,
-    `- Teléfono: ${ORG.telefono}`,
+    ...(ORG.telefono || ORG.telefonoLegible
+      ? [`- Teléfono: ${ORG.telefonoLegible || ORG.telefono}`]
+      : []),
     ...SEDES.map((s) => `- ${s.nombre}: ${direccionLegible(s)}`),
     '',
     `## Fuentes`,

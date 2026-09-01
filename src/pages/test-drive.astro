@@ -5,8 +5,12 @@ import Seccion from '../components/bloques/Seccion.astro';
 import Encabezado from '../components/bloques/Encabezado.astro';
 import Pasos from '../components/bloques/Pasos.astro';
 import Formulario from '../components/bloques/Formulario.astro';
+import Figura from '../components/ui/Figura.astro';
 import { PASOS } from '../lib/site';
 import { grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
+import type { Imagen } from '../lib/imagenes';
+
+import t5 from '../assets/t5-45-gris.webp';
 
 const titulo = 'Test drive';
 const descripcion =
@@ -18,6 +22,12 @@ const schema = grafo(
   pagina({ path: '/test-drive', titulo, descripcion }),
   migas([{ nombre: titulo, path: '/test-drive' }]),
 );
+
+const fotoPrueba: Imagen = {
+  fuente: { src: t5 },
+  alt: 'ARCFOX T5 gris, SUV 100% eléctrico listo para una prueba de manejo.',
+  generada: false,
+};
 ---
 
 <Base {titulo} {descripcion} path="/test-drive" {schema} barraAccion={false}>
@@ -27,8 +37,15 @@ const schema = grafo(
     PASOS.length > 0 && (
       <Seccion campo="tinte" aire="apretado">
         <Encabezado rotulo="Cómo funciona" titulo="De la reserva a la prueba" />
-        <div class="mt-10">
+        <div class="mt-10 grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <Pasos />
+          <div class="order-first lg:order-none">
+            <Figura
+              imagen={fotoPrueba}
+              proporcion="retrato"
+              sizes="(min-width: 1024px) 42vw, 100vw"
+            />
+          </div>
         </div>
       </Seccion>
     )

@@ -1,6 +1,7 @@
 ---
-/* Rejilla asimétrica: celdas de texto y foto que no miden lo mismo.
-   overflow-clip y no hidden: las fotos pueden llevar reveal. */
+/* En trenzado las fotos ocupan la fila alta y el copy una franja baja: el
+   texto deja de competir en superficie. overflow-clip (no hidden) para que
+   las fotos revelen. */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 
@@ -23,6 +24,17 @@ interface Props {
 }
 
 const { items, patron = 'trenzado', class: extra, modelo, activo = true } = Astro.props;
+
+const FOTO_TRAMO = [
+  'md:col-span-5 md:row-start-1',
+  'md:col-span-4 md:row-start-1',
+  'md:col-span-3 md:row-start-1',
+] as const;
+const TEXTO_TRAMO = [
+  'md:col-span-4 md:row-start-2',
+  'md:col-span-4 md:row-start-2',
+  'md:col-span-4 md:row-start-2',
+] as const;
 ---
 
 {
@@ -32,19 +44,40 @@ const { items, patron = 'trenzado', class: extra, modelo, activo = true } = Astr
       data-modelo-vista={modelo}
       data-oculta={modelo ? '' : undefined}
       hidden={Boolean(modelo) && !activo}
-      class:list={['tira grid gap-px bg-marca-clara/20 md:grid-cols-3', extra]}
+      class:list={[
+        'tira grid gap-px bg-marca-clara/20',
+        patron === 'trenzado' ? 'md:grid-cols-12' : 'md:grid-cols-3',
+        extra,
+      ]}
     >
       {items.map((celda, i) => {
-        const span = celda.ancho === 2 || (patron === 'destacado' && i === 0);
-        if (celda.imagen && celda.alt) {
+        const destacado = patron === 'destacado' && i === 0;
+        const ancho = celda.ancho === 2 || destacado;
+        const esFoto = Boolean(celda.imagen && celda.alt);
+        const indiceFoto = items.slice(0, i).filter((c) => c.imagen && c.alt).length;
+        const indiceTexto = items.slice(0, i).filter((c) => !c.imagen && (c.texto || c.titulo)).length;
+        const tramo =
+          patron === 'trenzado'
+            ? esFoto
+              ? (FOTO_TRAMO[indiceFoto] ?? 'md:col-span-4 md:row-start-1')
+              : (TEXTO_TRAMO[indiceTexto] ?? 'md:col-span-4 md:row-start-2')
+            : ancho
+              ? 'md:col-span-2'
+              : undefined;
+        const ancha = patron === 'trenzado' ? indiceFoto === 0 : Boolean(ancho);
+
+        if (esFoto && celda.imagen && celda.alt) {
           return (
-            <div class:list={['celda-foto overflow-clip', span && 'md:col-span-2']}>
+            <div class:list={['celda-foto overflow-clip', tramo]}>
               <Image
                 src={celda.imagen}
                 alt={celda.alt}
                 widths={[480, 800, 1200]}
-                sizes={span ? '(min-width: 768px) 66vw, 100vw' : '(min-width: 768px) 33vw, 100vw'}
-                class="revela-imagen h-full min-h-64 w-full object-cover md:min-h-[28rem]"
+                sizes={ancha ? '(min-width: 768px) 42vw, 100vw' : '(min-width: 768px) 28vw, 100vw'}
+                class:list={[
+                  'revela-imagen h-full min-h-56 w-full object-cover',
+                  patron === 'trenzado' ? 'md:min-h-[32rem] md:aspect-[4/3]' : 'md:min-h-[22rem]',
+                ]}
               />
             </div>
           );
@@ -53,14 +86,14 @@ const { items, patron = 'trenzado', class: extra, modelo, activo = true } = Astr
           return (
             <div
               class:list={[
-                'celda-texto flex min-h-64 flex-col justify-end bg-marca p-8 text-white md:min-h-[28rem]',
-                span && 'md:col-span-2',
+                'celda-texto flex flex-col justify-center bg-marca px-5 py-6 text-white md:px-6 md:py-7',
+                tramo,
               ]}
             >
-              <p class:list={['revela-titular font-display font-semibold uppercase tracking-[0.08em]', span ? 'text-h2' : 'text-h3']}>
+              <p class="revela-titular font-display text-small font-semibold uppercase tracking-[0.08em]">
                 {celda.titulo ?? celda.texto}
               </p>
-              {celda.bajada && <p class="revela mt-4 max-w-[34ch] text-small text-white/65">{celda.bajada}</p>}
+              {celda.bajada && <p class="revela mt-2 text-small text-white/60">{celda.bajada}</p>}
             </div>
           );
         }

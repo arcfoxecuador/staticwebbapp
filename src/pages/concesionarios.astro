@@ -1,17 +1,18 @@
 ---
+/* La red ya se presenta como tal: mapa, vías de contacto y fichas de sede.
+   Las calles y el teléfono real entran en `site.ts` cuando existan; aquí no
+   se explica un lanzamiento ni se promete una dirección que no hay. */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
-import Escena from '../components/bloques/Escena.astro';
+import Encabezado from '../components/bloques/Encabezado.astro';
 import Formulario from '../components/bloques/Formulario.astro';
-import { SEDES } from '../lib/site';
+import { ORG, SEDES } from '../lib/site';
 import { grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
-
-import sobre from '../assets/sobre.webp';
 
 const titulo = 'Concesionarios';
 const descripcion =
-  'La red de concesionarios ARCFOX en Ecuador se publica a medida que cada sede abre. Mientras tanto, pide contacto y te asignamos el punto más cercano.';
+  'Red de concesionarios ARCFOX en Ecuador. Correo, teléfono y sedes para visitar, cotizar o pedir un test drive.';
 
 const schema = grafo(
   organizacion(),
@@ -19,42 +20,151 @@ const schema = grafo(
   pagina({ path: '/concesionarios', titulo, descripcion }),
   migas([{ nombre: titulo, path: '/concesionarios' }]),
 );
+
+const mapa = SEDES.find((sede) => sede.mapa)?.mapa;
 ---
 
 <Base {titulo} {descripcion} path="/concesionarios" {schema}>
   <Hero rotulo="Red" titulo="Concesionarios en Ecuador" bajada={descripcion} />
 
-  <Escena
-    imagen={sobre}
-    alt="Un ARCFOX, de camino al concesionario."
-    rotulo="Quito primero"
-    titulo="La red se publica al abrir"
-    bajada="No inventamos una calle. Cuando una sede esté operativa, aparece aquí con dirección y horario."
-    altura="media"
-    anclaje="centro"
-  />
+  <Seccion campo="tinte" contenido={false}>
+    <div class="medida">
+      {
+        mapa ? (
+          <a
+            href={mapa}
+            class="mapa-red block overflow-clip border border-linea"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span class="mapa-red-lienzo" aria-hidden="true"></span>
+            <span class="mapa-red-pin">
+              <svg width="28" height="36" viewBox="0 0 28 36" fill="none" aria-hidden="true">
+                <path
+                  d="M14 34s12-12.4 12-20A12 12 0 1 0 2 14c0 7.6 12 20 12 20Z"
+                  fill="currentColor"
+                />
+                <circle cx="14" cy="14" r="4.5" fill="var(--color-fondo)" />
+              </svg>
+              <span class="mt-3 text-small font-medium uppercase tracking-[0.14em]">Ver en el mapa</span>
+            </span>
+          </a>
+        ) : (
+          <div class="mapa-red overflow-clip border border-linea" role="img" aria-label="Mapa de la red de concesionarios en Ecuador. Ubicación precisa pendiente.">
+            <span class="mapa-red-lienzo" aria-hidden="true"></span>
+            <span class="mapa-red-pin">
+              <svg width="28" height="36" viewBox="0 0 28 36" fill="none" aria-hidden="true">
+                <path
+                  d="M14 34s12-12.4 12-20A12 12 0 1 0 2 14c0 7.6 12 20 12 20Z"
+                  fill="currentColor"
+                />
+                <circle cx="14" cy="14" r="4.5" fill="var(--color-fondo)" />
+              </svg>
+              <span class="mt-3 text-small font-medium uppercase tracking-[0.14em]">Ecuador</span>
+            </span>
+          </div>
+        )
+      }
+    </div>
+  </Seccion>
 
-  <Seccion campo="tinte">
-    <ul class="revela-grupo grid gap-6 md:grid-cols-2">
+  <Seccion>
+    <Encabezado rotulo="Contacto" titulo="Correo, teléfono y sedes" />
+
+    <dl class="revela mt-10 grid gap-8 border-y border-linea py-8 sm:grid-cols-2">
+      <div>
+        <dt class="text-eyebrow uppercase tracking-[0.12em] text-tinta/55">Correo</dt>
+        <dd class="mt-2">
+          <a href={`mailto:${ORG.email}`} class="enlace-subrayado text-lead text-marca">
+            {ORG.email}
+          </a>
+        </dd>
+      </div>
+      {
+        (ORG.telefono || ORG.telefonoLegible) && (
+          <div>
+            <dt class="text-eyebrow uppercase tracking-[0.12em] text-tinta/55">Teléfono</dt>
+            <dd class="mt-2 text-lead text-marca">
+              {ORG.telefono ? (
+                <a href={`tel:${ORG.telefono}`} class="enlace-subrayado">
+                  {ORG.telefonoLegible}
+                </a>
+              ) : (
+                ORG.telefonoLegible
+              )}
+            </dd>
+          </div>
+        )
+      }
+    </dl>
+
+    <ul class="revela-grupo mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {
         SEDES.map((sede) => (
-          <li class="border border-linea bg-superficie p-7">
-            <p class="eyebrow text-marca-clara">{sede.pais}</p>
-            <h2 class="mt-2 text-h3 font-bold text-marca">{sede.ciudad}</h2>
-            <p class="mt-3 text-small text-tinta/70">
-              Dirección y horarios se publican cuando la sede esté operativa.
-            </p>
+          <li>
+            <address class="flex h-full flex-col border border-linea bg-superficie p-7 not-italic">
+              <p class="eyebrow text-marca-clara">{sede.pais}</p>
+              <h2 class="mt-2 text-h3 font-bold text-marca">{sede.nombre}</h2>
+              <p class="mt-3 text-small text-tinta/70">
+                {sede.calle ?? '[Dirección pendiente]'}
+                <br />
+                {[sede.ciudad, sede.region].filter(Boolean).join(', ')}
+              </p>
+              <p class="mt-4 text-small text-tinta/70">
+                <span class="text-tinta/50">Horario</span>
+                <br />
+                {sede.horario ?? '[pendiente]'}
+              </p>
+              {
+                sede.mapa && (
+                  <a
+                    href={sede.mapa}
+                    class="enlace-subrayado mt-auto pt-5 text-small text-marca"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Cómo llegar
+                  </a>
+                )
+              }
+            </address>
           </li>
         ))
       }
     </ul>
   </Seccion>
 
-  <Seccion>
+  <Seccion campo="tinte">
     <Formulario
       titulo="¿En qué ciudad estás?"
-      bajada="Te decimos qué punto te corresponde cuando esté abierto."
+      bajada="Nombre, teléfono, ciudad y modelo. Te contactamos desde el punto más cercano."
       origen="/concesionarios"
     />
   </Seccion>
 </Base>
+
+<style>
+  .mapa-red {
+    position: relative;
+    display: grid;
+    min-height: clamp(18rem, 48vw, 28rem);
+    place-items: center;
+    color: var(--color-marca);
+    text-decoration: none;
+    background: var(--color-superficie);
+  }
+  .mapa-red-lienzo {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--color-marca) 10%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-marca) 10%, transparent) 1px, transparent 1px);
+    background-size: min(16vw, 7rem) min(16vw, 7rem);
+  }
+  .mapa-red-pin {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+</style>

@@ -1,14 +1,16 @@
 ---
+/* La marca, no el catálogo. Los tres autos se recorren en la portada;
+   esta página cuenta quién es ARCFOX. */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
 import Encabezado from '../components/bloques/Encabezado.astro';
 import Rejilla from '../components/bloques/Rejilla.astro';
-import Tarjeta from '../components/bloques/Tarjeta.astro';
 import Figura from '../components/ui/Figura.astro';
 import Metricas from '../components/bloques/Metricas.astro';
 import Escena from '../components/bloques/Escena.astro';
 import Cierre from '../components/bloques/Cierre.astro';
+import Boton from '../components/ui/Boton.astro';
 
 import sobre from '../assets/sobre.webp';
 
@@ -18,9 +20,6 @@ import { METRICAS, ORG } from '../lib/site';
 import { grafo, migas, organizacion, pagina, persona, sitioWeb } from '../lib/schema';
 
 const equipo = (await coleccion('equipo')).sort((a, b) => a.data.orden - b.data.orden);
-const modelos = (await coleccion('modelos', ({ data }) => data.publico)).sort(
-  (a, b) => a.data.orden - b.data.orden,
-);
 
 const titulo = 'Sobre ARCFOX';
 const descripcion = ORG.descripcion;
@@ -40,7 +39,7 @@ const schema = grafo(
   <Hero
     rotulo={ORG.tagline}
     titulo="Sobre ARCFOX"
-    bajada="Marca de vehículos 100% eléctricos de BAIC. En Ecuador se presenta con el T5, el T1 y el S5."
+    bajada="Marca de vehículos 100% eléctricos de BAIC. En Ecuador el auto se recorre en la portada, uno a la vez."
   />
 
   {
@@ -53,7 +52,7 @@ const schema = grafo(
 
   <Escena
     imagen={sobre}
-    alt="ARCFOX T5, la marca en Ecuador."
+    alt="ARCFOX en un paisaje nocturno junto al zorro, emblema de la marca."
     rotulo="BAIC"
     titulo="Distintos por naturaleza"
     bajada="Diseño, autonomía y recarga para el uso diario. Sin cifras de otro país presentadas como locales."
@@ -104,27 +103,16 @@ const schema = grafo(
     )
   }
 
-  {
-    modelos.length > 0 && (
-      <Seccion>
-        <Encabezado
-          rotulo="Ecuador"
-          titulo="Tres modelos, una red"
-          bajada="T5, T1 y S5. Las cifras de homologación global se publican con aviso; lo local se confirma en el concesionario."
-        />
-        <Rejilla navegable class="mt-14">
-          {modelos.map((s) => (
-            <Tarjeta
-              titulo={s.data.nombre}
-              bajada={s.data.bajada}
-              href={`/modelos/${s.id}`}
-              etiqueta={s.data.categoria}
-            />
-          ))}
-        </Rejilla>
-      </Seccion>
-    )
-  }
+  <Seccion>
+    <Encabezado
+      rotulo="La gama"
+      titulo="Un auto a la vez"
+      bajada="El T5, el T1 y el S5 se recorren en la portada, un auto a la vez."
+    />
+    <div class="mt-10">
+      <Boton href="/" tamano="lg">Ver el auto</Boton>
+    </div>
+  </Seccion>
 
   <Cierre titulo="¿Hablamos?" bajada="Ciudad y modelo. Te contactamos con el concesionario." />
 </Base>
