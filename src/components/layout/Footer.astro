@@ -3,13 +3,16 @@
    derecha. El aviso legal —cuando existe— va debajo, no dentro de una columna
    de marketing: es la letra chica, no un párrafo de venta. */
 import Marca from '../ui/Marca.astro';
+import Zorro from '../ui/Zorro.astro';
 import { ORG, NAV, AVISO_LEGAL, LEGAL } from '../../lib/site';
 
 const anio = new Date().getFullYear();
 ---
 
-<footer class="campo-oscuro border-t border-white/15 bg-marca text-white/70">
-  <div class="medida flex flex-col gap-8 py-10 md:flex-row md:items-center md:justify-between">
+<footer class="campo-oscuro relative overflow-clip border-t border-white/15 bg-marca text-white/70">
+  {/* El pie ya lleva el wordmark. El zorro es rastro, no un segundo logo. */}
+  <Zorro tamano="marca" decorativo class="absolute bottom-0 left-2 z-0 opacity-35 max-md:left-0" />
+  <div class="medida relative z-10 flex flex-col gap-8 py-10 md:flex-row md:items-center md:justify-between">
     <Marca tono="blanco" enlace={false} />
 
     {
@@ -32,7 +35,7 @@ const anio = new Date().getFullYear();
     }
   </div>
 
-  <div class="medida border-t border-white/15 py-6">
+  <div class="medida relative z-10 border-t border-white/15 py-6">
     <nav aria-label="Navegación del pie" class="flex flex-wrap gap-x-6 gap-y-2 text-small">
       {
         NAV.map((zona) => (

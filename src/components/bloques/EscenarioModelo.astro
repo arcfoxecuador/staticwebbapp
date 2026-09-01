@@ -64,7 +64,7 @@ const { modelos } = Astro.props;
               data-giro
               aria-label={`Gira el ${modelo.nombre} arrastrando o con las flechas del teclado`}
             >
-              <div class="anillo" aria-hidden="true"></div>
+              <div class="marco" aria-hidden="true"></div>
               {modelo.colores.map((color, indiceColor) => (
                 <div
                   class:list={['fotogramas', indiceColor === 0 && 'esta-activo']}
@@ -138,6 +138,15 @@ const { modelos } = Astro.props;
       linear-gradient(to right, color-mix(in srgb, var(--color-marca) 8%, transparent) 1px, transparent 1px),
       linear-gradient(to bottom, color-mix(in srgb, var(--color-marca) 8%, transparent) 1px, transparent 1px);
     background-size: min(25vw, 20rem) 100%, 100% 14rem;
+    /* La retícula se abre con la sección: si naciera ya dibujada, el
+       plato parece un fondo estático y no un estudio que se enciende. */
+    animation: abrir-plano linear both;
+    animation-timeline: view();
+    animation-range: cover 0% cover 38%;
+  }
+  @keyframes abrir-plano {
+    from { clip-path: inset(10% 6%); opacity: 0; }
+    to   { clip-path: inset(0); opacity: 1; }
   }
   .selector-modelo {
     display: flex;
@@ -180,22 +189,29 @@ const { modelos } = Astro.props;
     touch-action: pan-y;
     user-select: none;
   }
-  .anillo {
+  /* Marco, no plato: el óvalo de estudio pelea con las losas del
+     mosaico. El auto se lee dentro de una casilla, como el resto. */
+  .marco {
     position: absolute;
     left: 50%;
-    top: 60%;
-    width: min(72%, 48rem);
-    aspect-ratio: 4 / 1;
-    border: 1px solid color-mix(in srgb, var(--color-marca) 28%, transparent);
-    border-radius: 50%;
+    top: 52%;
+    width: min(78%, 54rem);
+    aspect-ratio: 16 / 10;
+    border: 1px solid color-mix(in srgb, var(--color-marca) 22%, transparent);
     transform: translate(-50%, -50%);
+    animation: posar-marco linear both;
+    animation-timeline: view();
+    animation-range: cover 8% cover 42%;
   }
-  .anillo::after {
+  @keyframes posar-marco {
+    from { transform: translate(-50%, -50%) scale(0.92); opacity: 0; }
+    to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+  .marco::after {
     content: '';
     position: absolute;
-    inset: 12%;
-    border: 1px solid color-mix(in srgb, var(--color-marca) 12%, transparent);
-    border-radius: inherit;
+    inset: 8%;
+    border: 1px solid color-mix(in srgb, var(--color-marca) 10%, transparent);
   }
   .fotogramas {
     position: absolute;
@@ -251,10 +267,9 @@ const { modelos } = Astro.props;
   }
   .muestra::before {
     content: '';
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     border: 1px solid color-mix(in srgb, var(--color-marca) 25%, transparent);
-    border-radius: 50%;
     background: var(--muestra, var(--color-superficie));
     outline: 1px solid transparent;
     outline-offset: 4px;
@@ -270,16 +285,19 @@ const { modelos } = Astro.props;
   .barra-datos {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
     margin-top: 3rem;
-    border-block: 1px solid var(--color-linea);
+    background: color-mix(in srgb, var(--color-marca) 12%, transparent);
   }
   .barra-datos > div {
-    min-height: 7.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    min-height: 8.5rem;
     padding: 1.5rem;
-    text-align: center;
-  }
-  .barra-datos > div + div {
-    border-left: 1px solid var(--color-linea);
+    text-align: right;
+    background: var(--color-fondo);
   }
   .barra-datos dt {
     font-size: var(--text-eyebrow);
@@ -306,9 +324,9 @@ const { modelos } = Astro.props;
       width: 100%;
       max-height: 72%;
     }
-    .anillo {
-      top: 58%;
-      width: 88%;
+    .marco {
+      top: 50%;
+      width: 92%;
     }
     .aviso-giro {
       right: 50%;
@@ -320,15 +338,20 @@ const { modelos } = Astro.props;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .barra-datos > div {
-      min-height: 6.5rem;
-      padding: 1rem 0.5rem;
+      min-height: 7rem;
+      padding: 1.15rem 1rem;
     }
-    .barra-datos > div:nth-child(3) {
-      border-left: 0;
-      border-top: 1px solid var(--color-linea);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .plano,
+    .marco {
+      animation: none;
+      clip-path: none;
+      opacity: 1;
+      transform: none;
     }
-    .barra-datos > div:nth-child(4) {
-      border-top: 1px solid var(--color-linea);
+    .marco {
+      transform: translate(-50%, -50%);
     }
   }
 </style>

@@ -179,6 +179,12 @@
       .tira > * {
         animation-name: entrar-tira;
       }
+      /* Casillas de un mosaico: no deslizan de lado. Eso es el gesto de una
+         fila de fichas (catálogo). Aquí la pieza ES un cuadrado, así que se
+         ensambla como losa: recorte simétrico que se abre y una escala corta. */
+      .tira-casilla > * {
+        animation-name: entrar-casilla;
+      }
     }
     .tira > *:nth-child(1) { animation-range: cover 8% cover 42%; }
     .tira > *:nth-child(2) { animation-range: cover 13% cover 47%; }
@@ -189,6 +195,18 @@
     .tira > *:nth-child(7) { animation-range: cover 38% cover 72%; }
     .tira > *:nth-child(8) { animation-range: cover 43% cover 77%; }
     .tira > *:nth-child(9) { animation-range: cover 48% cover 82%; }
+
+    /* Un tablero de seis losas mide casi un viewport. Con los rangos
+       largos de `.tira`, las dos de abajo se quedan a media apertura
+       —título recortado— justo cuando alguien se para a leerlas. */
+    @media (width >= 48rem) {
+      .tira-casilla > *:nth-child(1) { animation-range: cover 4% cover 20%; }
+      .tira-casilla > *:nth-child(2) { animation-range: cover 6% cover 22%; }
+      .tira-casilla > *:nth-child(3) { animation-range: cover 8% cover 24%; }
+      .tira-casilla > *:nth-child(4) { animation-range: cover 10% cover 26%; }
+      .tira-casilla > *:nth-child(5) { animation-range: cover 12% cover 28%; }
+      .tira-casilla > *:nth-child(6) { animation-range: cover 14% cover 30%; }
+    }
 
     /* `.tira-indice` — LA VARIANTE PARA REJILLAS QUE SE NAVEGAN, no que se leen,
        y la diferencia no es de gusto.
@@ -253,6 +271,15 @@
       animation: revelar-imagen linear both;
       animation-timeline: view();
       animation-range: cover 12% cover 54%;
+    }
+
+    /* El zorro llega al encuadre, no se funde. Mira a la derecha: entrar
+       desde la izquierda es sentarse a mirar el bloque, no aparecer encima.
+       `entry` y no `cover`: en el pie —último bloque— `cover` no termina. */
+    .llega-zorro {
+      animation: llegar-zorro linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
     }
 
     /* MÓVIL: el gesto del escritorio termina a media pantalla. En 390px eso
@@ -380,6 +407,18 @@
     35%  { opacity: 1; }
     to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
   }
+  /* 14% y 0.92: por encima se lee como zoom de tarjeta; por debajo el
+     recorte no se distingue de un fade. El reloj partido (opacidad al 40%)
+     es el mismo que `.revelar`: la losa se lee antes de terminar de abrir. */
+  @keyframes entrar-casilla {
+    from { opacity: 0; clip-path: inset(14%); transform: scale(0.92); }
+    40%  { opacity: 1; }
+    to   { opacity: 1; clip-path: inset(0); transform: scale(1); }
+  }
+  @keyframes llegar-zorro {
+    from { opacity: 0.15; transform: translate3d(-14%, 10%, 0) scale(0.94); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  }
   /* 62% y 1.06, no 82% y 1.14: por encima de ahí se lee como zoom y delata la
      planitud del original. */
   @keyframes revelar-imagen {
@@ -440,6 +479,12 @@
   .entra-2 { animation-delay: 70ms; }
   .entra-3 { animation-delay: 125ms; }
   .entra-4 { animation-delay: 180ms; }
+
+  /* Misma llegada del zorro, disparada por el reloj. El 404 ya está en
+     pantalla al cargar: no hay entrada que `view()` pueda medir. */
+  .entra-zorro {
+    animation: llegar-zorro 880ms var(--ease-out) 160ms both;
+  }
 
   @keyframes entrar {
     from { opacity: 0; transform: translateY(14px); }
@@ -633,8 +678,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .revela, .revela-grupo > *, .tira > *, .tira-indice > *, .deriva, .deriva-hero,
-  .entra, .traza, .revela-titular, .revela-cifra, .deriva-fondo, .revela-imagen,
+  .revela, .revela-grupo > *, .tira > *, .tira-casilla > *, .tira-indice > *,
+  .deriva, .deriva-hero, .entra, .entra-zorro, .llega-zorro, .traza,
+  .revela-titular, .revela-cifra, .deriva-fondo, .revela-imagen,
   .entra-imagen, .entra-titular-hero, .riel > *, .riel[data-foco] > *,
   .aviso-mira, [data-slot='escena'][data-mira] img {
     animation: none !important;

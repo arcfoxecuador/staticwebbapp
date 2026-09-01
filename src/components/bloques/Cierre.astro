@@ -24,6 +24,8 @@ interface Props {
   /** Un fondo por modelo en la portada. El activo se decide en la isla. */
   fondos?: { id: string; imagen: ImageMetadata; alt: string }[];
   id?: string;
+  /** Dos losas: foto | ficha. El overlay a sangre no es el tablero. */
+  tablero?: boolean;
 }
 
 const {
@@ -35,6 +37,7 @@ const {
   alt,
   fondos = [],
   id,
+  tablero = false,
 } = Astro.props;
 
 const capas = fondos.length > 0 ? fondos : imagen && alt ? [{ id: 'unico', imagen, alt }] : [];
@@ -51,56 +54,80 @@ const conSlot = Astro.slots.has('default');
   class:list={[
     'relative isolate overflow-clip',
     oscuro ? 'bg-marca text-white campo-oscuro' : 'bg-tinte text-marca',
+    tablero && 'cierre-tablero',
   ]}
 >
   {
-    capas.length > 0 && (
+    tablero ? (
+      <div class="tira tira-casilla grid gap-px bg-marca-clara/20 md:grid-cols-2">
+        <div class="relative min-h-[28rem] overflow-clip md:min-h-[40rem]">
+          {capas.map((capa, indice) => (
+            <Image
+              src={capa.imagen}
+              alt={capa.alt}
+              widths={[800, 1440, 1920]}
+              sizes="(min-width: 768px) 50vw, 100vw"
+              data-modelo-vista={capa.id}
+              data-activo={indice === 0 ? '' : undefined}
+              class="cierre-fondo absolute inset-0 h-full w-full object-cover"
+            />
+          ))}
+        </div>
+        <div class="flex flex-col justify-end bg-marca px-6 py-10 md:px-10 md:py-16">
+          {conSlot && <slot />}
+        </div>
+      </div>
+    ) : (
       <>
-        {capas.map((capa, indice) => (
-          <Image
-            src={capa.imagen}
-            alt={capa.alt}
-            widths={[800, 1440, 1920]}
-            sizes="100vw"
-            data-modelo-vista={capa.id}
-            data-activo={indice === 0 ? '' : undefined}
-            class="cierre-fondo absolute inset-0 -z-10 h-full w-full object-cover"
-          />
-        ))}
-        <div class="absolute inset-0 -z-10 bg-marca/55" aria-hidden="true"></div>
+        {capas.length > 0 && (
+          <>
+            {capas.map((capa, indice) => (
+              <Image
+                src={capa.imagen}
+                alt={capa.alt}
+                widths={[800, 1440, 1920]}
+                sizes="100vw"
+                data-modelo-vista={capa.id}
+                data-activo={indice === 0 ? '' : undefined}
+                class="cierre-fondo absolute inset-0 -z-10 h-full w-full object-cover"
+              />
+            ))}
+            <div class="absolute inset-0 -z-10 bg-marca/55" aria-hidden="true"></div>
+          </>
+        )}
+        <div class:list={['medida py-20 md:py-24', conSlot && 'max-w-xl']}>
+          {
+            !conSlot && (
+              <>
+                <div class="traza mb-8 w-full max-w-[120px]" aria-hidden="true"></div>
+                <div class="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+                  <div>
+                    <h2 class="revela-titular max-w-[24ch] equilibra text-h2 font-bold">{titulo}</h2>
+                    {bajada && <p class="revela mt-4 max-w-[52ch] text-lead text-current/75">{bajada}</p>}
+                  </div>
+                  <div class="revela flex shrink-0 flex-col gap-3 sm:flex-row">
+                    <Boton href={accion.href} tamano="lg">{accion.texto}</Boton>
+                    {ORG.whatsapp && (
+                      <Boton
+                        href={`https://wa.me/${ORG.whatsapp}`}
+                        tamano="lg"
+                        variante={oscuro ? 'fantasma' : 'secundario'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        WhatsApp
+                      </Boton>
+                    )}
+                  </div>
+                </div>
+              </>
+            )
+          }
+          {conSlot && <slot />}
+        </div>
       </>
     )
   }
-  <div class:list={['medida py-20 md:py-24', conSlot && 'max-w-xl']}>
-    {
-      !conSlot && (
-        <>
-          <div class="traza mb-8 w-full max-w-[120px]" aria-hidden="true"></div>
-          <div class="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h2 class="revela-titular max-w-[24ch] equilibra text-h2 font-bold">{titulo}</h2>
-              {bajada && <p class="revela mt-4 max-w-[52ch] text-lead text-current/75">{bajada}</p>}
-            </div>
-            <div class="revela flex shrink-0 flex-col gap-3 sm:flex-row">
-              <Boton href={accion.href} tamano="lg">{accion.texto}</Boton>
-              {ORG.whatsapp && (
-                <Boton
-                  href={`https://wa.me/${ORG.whatsapp}`}
-                  tamano="lg"
-                  variante={oscuro ? 'fantasma' : 'secundario'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  WhatsApp
-                </Boton>
-              )}
-            </div>
-          </div>
-        </>
-      )
-    }
-    {conSlot && <slot />}
-  </div>
 </section>
 
 <style>
@@ -109,6 +136,11 @@ const conSlot = Astro.slots.has('default');
   }
   .cierre-fondo[data-activo] {
     opacity: 0.4;
+  }
+  /* En tablero la foto ES la losa: atenuarla 60% la deja sucia y
+     destapa el hueco negro del vecino. */
+  .cierre-tablero .cierre-fondo[data-activo] {
+    opacity: 1;
   }
   .cierre-fondo {
     transition: opacity 480ms var(--ease-out);
