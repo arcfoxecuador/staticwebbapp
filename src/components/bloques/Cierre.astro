@@ -21,6 +21,8 @@ interface Props {
   campo?: 'marca' | 'tinte';
   imagen?: ImageMetadata;
   alt?: string;
+  /** Un fondo por modelo en la portada. El activo se decide en la isla. */
+  fondos?: { id: string; imagen: ImageMetadata; alt: string }[];
   id?: string;
 }
 
@@ -31,9 +33,11 @@ const {
   campo = 'marca',
   imagen,
   alt,
+  fondos = [],
   id,
 } = Astro.props;
 
+const capas = fondos.length > 0 ? fondos : imagen && alt ? [{ id: 'unico', imagen, alt }] : [];
 const oscuro = campo === 'marca';
 const conSlot = Astro.slots.has('default');
 ---
@@ -50,15 +54,19 @@ const conSlot = Astro.slots.has('default');
   ]}
 >
   {
-    imagen && alt && (
+    capas.length > 0 && (
       <>
-        <Image
-          src={imagen}
-          {alt}
-          widths={[800, 1440, 1920]}
-          sizes="100vw"
-          class="absolute inset-0 -z-10 h-full w-full object-cover opacity-40"
-        />
+        {capas.map((capa, indice) => (
+          <Image
+            src={capa.imagen}
+            alt={capa.alt}
+            widths={[800, 1440, 1920]}
+            sizes="100vw"
+            data-modelo-vista={capa.id}
+            data-activo={indice === 0 ? '' : undefined}
+            class="cierre-fondo absolute inset-0 -z-10 h-full w-full object-cover"
+          />
+        ))}
         <div class="absolute inset-0 -z-10 bg-marca/55" aria-hidden="true"></div>
       </>
     )
@@ -94,3 +102,15 @@ const conSlot = Astro.slots.has('default');
     {conSlot && <slot />}
   </div>
 </section>
+
+<style>
+  .cierre-fondo:not([data-activo]) {
+    opacity: 0;
+  }
+  .cierre-fondo[data-activo] {
+    opacity: 0.4;
+  }
+  .cierre-fondo {
+    transition: opacity 480ms var(--ease-out);
+  }
+</style>

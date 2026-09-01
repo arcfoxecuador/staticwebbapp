@@ -29,6 +29,8 @@ interface Props {
   secundaria?: { texto: string; href: string };
   imagen: ImageMetadata;
   alt: string;
+  /** Un fondo por modelo. El primero es el LCP; los demás esperan al cambio. */
+  fondos?: { id: string; imagen: ImageMetadata; alt: string }[];
   generada?: boolean;
   /** Ancla del siguiente capítulo. Sin ella no hay invitación a bajar. */
   siguiente?: { href: string; etiqueta: string };
@@ -43,12 +45,12 @@ const {
   secundaria,
   imagen,
   alt,
+  fondos = [],
   generada = true,
   siguiente,
 } = Astro.props;
 
-/* La primera palabra carga; el resto acompaña. Un solo h1, dos cuerpos:
-   es el cartel, no un párrafo en versales. */
+const capas = fondos.length > 0 ? fondos : [{ id: 'unico', imagen, alt }];
 const palabras = titulo.trim().split(/\s+/);
 const cabeza = palabras[0] ?? titulo;
 const cola = palabras.slice(1).join(' ');
@@ -60,15 +62,24 @@ const cola = palabras.slice(1).join(' ');
   class="campo-oscuro relative isolate flex min-h-svh items-center overflow-clip bg-marca"
 >
   <div class="deriva-hero absolute inset-0 -z-10">
-    <Image
-      src={imagen}
-      {alt}
-      widths={[640, 1024, 1440, 1920]}
-      sizes="100vw"
-      loading="eager"
-      fetchpriority="high"
-      class="entra-imagen h-full w-full object-cover object-[58%_60%]"
-    />
+    {
+      capas.map((capa, indice) => (
+        <Image
+          src={capa.imagen}
+          alt={capa.alt}
+          widths={[640, 1024, 1440, 1920]}
+          sizes="100vw"
+          loading={indice === 0 ? 'eager' : 'lazy'}
+          fetchpriority={indice === 0 ? 'high' : 'low'}
+          data-modelo-vista={capa.id}
+          data-activo={indice === 0 ? '' : undefined}
+          class:list={[
+            'hero-fondo h-full w-full object-cover object-[58%_60%]',
+            indice === 0 ? 'entra-imagen relative' : 'absolute inset-0',
+          ]}
+        />
+      ))
+    }
   </div>
 
   <div
@@ -88,6 +99,7 @@ const cola = palabras.slice(1).join(' ');
     {
       insignia && (
         <p class="hero-insignia entra text-eyebrow uppercase tracking-[0.22em] text-white/80">
+          <span data-modelo-rotulo></span>
           {insignia}
         </p>
       )
@@ -135,6 +147,20 @@ const cola = palabras.slice(1).join(' ');
 </section>
 
 <style>
+  .hero-fondo:not([data-activo]) {
+    opacity: 0;
+  }
+  .hero-fondo[data-activo] {
+    opacity: 1;
+  }
+  .hero-fondo {
+    transition: opacity 480ms var(--ease-out);
+  }
+
+  .hero-insignia [data-modelo-rotulo]:not(:empty)::after {
+    content: ' · ';
+  }
+
   .hero-insignia {
     display: inline-flex;
     flex-direction: column;

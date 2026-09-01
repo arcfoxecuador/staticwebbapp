@@ -1,8 +1,9 @@
 ---
 /* La portada es un recorrido de producto, no un índice de marca: un auto abre,
-   el escenario permite explorarlo y el resto del scroll demuestra la experiencia. */
-import { Image } from 'astro:assets';
+   el escenario permite explorarlo y el resto del scroll demuestra la experiencia.
+   Cambiar de modelo pinta hero, plato, mosaico, cierre y cabecera a la vez. */
 import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import HeroImagen from '../components/bloques/HeroImagen.astro';
 import EscenarioModelo from '../components/bloques/EscenarioModelo.astro';
@@ -11,9 +12,10 @@ import Cierre from '../components/bloques/Cierre.astro';
 import Formulario from '../components/bloques/Formulario.astro';
 
 import hero from '../assets/hero.webp';
-import t5Habitaculo from '../assets/t5-habitaculo.webp';
-import t5Rueda from '../assets/t5-rueda.webp';
-import t5Cabina from '../assets/t5-cabina.webp';
+import t1Kv from '../assets/t1-kv.webp';
+import t1Kv2 from '../assets/t1-kv2.webp';
+import s5Cuarto from '../assets/s5-45.webp';
+import s5Bajo from '../assets/s5-bajo.webp';
 import sobre from '../assets/sobre.webp';
 import cotizar from '../assets/cotizar.webp';
 
@@ -30,9 +32,21 @@ const resolverFotogramas = (items: { archivo: string; alt: string }[]) =>
   items
     .map((item) => {
       const imagen = imagenPorArchivo(item.archivo, item.alt);
-      return imagen ? { imagen, alt: item.alt } : undefined;
+      return imagen ? { imagen, alt: item.alt, archivo: item.archivo } : undefined;
     })
-    .filter((item): item is { imagen: ImageMetadata; alt: string } => Boolean(item));
+    .filter((item): item is { imagen: ImageMetadata; alt: string; archivo: string } => Boolean(item));
+
+const heroPorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
+  t5: { imagen: hero, alt: 'SUV ARCFOX T5 eléctrico en carretera al anochecer.' },
+  t1: { imagen: t1Kv, alt: 'ARCFOX T1, SUV familiar 100% eléctrico.' },
+  s5: { imagen: s5Cuarto, alt: 'ARCFOX S5, SUV fastback 100% eléctrico.' },
+};
+
+const cierrePorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
+  t5: { imagen: cotizar, alt: 'ARCFOX T5 en el escenario oscuro de cotización.' },
+  t1: { imagen: t1Kv2, alt: 'ARCFOX T1, toma de marca para cotizar.' },
+  s5: { imagen: s5Bajo, alt: 'ARCFOX S5, vista baja para cotizar.' },
+};
 
 const modelos = entradas.map((entrada) => {
   const angulos = resolverFotogramas(entrada.data.angulos);
@@ -42,8 +56,6 @@ const modelos = entradas.map((entrada) => {
       return {
         etiqueta: variante.etiqueta,
         muestra: variante.muestra,
-        /* Sólo el primer color comparte la secuencia: mezclar ángulos grises
-           con una carrocería blanca fingiría que ese color fue fotografiado. */
         fotogramas: indice === 0 && angulos.length ? angulos : propia,
       };
     })
@@ -58,11 +70,38 @@ const modelos = entradas.map((entrada) => {
       valor: `${cota.valor}${cota.unidad ? ` ${cota.unidad}` : ''}`,
     })),
   ];
+
+  const vistos = new Set<string>();
+  const fotos = resolverFotogramas([
+    ...entrada.data.interior.map((item) => ({ archivo: item.archivo, alt: item.alt })),
+    ...entrada.data.galeria,
+  ]).filter((foto) => {
+    if (vistos.has(foto.archivo)) return false;
+    vistos.add(foto.archivo);
+    return true;
+  });
+
+  const textos = (entrada.data.destacados.length ? entrada.data.destacados : PILARES)
+    .slice(0, 3)
+    .map((item, i) => ({
+      titulo: 'titulo' in item ? item.titulo : PILARES[i]?.titulo,
+      bajada: 'puntos' in item ? item.puntos[0] : PILARES[i]?.texto,
+    }));
+
   return {
     id: entrada.id,
     nombre: entrada.data.nombre,
+    rotulo: entrada.data.rotulo,
     colores,
     datos,
+    mosaico: [
+      textos[0],
+      fotos[0] ? { imagen: fotos[0].imagen, alt: fotos[0].alt } : undefined,
+      fotos[1] ? { imagen: fotos[1].imagen, alt: fotos[1].alt } : undefined,
+      fotos[2] ? { imagen: fotos[2].imagen, alt: fotos[2].alt } : undefined,
+      textos[1],
+      textos[2],
+    ].filter((item): item is NonNullable<typeof item> => Boolean(item)),
   };
 }).filter((modelo) => modelo.colores.some((color) => color.fotogramas.length > 0));
 
@@ -81,22 +120,22 @@ const schema = grafo(
     insignia="100% eléctrico"
     imagen={hero}
     alt="SUV ARCFOX eléctrico en carretera al anochecer."
+    fondos={modelos.map((modelo) => ({
+      id: modelo.id,
+      imagen: heroPorId[modelo.id]?.imagen ?? hero,
+      alt: heroPorId[modelo.id]?.alt ?? modelo.nombre,
+    }))}
     generada={false}
   />
 
   <EscenarioModelo {modelos} />
 
-  <section class="campo-oscuro overflow-clip bg-marca" aria-label="Rasgos ARCFOX">
-    <Mosaico
-      items={[
-        { titulo: PILARES[0]?.titulo, bajada: PILARES[0]?.texto },
-        { imagen: t5Habitaculo, alt: 'Puesto de conducción y pantallas del ARCFOX T5.' },
-        { imagen: t5Rueda, alt: 'Llanta y sistema de frenado del ARCFOX T5.' },
-        { imagen: t5Cabina, alt: 'Plazas traseras y techo panorámico del ARCFOX T5.' },
-        { titulo: PILARES[1]?.titulo, bajada: PILARES[1]?.texto },
-        { titulo: PILARES[2]?.titulo, bajada: PILARES[2]?.texto },
-      ]}
-    />
+  <section class="campo-oscuro overflow-clip bg-marca" aria-label="Rasgos del modelo">
+    {
+      modelos.map((modelo, indice) => (
+        <Mosaico modelo={modelo.id} activo={indice === 0} items={modelo.mosaico} />
+      ))
+    }
   </section>
 
   <section class="sobre-portada campo-oscuro relative isolate overflow-clip bg-marca">
@@ -121,7 +160,16 @@ const schema = grafo(
     </a>
   </section>
 
-  <Cierre id="cotizalo" imagen={cotizar} alt="ARCFOX T5 en el escenario oscuro de cotización.">
+  <Cierre
+    id="cotizalo"
+    imagen={cotizar}
+    alt="ARCFOX T5 en el escenario oscuro de cotización."
+    fondos={modelos.map((modelo) => ({
+      id: modelo.id,
+      imagen: cierrePorId[modelo.id]?.imagen ?? cotizar,
+      alt: cierrePorId[modelo.id]?.alt ?? modelo.nombre,
+    }))}
+  >
     <Formulario titulo="Cotízalo" bajada="Elige tu ARCFOX. Te contactamos desde Quito." origen="/" compacto />
   </Cierre>
 </Base>

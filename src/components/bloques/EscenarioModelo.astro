@@ -18,6 +18,7 @@ export type ColorModelo = {
 export type ModeloEscenario = {
   id: string;
   nombre: string;
+  rotulo?: string;
   colores: ColorModelo[];
   datos: { clave: string; valor: string }[];
 };
@@ -34,7 +35,7 @@ const { modelos } = Astro.props;
     <section data-slot="escenario-modelo" class="escenario-modelo campo-claro bg-fondo">
       <div class="plano" aria-hidden="true"></div>
       <div class="medida relative py-16 md:py-24">
-        <div class="selector-modelo revela-titular" role="group" aria-label="Cambiar modelo">
+        <div class="selector-modelo sticky top-16 z-20 revela-titular" role="group" aria-label="Cambiar modelo">
           <button type="button" data-modelo-anterior aria-label="Modelo anterior">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path d="M7.5 2.5 4 6l3.5 3.5" stroke="currentColor" stroke-width="1.3" />
@@ -53,6 +54,8 @@ const { modelos } = Astro.props;
             id={`panel-${modelo.id}`}
             aria-label={modelo.nombre}
             data-modelo-panel={modelo.id}
+            data-modelo-corto={modelo.nombre.replace(/^ARCFOX\s+/i, '')}
+            data-modelo-rotulo={modelo.rotulo}
             hidden={indiceModelo !== 0}
           >
             <div
@@ -142,6 +145,7 @@ const { modelos } = Astro.props;
     justify-content: center;
     gap: 0.35rem;
     min-height: 44px;
+    background: color-mix(in srgb, var(--color-fondo) 92%, transparent);
   }
   .selector-modelo button {
     display: inline-grid;

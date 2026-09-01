@@ -17,28 +17,34 @@ interface Props {
   items: CeldaMosaico[];
   patron?: 'trenzado' | 'destacado';
   class?: string;
+  /** Identificador del modelo dueño de esta rejilla en la portada. */
+  modelo?: string;
+  activo?: boolean;
 }
 
-const { items, patron = 'trenzado', class: extra } = Astro.props;
+const { items, patron = 'trenzado', class: extra, modelo, activo = true } = Astro.props;
 ---
 
 {
   items.length > 0 && (
     <div
       data-slot="mosaico"
-      class:list={['revela-grupo grid gap-px bg-marca-clara/20 md:grid-cols-3', extra]}
+      data-modelo-vista={modelo}
+      data-oculta={modelo ? '' : undefined}
+      hidden={Boolean(modelo) && !activo}
+      class:list={['tira grid gap-px bg-marca-clara/20 md:grid-cols-3', extra]}
     >
       {items.map((celda, i) => {
         const span = celda.ancho === 2 || (patron === 'destacado' && i === 0);
         if (celda.imagen && celda.alt) {
           return (
-            <div class:list={['overflow-clip', span && 'md:col-span-2']}>
+            <div class:list={['celda-foto overflow-clip', span && 'md:col-span-2']}>
               <Image
                 src={celda.imagen}
                 alt={celda.alt}
                 widths={[480, 800, 1200]}
                 sizes={span ? '(min-width: 768px) 66vw, 100vw' : '(min-width: 768px) 33vw, 100vw'}
-                class="h-full min-h-64 w-full object-cover md:min-h-80"
+                class="revela-imagen h-full min-h-64 w-full object-cover md:min-h-[28rem]"
               />
             </div>
           );
@@ -47,14 +53,14 @@ const { items, patron = 'trenzado', class: extra } = Astro.props;
           return (
             <div
               class:list={[
-                'flex min-h-64 flex-col justify-end bg-marca p-8 text-white md:min-h-80',
+                'celda-texto flex min-h-64 flex-col justify-end bg-marca p-8 text-white md:min-h-[28rem]',
                 span && 'md:col-span-2',
               ]}
             >
-              <p class:list={['font-display font-semibold uppercase tracking-[0.08em]', span ? 'text-h2' : 'text-h3']}>
+              <p class:list={['revela-titular font-display font-semibold uppercase tracking-[0.08em]', span ? 'text-h2' : 'text-h3']}>
                 {celda.titulo ?? celda.texto}
               </p>
-              {celda.bajada && <p class="mt-4 max-w-[34ch] text-small text-white/65">{celda.bajada}</p>}
+              {celda.bajada && <p class="revela mt-4 max-w-[34ch] text-small text-white/65">{celda.bajada}</p>}
             </div>
           );
         }
@@ -63,3 +69,29 @@ const { items, patron = 'trenzado', class: extra } = Astro.props;
     </div>
   )
 }
+
+<style>
+  /* Al cambiar de modelo el mosaico ya está en pantalla: view() no vuelve a
+     disparar. El reloj recorre el mismo gesto que `.tira`, una vez. */
+  .prende > * {
+    animation: entrar-tira 720ms var(--ease-out) both;
+  }
+  .prende > *:nth-child(2) { animation-delay: 60ms; }
+  .prende > *:nth-child(3) { animation-delay: 120ms; }
+  .prende > *:nth-child(4) { animation-delay: 180ms; }
+  .prende > *:nth-child(5) { animation-delay: 240ms; }
+  .prende > *:nth-child(6) { animation-delay: 300ms; }
+  .prende .revela-imagen {
+    animation: revelar-imagen 980ms var(--ease-out) both;
+  }
+  .prende .revela-titular {
+    animation: revelar-titular 720ms var(--ease-out) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .prende > *,
+    .prende .revela-imagen,
+    .prende .revela-titular {
+      animation: none;
+    }
+  }
+</style>
