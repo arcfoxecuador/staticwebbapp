@@ -1,5 +1,5 @@
 ---
-/* EL FORMULARIO DE CONTACTO. Cuatro campos y ni uno más.
+/* EL FORMULARIO DE CONTACTO. Los campos que necesita la cotización y ni uno más.
 
    Funciona SIN JavaScript: es un `<form method="post">` de verdad contra el
    endpoint configurado, y sin JS el navegador hace el envío nativo y aterriza en
@@ -171,6 +171,16 @@ const modelos = [
           </label>
 
           <label class="flex flex-col gap-2">
+            <span class="text-small font-medium text-marca">Mensaje</span>
+            <textarea
+              name="mensaje"
+              rows="3"
+              class="campo"
+              placeholder="Cuéntanos qué necesitas"
+            ></textarea>
+          </label>
+
+          <label class="flex flex-col gap-2">
             <span class="text-small font-medium text-marca">¿Qué modelo te interesa?</span>
             <select name="modelo" required class="campo">
               <option value="" disabled selected>Elige un modelo</option>
@@ -180,7 +190,7 @@ const modelos = [
         </div>
 
         <div class="mt-7 flex flex-col gap-4">
-          <Boton tipo="submit" tamano="lg" class="w-full justify-center">Enviar →</Boton>
+          <Boton tipo="submit" tamano="lg" class="w-full justify-center">Enviar</Boton>
           {/* `aria-live="polite"` y no `assertive`: el acuse no es una alarma. Y
               vive FUERA del bloque que se oculta al enviar, porque una región
               viva que aparece de la nada a veces no se anuncia. */}
@@ -192,8 +202,8 @@ const modelos = [
 }
 
 <style>
-  /* Los campos se estilan aquí y no con utilidades repetidas en seis sitios: son
-     seis controles con exactamente el mismo aspecto, y la variante que se olvida
+  /* Los campos se estilan aquí y no con utilidades repetidas: son controles con
+     exactamente el mismo aspecto, y la variante que se olvida
      de una utilidad es el defecto clásico de un formulario. */
   .campo {
     width: 100%;

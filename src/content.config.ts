@@ -39,6 +39,11 @@ const variante = z.object({
   alt: z.string(),
 });
 
+const angulo = z.object({
+  archivo: z.string(),
+  alt: z.string(),
+});
+
 const modelos = defineCollection({
   loader: glob({ base: './src/content/modelos', pattern: '**/*.md' }),
   schema: z.object({
@@ -57,6 +62,9 @@ const modelos = defineCollection({
       .array(z.object({ valor: z.string(), unidad: z.string().optional(), etiqueta: z.string() }))
       .default([]),
     variantes: z.array(variante).default([]),
+    /** Una órbita fotográfica no se deduce del nombre del archivo: el orden
+        editorial fija el sentido del arrastre y evita prometer un 3D que no existe. */
+    angulos: z.array(angulo).default([]),
     galeria: z.array(fotoLocal).default([]),
     interior: z.array(variante).default([]),
     destacados: z

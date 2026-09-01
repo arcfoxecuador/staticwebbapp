@@ -6,6 +6,8 @@ import type { ImageMetadata } from 'astro';
 
 export type CeldaMosaico = {
   texto?: string;
+  titulo?: string;
+  bajada?: string;
   imagen?: ImageMetadata;
   alt?: string;
   ancho?: 1 | 2;
@@ -41,16 +43,19 @@ const { items, patron = 'trenzado', class: extra } = Astro.props;
             </div>
           );
         }
-        if (celda.texto) {
+        if (celda.texto || celda.titulo) {
           return (
-            <p
+            <div
               class:list={[
-                'flex min-h-40 items-end bg-marca p-8 font-display font-semibold uppercase tracking-[0.08em] text-white',
-                span ? 'text-h2 md:col-span-2' : 'text-h3',
+                'flex min-h-64 flex-col justify-end bg-marca p-8 text-white md:min-h-80',
+                span && 'md:col-span-2',
               ]}
             >
-              {celda.texto}
-            </p>
+              <p class:list={['font-display font-semibold uppercase tracking-[0.08em]', span ? 'text-h2' : 'text-h3']}>
+                {celda.titulo ?? celda.texto}
+              </p>
+              {celda.bajada && <p class="mt-4 max-w-[34ch] text-small text-white/65">{celda.bajada}</p>}
+            </div>
           );
         }
         return null;

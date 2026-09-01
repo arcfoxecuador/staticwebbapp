@@ -75,7 +75,7 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
 
 | Ruta | Archivo |
 | --- | --- |
-| `/` | `pages/index.astro` |
+| `/` | `pages/index.astro` — portada de producto: hero, escenario, mosaico, marca y cotización |
 | `/modelos` | `pages/modelos/index.astro` |
 | `/modelos/{slug}` | `pages/modelos/[slug].astro` |
 | `/nosotros` | `pages/nosotros.astro` |
@@ -126,9 +126,10 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
 
 ## Estado del proyecto
 
-- **Titular de portada**: `PORTADA.titular` arranca con el tagline. Construye, pero
-  es lo primero que hay que reescribir — un `<h1>` es una idea de seis a diez
-  palabras, no la frase citable (esa es `PORTADA.bajada`).
+- **Portada**: `/` es la experiencia de producto, no otro catálogo. Sigue el
+  recorrido hero cinematográfico → escenario claro T5/T1/S5 → mosaico de rasgos
+  → Sobre ARCFOX → Cotízalo. El escenario gira fotografías 2D ordenadas desde el
+  markdown y sincroniza el modelo activo con el formulario; no hay malla 3D.
 - **Contenido**: `METRICAS`, `PASOS`, `PILARES` y `FAQ` de `site.ts` — *pendiente*.
   Sus bloques no se pintan mientras estén vacíos.
 - **Colecciones**: los tres `ejemplo.md` de `src/content/` vienen **despublicados**
@@ -137,8 +138,9 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   referencia, así que el archivo tiene que existir — *pendiente el real*.
 - **Imagen de compartición**: `npm run og` genera un provisional. *Pendiente el
   diseño real* (1200×630, mismo nombre de archivo).
-- **Fotografía**: *pendiente*. Todo lo que entre generado se queda declarado como
-  tal (`portadaGenerada: true`) hasta que llegue una fotografía real.
+- **Fotografía**: hero, interiores, modelos, `sobre.webp` y `cotizar.webp` son
+  material local real. Para giro 3D siguen pendientes un GLB por modelo/color o
+  secuencias equiangulares completas; los ángulos actuales sólo permiten spin 2D.
 - **Formulario**: `PUBLIC_FORMULARIO_ENDPOINT` — *pendiente*. Sin él, el bloque no
   se pinta y `/contacto` muestra las vías directas.
 - **Analítica**: `PUBLIC_GA4_ID` / `PUBLIC_CLARITY_ID` — *pendiente*. Sin ninguno no

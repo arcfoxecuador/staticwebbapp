@@ -85,6 +85,13 @@ export type NavZona = {
   hijos?: NavHijo[];
 };
 
+/** El CTA primario también entra al final del menú: declararlo antes de NAV
+    permite que cabecera, barra móvil y cierre compartan texto y destino. */
+export const CTA = {
+  texto: 'Cotízalo',
+  href: '/#cotizalo',
+} as const;
+
 export const NAV: NavZona[] = [
   {
     texto: 'Modelos',
@@ -98,18 +105,12 @@ export const NAV: NavZona[] = [
   { texto: 'Concesionarios', href: '/concesionarios' },
   { texto: 'Test drive', href: '/test-drive' },
   { texto: 'Sobre ARCFOX', href: '/nosotros' },
+  { texto: CTA.texto, href: CTA.href },
   /* Postventa NO entra aquí a propósito: la página existe para revisar
      (`/postventa`) pero el servicio no está cerrado. Un enlace en cabecera,
      pie y 404 —los tres leen esta lista— la promocionaría. Vive en
      `RUTAS_NO_INDEXABLES` hasta que haya red de talleres que publicar. */
 ];
-
-/** El CTA primario. Aparece en la cabecera, en la barra de acción de móvil y al
-    cierre de cada página: escribirlo una vez es lo que los mantiene iguales. */
-export const CTA = {
-  texto: 'Cotízalo',
-  href: '/#cotizalo',
-} as const;
 
 // ── Contenido de portada ────────────────────────────────────────────────────
 

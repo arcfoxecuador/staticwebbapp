@@ -57,7 +57,7 @@ const cola = palabras.slice(1).join(' ');
 <section
   data-slot="hero-imagen"
   data-generada={generada ? 'true' : undefined}
-  class="campo-oscuro relative isolate flex min-h-svh items-end overflow-clip bg-marca"
+  class="campo-oscuro relative isolate flex min-h-svh items-center overflow-clip bg-marca"
 >
   <div class="deriva-hero absolute inset-0 -z-10">
     <Image
@@ -82,7 +82,7 @@ const cola = palabras.slice(1).join(' ');
   >
   </div>
 
-  <div class="medida relative w-full pb-16 pt-32 max-lg:pb-[calc(85px+2.25rem)] md:pb-20">
+  <div class="hero-contenido medida relative w-full pb-16 pt-32 max-lg:pb-[calc(85px+2.25rem)] md:pb-20">
     {rotulo && <p class="eyebrow entra text-white/70">{rotulo}</p>}
 
     {
@@ -202,6 +202,14 @@ const cola = palabras.slice(1).join(' ');
 
     .hero-acciones [data-slot='boton']:first-child {
       display: none;
+    }
+  }
+
+  @media (width < 48rem) {
+    /* Tres líneas de Eurostile necesitan despejar la barra fija completa; el
+       hueco anterior sólo alcanzaba para titulares de dos líneas. */
+    .hero-contenido {
+      padding-bottom: calc(85px + 6.5rem);
     }
   }
 
