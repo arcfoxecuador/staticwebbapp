@@ -287,7 +287,7 @@ const { modelos } = Astro.props;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1px;
     margin-top: 3rem;
-    background: color-mix(in srgb, var(--color-marca) 12%, transparent);
+    background: color-mix(in srgb, var(--color-marca-clara) 45%, transparent);
   }
   .barra-datos > div {
     display: flex;
@@ -297,20 +297,21 @@ const { modelos } = Astro.props;
     min-height: 8.5rem;
     padding: 1.5rem;
     text-align: right;
-    background: var(--color-fondo);
+    background: var(--color-marca);
+    color: white;
   }
   .barra-datos dt {
     font-size: var(--text-eyebrow);
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--color-tinta) 58%, transparent);
+    color: color-mix(in srgb, white 55%, transparent);
   }
   .barra-datos dd {
     margin-top: 0.65rem;
     font-family: var(--font-display);
     font-size: var(--text-dato);
     font-weight: 600;
-    color: var(--color-marca);
+    color: white;
   }
   @media (width < 48rem) {
     .plano {
