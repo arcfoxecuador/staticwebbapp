@@ -4,8 +4,12 @@
    `view-transition-name`. Un nombre duplicado hace que Chrome ABORTE la
    transición de página entera, no sólo la de este elemento.
 
-   Hay dos PNG oficiales, uno por tono. Recolorear con filtros deforma el
-   wordmark y rompe el área de seguridad del brandbook. */
+   El lockup oficial es un PNG de 192×28: en cualquier pantalla 2× se lee
+   pixelado y las orejas del zorro tocan el borde del lienzo, así que un
+   `object-cover` o un redondeo de subpíxel se las come. El sello de 700 px
+   sí es material de imprenta; el wordmark se escribe con Eurostile, que es
+   la misma familia del brandbook. Recolorear el PNG con filtros deforma
+   el trazo y rompe el área de seguridad. */
 import { ORG } from '../../lib/site';
 
 interface Props {
@@ -21,17 +25,7 @@ interface Props {
 
 const { tono = 'marca', enlace = true, soloSello = false, class: extra } = Astro.props;
 
-/* El lockup de 192×28 no se recorta: su zorro mide 28 px y al agrandarlo
-   (puerta de campaña, cabecera flotante) se lee pixelado y `object-cover`
-   le come las orejas. El sello sale de `wordmark-negro.png`, que sí es
-   material de marca a resolución de imprenta. */
-const src = soloSello
-  ? tono === 'blanco'
-    ? '/marca/sello-blanco.png'
-    : '/marca/sello.png'
-  : tono === 'blanco'
-    ? '/marca/logo-blanco.png'
-    : '/marca/logo-oficial.png';
+const src = tono === 'blanco' ? '/marca/sello-blanco.png' : '/marca/sello.png';
 const Etiqueta = enlace ? 'a' : 'span';
 ---
 
@@ -39,15 +33,57 @@ const Etiqueta = enlace ? 'a' : 'span';
   data-slot="marca"
   href={enlace ? '/' : undefined}
   aria-label={enlace ? `${ORG.nombreCorto} — ir a la portada` : undefined}
-  class:list={['inline-flex items-center', extra]}
+  class:list={[
+    'marca inline-flex items-center gap-1.5 no-underline',
+    enlace && 'marca-enlace',
+    tono === 'blanco' ? 'text-white' : 'text-marca',
+    extra,
+  ]}
 >
   <img
     src={src}
     alt={ORG.nombreCorto}
-    height={soloSello ? '64' : '28'}
-    width={soloSello ? '64' : '192'}
-    class:list={[
-      soloSello ? 'h-7 w-7 object-contain' : 'h-7 w-auto',
-    ]}
+    height="64"
+    width="64"
+    class="marca-sello h-7 w-7 object-contain"
   />
+  {
+    !soloSello && (
+      <span class="marca-wordmark" aria-hidden="true">
+        {ORG.nombreCorto}
+      </span>
+    )
+  }
 </Etiqueta>
+
+<style>
+  /* El sello puede medir 22 px; el toque no. Agrandar el PNG deforma el
+     lockup y come las orejas: la caja crece, el dibujo no. */
+  .marca-enlace {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .marca-wordmark {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+
+  @media (width < 48rem) {
+    .marca {
+      gap: 0.4rem;
+    }
+    .marca-sello {
+      height: 1.35rem;
+      width: 1.35rem;
+    }
+    .marca-wordmark {
+      font-size: 0.82rem;
+      letter-spacing: 0.14em;
+    }
+  }
+</style>

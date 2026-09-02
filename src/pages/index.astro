@@ -13,6 +13,7 @@ import Formulario from '../components/bloques/Formulario.astro';
 import Zorro from '../components/ui/Zorro.astro';
 
 import hero from '../assets/hero.webp';
+import t5Cuarto from '../assets/t5-45-gris.webp';
 import t1Kv2 from '../assets/t1-kv2.webp';
 import s5Cuarto from '../assets/s5-45.webp';
 import s5Bajo from '../assets/s5-bajo.webp';
@@ -37,7 +38,10 @@ const resolverFotogramas = (items: { archivo: string; alt: string }[]) =>
     .filter((item): item is { imagen: ImageMetadata; alt: string; archivo: string } => Boolean(item));
 
 const heroPorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
-  t5: { imagen: hero, alt: 'SUV ARCFOX T5 eléctrico en carretera al anochecer.' },
+  /* hero.webp es el T1 en el pabellón: en 390 el auto queda en un rincón
+     y el morro se pierde. El tres cuartos del T5 pone la trompa en el
+     encuadre. */
+  t5: { imagen: t5Cuarto, alt: 'ARCFOX T5 gris, vista de tres cuartos delanteros.' },
   /* t1-kv es la misma escena de pabellón que hero.webp: a sangre se leen
      como el mismo auto. kv2 es la toma de dos T1 frente a la ciudad. */
   t1: { imagen: t1Kv2, alt: 'Dos ARCFOX T1 en el escenario de marca junto al agua.' },
@@ -128,8 +132,8 @@ const schema = grafo(
   <HeroImagen
     titulo={PORTADA.titular}
     insignia="100% eléctrico"
-    imagen={hero}
-    alt="SUV ARCFOX eléctrico en carretera al anochecer."
+    imagen={t5Cuarto}
+    alt="ARCFOX T5 gris, vista de tres cuartos delanteros."
     fondos={modelos.map((modelo) => ({
       id: modelo.id,
       imagen: heroPorId[modelo.id]?.imagen ?? hero,

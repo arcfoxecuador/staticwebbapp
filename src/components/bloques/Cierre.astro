@@ -143,6 +143,19 @@ const conSlot = Astro.slots.has('default');
     opacity: 1;
   }
   .cierre-fondo {
+    object-position: 50% 55%;
     transition: opacity 480ms var(--ease-out);
+  }
+
+  @media (width < 48rem) {
+    .cierre-tablero .cierre-fondo[data-modelo-vista='t5'] {
+      object-position: 28% 55%;
+    }
+    .cierre-tablero .cierre-fondo[data-modelo-vista='t1'] {
+      object-position: 62% 60%;
+    }
+    .cierre-tablero .cierre-fondo[data-modelo-vista='s5'] {
+      object-position: 58% 62%;
+    }
   }
 </style>

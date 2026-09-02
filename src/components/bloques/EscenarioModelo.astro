@@ -84,8 +84,8 @@ const { modelos } = Astro.props;
                   ))}
                 </div>
               ))}
-              <p class="aviso-giro">Arrastra para girar</p>
             </div>
+            <p class="aviso-giro">Arrastra para girar</p>
 
             {modelo.colores.length > 1 && (
               <fieldset class="colores">
@@ -223,10 +223,14 @@ const { modelos } = Astro.props;
     display: grid;
   }
   .fotograma {
+    /* Caja = plato. Si el <img> hereda width/height del archivo (1920×1080)
+       y sólo limita el ancho, el auto se sale y en móvil se lee el estribo. */
     position: absolute;
-    width: min(88%, 62rem);
-    max-height: 80%;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
+    object-position: center;
     opacity: 0;
     pointer-events: none;
   }
@@ -234,9 +238,10 @@ const { modelos } = Astro.props;
     opacity: 1;
   }
   .aviso-giro {
-    position: absolute;
-    right: 0;
-    bottom: 1rem;
+    /* Fuera del plato: si vive encima del fotograma, en 390 el S5 lo
+       pisa porque el auto llena el contain. */
+    margin: 0.65rem 0 0;
+    text-align: center;
     font-size: var(--text-eyebrow);
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -246,7 +251,7 @@ const { modelos } = Astro.props;
     display: flex;
     justify-content: center;
     gap: 0.5rem;
-    margin-top: -1rem;
+    margin-top: 0.25rem;
     border: 0;
   }
   .colores legend {
@@ -326,21 +331,14 @@ const { modelos } = Astro.props;
       background-size: 50vw 100%, 100% 11rem;
     }
     .plato {
-      min-height: 22rem;
+      min-height: 18rem;
       margin-top: 0;
-    }
-    .fotograma {
-      width: 100%;
-      max-height: 72%;
     }
     .marco {
       top: 50%;
       width: 92%;
     }
     .aviso-giro {
-      right: 50%;
-      bottom: 0;
-      transform: translateX(50%);
       white-space: nowrap;
     }
     .barra-datos {

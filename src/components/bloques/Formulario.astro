@@ -75,7 +75,7 @@ const modelos = [
               <div>
                 <dt class="text-tinta/55">Correo</dt>
                 <dd class="mt-1">
-                  <a href={`mailto:${ORG.email}`} class="enlace-subrayado text-marca">
+                  <a href={`mailto:${ORG.email}`} class="enlace-subrayado inline-flex min-h-11 items-center text-marca">
                     {ORG.email}
                   </a>
                 </dd>
@@ -85,7 +85,7 @@ const modelos = [
                   <dt class="text-tinta/55">Teléfono</dt>
                   <dd class="mt-1">
                     {ORG.telefono ? (
-                      <a href={`tel:${ORG.telefono}`} class="enlace-subrayado text-marca">
+                      <a href={`tel:${ORG.telefono}`} class="enlace-subrayado inline-flex min-h-11 items-center text-marca">
                         {ORG.telefonoLegible}
                       </a>
                     ) : (

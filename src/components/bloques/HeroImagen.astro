@@ -74,7 +74,7 @@ const cola = palabras.slice(1).join(' ');
           data-modelo-vista={capa.id}
           data-activo={indice === 0 ? '' : undefined}
           class:list={[
-            'hero-fondo h-full w-full object-cover object-[58%_60%]',
+            'hero-fondo h-full w-full object-cover',
             indice === 0 ? 'entra-imagen relative' : 'absolute inset-0',
           ]}
         />
@@ -154,7 +154,22 @@ const cola = palabras.slice(1).join(' ');
     opacity: 1;
   }
   .hero-fondo {
+    object-position: 58% 60%;
     transition: opacity 480ms var(--ease-out);
+  }
+
+  /* En 390 un cover de foto apaisada recorta morro y cola. Cada toma
+     ancla el encuadre al tercio delantero del auto, no al centro del cielo. */
+  @media (width < 48rem) {
+    .hero-fondo[data-modelo-vista='t5'] {
+      object-position: 38% 52%;
+    }
+    .hero-fondo[data-modelo-vista='t1'] {
+      object-position: 48% 68%;
+    }
+    .hero-fondo[data-modelo-vista='s5'] {
+      object-position: 40% 50%;
+    }
   }
 
   .hero-insignia [data-modelo-rotulo]:not(:empty)::after {
@@ -236,6 +251,12 @@ const cola = palabras.slice(1).join(' ');
        hueco anterior sólo alcanzaba para titulares de dos líneas. */
     .hero-contenido {
       padding-bottom: calc(85px + 6.5rem);
+    }
+
+    /* En móvil el 6 % de arranque de `.deriva-hero` se come el morro
+       que el object-position acaba de recuperar. */
+    .deriva-hero {
+      animation: none;
     }
   }
 
