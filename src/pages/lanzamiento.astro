@@ -49,6 +49,9 @@ const lineasTitular = [
     data-slot="puerta-lanzamiento"
     class="puerta campo-oscuro relative isolate flex min-h-svh items-center justify-center overflow-clip bg-marca px-5 py-10 text-white"
   >
+    {/* El barrido de escaneo. Se quita junto a su bloque de estilos. */}
+    <div class="barrido" aria-hidden="true"></div>
+
     {/* LAS CUATRO MARCAS recuperan el sistema completo de la diapositiva 10:
         cruz central, esquinas incompletas y rastro digital. No son estrellas ni
         partículas; cada grupo marca una coordenada del encuadre. */}
@@ -132,8 +135,73 @@ const lineasTitular = [
 </Teaser>
 
 <style is:global>
+  /* EL CAMPO EN TRES CAPAS, y el orden es el de antes de que la luz se moviera:
+     base → luz → retícula. Mientras fue un único `background` bastaba con
+     listarlas; ahora la luz se anima y un gradiente no se puede mover con
+     `transform`, así que sale a su propio pseudo-elemento. La retícula tiene que
+     salir con ella: si se quedara en el fondo de `.puerta`, la luz —que es opaca
+     en su centro— la taparía justo en el lado izquierdo. Las dos van a
+     `z-index: -1`, que dentro del `isolate` de la sección pinta sobre el fondo y
+     bajo el contenido; entre ellas decide el orden del árbol, `::before` primero. */
   .puerta {
     min-height: 100svh;
+    background: linear-gradient(
+      112deg,
+      color-mix(in oklab, var(--color-campana-fria) 54%, var(--color-marca)) 0%,
+      color-mix(in oklab, var(--color-campana-fria) 18%, var(--color-marca)) 43%,
+      color-mix(in oklab, var(--color-campana-calida) 72%, var(--color-marca)) 78%,
+      color-mix(in oklab, var(--color-campana-calida) 46%, var(--color-marca)) 100%
+    );
+  }
+
+  /* LA LUZ QUE RESPIRA. Sobresale un 12% por cada lado para que el recorrido
+     nunca deje ver su borde: la luz ya se cortaba en el canto izquierdo del
+     encuadre, y sin ese margen el corte viajaría con ella. Con la caja más
+     grande, la elipse se reescala para que en reposo sea la MISMA de la
+     diagramación: `64% 105% at 8% 52%` sobre el encuadre equivale a
+     `51.6% 84.7% at 16.1% 51.6%` sobre una caja del 124%.
+
+     `ease-in-out` de fábrica y no `--ease-in-out`: la curva del sistema es
+     fuerte a propósito, y en 22 segundos se quedaría quieta casi todo el ciclo
+     para cruzar de golpe a la mitad — o sea, un movimiento que se nota. Aquí se
+     busca lo contrario. `alternate` hace que vuelva por el mismo camino, así que
+     el ciclo nunca salta al reiniciarse. */
+  .puerta::before {
+    content: '';
+    position: absolute;
+    inset: -12%;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 51.6% 84.7% at 16.1% 51.6%,
+      color-mix(in oklab, var(--color-campana-fria) 82%, var(--color-marca)) 0%,
+      color-mix(in oklab, var(--color-campana-fria) 38%, var(--color-marca)) 38%,
+      transparent 74%
+    );
+    animation: respirar-luz 22s ease-in-out infinite alternate;
+  }
+
+  /* El fotograma inicial es el reposo aprobado: quien no espere 22 segundos ve
+     exactamente la diagramación. */
+  @keyframes respirar-luz {
+    from {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    to {
+      opacity: 0.85;
+      transform: translate3d(6%, -3%, 0) scale(1.08);
+    }
+  }
+
+  /* La retícula se queda QUIETA: líneas de 1px en movimiento caen entre píxeles
+     y se ven borrosas o parpadean. */
+  .puerta::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
     background:
       repeating-linear-gradient(
         90deg,
@@ -144,20 +212,59 @@ const lineasTitular = [
         90deg,
         transparent 0 89px,
         color-mix(in oklab, var(--color-campana-calida) 13%, transparent) 89px 90px
-      ),
-      radial-gradient(
-        ellipse 64% 105% at 8% 52%,
-        color-mix(in oklab, var(--color-campana-fria) 82%, var(--color-marca)) 0%,
-        color-mix(in oklab, var(--color-campana-fria) 38%, var(--color-marca)) 38%,
-        transparent 74%
-      ),
-      linear-gradient(
-        112deg,
-        color-mix(in oklab, var(--color-campana-fria) 54%, var(--color-marca)) 0%,
-        color-mix(in oklab, var(--color-campana-fria) 18%, var(--color-marca)) 43%,
-        color-mix(in oklab, var(--color-campana-calida) 72%, var(--color-marca)) 78%,
-        color-mix(in oklab, var(--color-campana-calida) 46%, var(--color-marca)) 100%
       );
+  }
+
+  /* ── BARRIDO DE ESCANEO ─────────────────────────────────────────────────────
+     Para quitarlo: este bloque y el `<div class="barrido">` del marcado.
+
+     Una franja que cruza la retícula y descansa: 5,4s de cruce y 3,6s de pausa
+     en un ciclo de 9s. `linear` porque es movimiento constante, no una llegada.
+     Arranca a los 2,2s, cuando ya terminó la coreografía de entrada — encima de
+     ella sería un octavo gesto compitiendo con el titular.
+
+     El recorrido va de -100% a 360% de su propio ancho: con una franja del 28%
+     del encuadre, 360% es justo el punto en que sale entera por la derecha. El
+     `overflow: clip` de la sección recorta lo que sobra sin crear scroll.
+
+     28% y no 10%: con el fotograma congelado a mitad de cruce, a 10% la captura
+     era idéntica a la de sin barrido — azul sobre azul no se ve. El blanco al 8%
+     tampoco se distinguía. A 28% es un velo que se nota quieto, así que en
+     movimiento se lee sin tener que buscarlo.
+
+     SE REPITE SIN FIN, y la luz de `::before` también, por decisión tomada el
+     2026-09-10 sabiendo lo que cuesta: WCAG 2.2.2 pide poder pausar un
+     movimiento automático de más de 5s que convive con el contenido, y aquí
+     sólo lo apaga `prefers-reduced-motion`. Si hay que cumplirla, la salida
+     barata es acotar las repeticiones: 3 pasadas aquí y 2 ciclos en la luz, que
+     con `alternate` terminan justo en el reposo.
+
+     El selector va anclado a `.puerta` porque este bloque es `is:global` y
+     `.barrido` es un nombre que cualquier otra página podría querer. */
+  .puerta > .barrido {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 28%;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--color-campana-fria) 28%, transparent) 50%,
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: escanear 9s linear 2.2s infinite;
+  }
+
+  @keyframes escanear {
+    from {
+      transform: translateX(-100%);
+    }
+    60%,
+    to {
+      transform: translateX(360%);
+    }
   }
 
   /* ── EL MARCO Y SUS CUATRO CRUCES ───────────────────────────────────────── */
@@ -480,6 +587,19 @@ const lineasTitular = [
       animation: none !important;
       opacity: 0.1 !important;
       transform: translate(-50%, -50%) scaleY(1) !important;
+    }
+
+    /* El campo vuelve a ser la diagramación quieta: la luz en su reposo y sin
+       barrido. Ninguno de los dos informa de nada, así que no hay nada que
+       conservar — a diferencia del reloj. */
+    .puerta::before {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+
+    .puerta .barrido {
+      display: none;
     }
   }
 </style>
