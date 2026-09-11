@@ -94,13 +94,12 @@ const grupos = tablero
                     {celda.titulo ?? celda.texto}
                   </p>
                   {
+                    /* Filete de cierre del tablero, sólo adorno. Llevaba un
+                       tercio encendido y se leía como la barra de progreso de
+                       un carrusel que no existe: completo y tenue, no promete
+                       nada que no haga. */
                     indiceTexto === ultimoTexto && (
-                      <span
-                        class="relative mt-8 block h-px w-full max-w-[14ch] bg-marca-clara/55"
-                        aria-hidden="true"
-                      >
-                        <span class="absolute inset-y-0 left-0 w-1/3 bg-marca-clara"></span>
-                      </span>
+                      <span class="mt-8 block h-px w-full max-w-[14ch] bg-marca-clara/55" aria-hidden="true"></span>
                     )
                   }
                 </div>
@@ -194,6 +193,15 @@ const grupos = tablero
   }
   .mosaico-tablero > * {
     background: color-mix(in srgb, var(--color-marca-clara) 55%, transparent);
+  }
+
+  /* En tableta las tres columnas conservan su geometría, pero «inteligente»
+     no cabe con la escala de escritorio. La letra depende del ancho útil. */
+  .mosaico-tablero .celda-texto {
+    container-type: inline-size;
+  }
+  .mosaico-tablero .celda-texto > p {
+    font-size: min(var(--text-subtitulo), calc(100cqi / 11));
   }
 
   /* Al cambiar de modelo el mosaico ya está en pantalla: view() no vuelve a
