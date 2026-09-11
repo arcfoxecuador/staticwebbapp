@@ -7,7 +7,7 @@ import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import HeroImagen from '../components/bloques/HeroImagen.astro';
 import EscenarioModelo from '../components/bloques/EscenarioModelo.astro';
-import Mosaico from '../components/bloques/Mosaico.astro';
+import Mosaico, { type ColumnaExtra } from '../components/bloques/Mosaico.astro';
 import Cierre from '../components/bloques/Cierre.astro';
 import Formulario from '../components/bloques/Formulario.astro';
 import Zorro from '../components/ui/Zorro.astro';
@@ -52,6 +52,44 @@ const cierrePorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
   t5: { imagen: cotizar, alt: 'ARCFOX T5, vista de tres cuartos para cotizar.' },
   t1: { imagen: t1Kv2, alt: 'ARCFOX T1, toma de marca para cotizar.' },
   s5: { imagen: s5Bajo, alt: 'ARCFOX S5, vista baja para cotizar.' },
+};
+
+/* LAS COLUMNAS DE LA DERECHA DEL TABLERO. Tres por modelo: la cuarta función
+   con su foto y dos cifras de la ficha. Las fotos no repiten las tres primeras
+   columnas. La cifra se busca por su nombre en datos, cotas o especificaciones:
+   si cambia en la ficha, cambia aquí. Cada foto lleva reserva real: las
+   generadas del T1 se usan cuando existen y, mientras no, sale la de reserva. */
+type FotoTablero = { archivo: string; alt: string; generada?: boolean };
+type ColumnaTablero = ({ destacado: number } | { dato: string }) & { fotos: FotoTablero[] };
+
+const tableroExtraPorId: Record<string, ColumnaTablero[]> = {
+  t5: [
+    { destacado: 3, fotos: [{ archivo: 't5-llanta', alt: 'Llanta y pinza de freno del T5.' }] },
+    { dato: 'Potencia', fotos: [{ archivo: 't5-faro', alt: 'Faro delantero del T5.' }] },
+    { dato: 'Velocidad máx.', fotos: [{ archivo: 't5-material', alt: 'Habitáculo del T5 bajo el techo panorámico.' }] },
+  ],
+  t1: [
+    { destacado: 3, fotos: [{ archivo: 't1-carretera', alt: 'T1 en marcha por una carretera junto al mar.' }] },
+    {
+      dato: 'Maletero',
+      fotos: [
+        { archivo: 't1-maletero-plegado', alt: 'Maletero del T1 con los asientos traseros abatidos.', generada: true },
+        { archivo: 't1-kv2', alt: 'Dos ARCFOX T1 en el escenario de marca junto al agua.' },
+      ],
+    },
+    {
+      dato: 'Largo',
+      fotos: [
+        { archivo: 't1-perfil', alt: 'T1 de perfil en el pabellón de marca.', generada: true },
+        { archivo: 't1-kv', alt: 'T1 celeste en el pabellón de marca.' },
+      ],
+    },
+  ],
+  s5: [
+    { destacado: 3, fotos: [{ archivo: 's5-puerta', alt: 'Volante y tablero del S5 vistos desde la puerta sin marco.' }] },
+    { dato: 'Autonomía WLTC', fotos: [{ archivo: 's5-aleta', alt: 'Aleta trasera y pilotos del S5.' }] },
+    { dato: 'Carga rápida 30–80%', fotos: [{ archivo: 's5-llanta', alt: 'Llanta del S5 con la pinza de freno verde.' }] },
+  ],
 };
 
 const modelos = entradas.map((entrada) => {
@@ -116,6 +154,27 @@ const modelos = entradas.map((entrada) => {
       textos[1],
       textos[2],
     ].filter((item): item is NonNullable<typeof item> => Boolean(item)),
+    tableroExtra: (() => {
+      const cifras = new Map<string, string>([
+        ...datos.map((dato) => [dato.clave, dato.valor] as const),
+        ...(entrada.data.especificaciones ?? []).flatMap((grupo) =>
+          grupo.items.map((item) => [item.clave, item.valor] as const),
+        ),
+      ]);
+      return (tableroExtraPorId[entrada.id] ?? []).flatMap((columna): ColumnaExtra[] => {
+        const foto = columna.fotos
+          .map((f) => ({ ...f, imagen: imagenPorArchivo(f.archivo, f.alt) }))
+          .find((f) => f.imagen);
+        if (!foto?.imagen) return [];
+        const base = { imagen: foto.imagen, alt: foto.alt, generada: foto.generada };
+        if ('destacado' in columna) {
+          const destacado = entrada.data.destacados[columna.destacado];
+          return destacado ? [{ ...base, titulo: destacado.titulo }] : [];
+        }
+        const valor = cifras.get(columna.dato);
+        return valor ? [{ ...base, cifra: valor, etiqueta: columna.dato }] : [];
+      });
+    })(),
   };
 }).filter((modelo) => modelo.colores.some((color) => color.fotogramas.length > 0));
 
@@ -148,7 +207,13 @@ const schema = grafo(
   <section class="campo-oscuro overflow-clip bg-marca" aria-label="Rasgos del modelo">
     {
       modelos.map((modelo, indice) => (
-        <Mosaico modelo={modelo.id} activo={indice === 0} items={modelo.mosaico} patron="tablero" />
+        <Mosaico
+          modelo={modelo.id}
+          activo={indice === 0}
+          items={modelo.mosaico}
+          columnasExtra={modelo.tableroExtra}
+          patron="tablero"
+        />
       ))
     }
   </section>
