@@ -18,7 +18,7 @@ import t1Kv2 from '../assets/t1-kv2.webp';
 import s5Cuarto from '../assets/s5-45.webp';
 import s5Bajo from '../assets/s5-bajo.webp';
 import sobre from '../assets/sobre.webp';
-import cotizar from '../assets/cotizar.webp';
+import cotizar from '../assets/t5-340.webp';
 
 import { coleccion } from '../lib/contenido';
 import { imagenPorArchivo } from '../lib/imagenes';
@@ -49,7 +49,7 @@ const heroPorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
 };
 
 const cierrePorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
-  t5: { imagen: cotizar, alt: 'ARCFOX T5 en el escenario oscuro de cotización.' },
+  t5: { imagen: cotizar, alt: 'ARCFOX T5, vista de tres cuartos para cotizar.' },
   t1: { imagen: t1Kv2, alt: 'ARCFOX T1, toma de marca para cotizar.' },
   s5: { imagen: s5Bajo, alt: 'ARCFOX S5, vista baja para cotizar.' },
 };
@@ -164,17 +164,20 @@ const schema = grafo(
       />
       {/* Recorte generado: el material local no trae un zorro de campaña.
           La llegada la decide `.llega-zorro`, no esta caja. */}
-      <Zorro class="absolute bottom-0 left-0 z-0 max-md:-left-12" />
+      <Zorro class="sobre-zorro absolute bottom-0 left-0 z-0" />
       <a
         href="/nosotros"
-        class="losa-entra absolute inset-x-0 bottom-0 z-10 flex min-h-[10.5rem] flex-col items-end justify-end bg-marca px-6 py-8 text-right text-white md:inset-x-auto md:right-0 md:w-[min(24rem,38vw)] md:px-8"
+        class="losa-entra group absolute inset-x-0 bottom-0 z-10 flex min-h-[10.5rem] flex-col items-end justify-end bg-marca px-6 py-8 text-right text-white md:inset-x-auto md:right-0 md:w-[min(24rem,38vw)] md:px-8"
       >
         <span class="text-eyebrow uppercase tracking-[0.18em]">Sobre ARCFOX</span>
         <span class="mt-3 max-w-[14ch] font-display text-subtitulo font-semibold uppercase tracking-[0.08em]">
           Conoce la marca
         </span>
+        {/* El subrayado del enlace, no un indicador: con un tercio lleno se leía
+            como una barra de scroll a medias. En reposo la pista entera y tenue;
+            al pasar o con el foco del teclado se llena de izquierda a derecha. */}
         <span class="relative mt-8 block h-px w-full max-w-[14ch] bg-marca-clara/55" aria-hidden="true">
-          <span class="absolute inset-y-0 left-0 w-1/3 bg-marca-clara"></span>
+          <span class="absolute inset-0 origin-left scale-x-0 bg-marca-clara transition-transform duration-500 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none"></span>
         </span>
       </a>
     </div>
@@ -184,7 +187,7 @@ const schema = grafo(
     id="cotizalo"
     tablero
     imagen={cotizar}
-    alt="ARCFOX T5 en el escenario oscuro de cotización."
+    alt="ARCFOX T5, vista de tres cuartos para cotizar."
     fondos={modelos.map((modelo) => ({
       id: modelo.id,
       imagen: cierrePorId[modelo.id]?.imagen ?? cotizar,
@@ -196,6 +199,30 @@ const schema = grafo(
 </Base>
 
 <style>
+  /* El emblema acompaña al auto: su altura no debe competir con la sección.
+     El límite ligado al viewport también protege las ventanas poco altas. */
+  .sobre-portada :global(.sobre-zorro) {
+    width: clamp(7rem, 18vw, 16rem);
+    max-width: 24svh;
+  }
+
+  @media (width >= 48rem) {
+    .sobre-portada > div > img {
+      object-position: 25% 50%;
+    }
+  }
+
+  @media (width < 48rem) {
+    .sobre-portada > div > img {
+      object-position: 15% 50%;
+    }
+    /* La ficha ocupa todo el borde inferior en móvil; las patas quedan justo
+       por encima para que el emblema no desaparezca detrás de ella. */
+    .sobre-portada :global(.sobre-zorro) {
+      bottom: 12rem;
+    }
+  }
+
   .sobre-portada a {
     text-decoration: none;
   }
