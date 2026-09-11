@@ -66,7 +66,7 @@ const escribirHash = (id: string) => {
   history.replaceState(null, '', `${url.pathname}${url.search}#${id}`);
 };
 
-const seleccionarModelo = (indice: number) => {
+const seleccionarModelo = (indice: number, actualizarUrl = true) => {
   const paneles = panelesDe();
   if (!paneles.length) return;
   const actual = (indice + paneles.length) % paneles.length;
@@ -81,7 +81,7 @@ const seleccionarModelo = (indice: number) => {
   pintarNombres(panel);
   pintarCabecera(id);
   pintarFormulario(id);
-  escribirHash(id);
+  if (actualizarUrl) escribirHash(id);
 };
 
 const indiceDe = (id: string) => panelesDe().findIndex((panel) => idDe(panel) === id);
@@ -178,7 +178,9 @@ document.querySelectorAll<HTMLElement>('[data-cambia-modelo]').forEach((enlace) 
 panelesDe().forEach(montarGiro);
 
 const inicial = idDesdeHash();
-seleccionarModelo(inicial ? indiceDe(inicial) : 0);
+/* Crear un ancla durante la carga hace que el navegador salte al panel antes
+   de mostrar el hero. La entrada conserva su URL; sólo una elección la cambia. */
+seleccionarModelo(inicial ? indiceDe(inicial) : 0, false);
 yaPinto = true;
 
 window.addEventListener('hashchange', () => {
