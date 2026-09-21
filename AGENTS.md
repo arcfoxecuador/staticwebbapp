@@ -76,7 +76,7 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
 
 | Ruta | Archivo |
 | --- | --- |
-| `/` | `pages/index.astro` — portada de producto: hero, escenario, mosaico, puerta a marca y a `/cotizalo` |
+| `/` | `pages/index.astro` — portada de producto: hero, escenario, mosaico, Sobre ARCFOX y formulario de Cotízalo |
 | `/modelos` | `pages/modelos/index.astro` |
 | `/modelos/{slug}` | `pages/modelos/[slug].astro` |
 | `/nosotros` | `pages/nosotros.astro` — Sobre ARCFOX (como About en Global) |

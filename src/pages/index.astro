@@ -9,7 +9,7 @@ import HeroImagen from '../components/bloques/HeroImagen.astro';
 import EscenarioModelo from '../components/bloques/EscenarioModelo.astro';
 import Mosaico, { type ColumnaExtra } from '../components/bloques/Mosaico.astro';
 import Cierre from '../components/bloques/Cierre.astro';
-import Boton from '../components/ui/Boton.astro';
+import Formulario from '../components/bloques/Formulario.astro';
 import Zorro from '../components/ui/Zorro.astro';
 
 import hero from '../assets/hero.webp';
@@ -22,7 +22,7 @@ import cotizar from '../assets/t5-340.webp';
 import { coleccion } from '../lib/contenido';
 import { imagenPorArchivo } from '../lib/imagenes';
 import { resolverOrbita } from '../lib/orbitas';
-import { CTA, ORG, PILARES, PORTADA } from '../lib/site';
+import { ORG, PILARES, PORTADA } from '../lib/site';
 import { grafo, listaDeServicios, organizacion, pagina, sitioWeb } from '../lib/schema';
 
 const entradas = (await coleccion('modelos', ({ data }) => data.publico)).sort(
@@ -305,20 +305,14 @@ const schema = grafo(
       alt: cierrePorId[modelo.id]?.alt ?? modelo.nombre,
     }))}
   >
-    {/* La ficha vive en `/cotizalo`, como Contact Us en Global. Aquí
-        sólo se abre la puerta: un formulario embebido competiría con
-        la página dedicada y el ancla `/#cotizalo` seguiría existiendo. */}
-    <div>
-      <h2 class="revela-titular equilibra font-display text-h2 font-semibold uppercase tracking-[0.14em] text-white">
-        Cotízalo
-      </h2>
-      <p class="revela mt-4 max-w-[46ch] text-lead text-white/75">
-        Elige tu ARCFOX. Te contactamos desde el concesionario.
-      </p>
-      <div class="revela mt-8">
-        <Boton href={CTA.href} tamano="lg">{CTA.texto}</Boton>
-      </div>
-    </div>
+    {/* La isla pinta el select al cambiar de modelo. `/cotizalo` sigue
+        siendo la URL del menú; aquí el visitante no tiene que salir. */}
+    <Formulario
+      titulo="Cotízalo"
+      bajada="Elige tu ARCFOX. Te contactamos desde el concesionario."
+      origen="/"
+      compacto
+    />
   </Cierre>
 </Base>
 
