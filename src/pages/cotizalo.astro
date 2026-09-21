@@ -1,33 +1,76 @@
 ---
 /* Cotízalo es la página de conversión, como Contact Us en Global
-   (`/contactUs`): el menú abre una URL propia, no un ancla de la
-   portada. `barraAccion={false}` porque el CTA ya es el contenido. */
+   (`/contactUs`) y Cotiza Ya en Colombia. El menú abre una URL propia.
+   `barraAccion={false}` porque el CTA ya es el contenido. Precios de
+   otro país no entran. */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
+import Encabezado from '../components/bloques/Encabezado.astro';
+import Rejilla from '../components/bloques/Rejilla.astro';
+import Pasos from '../components/bloques/Pasos.astro';
 import Formulario from '../components/bloques/Formulario.astro';
-import { ORG, SEDES } from '../lib/site';
-import { grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
+import ListaIndice from '../components/bloques/ListaIndice.astro';
+import Faq from '../components/bloques/Faq.astro';
+import { coleccion } from '../lib/contenido';
+import { COTIZA, FAQ_COTIZA, ORG, PASOS, SEDES } from '../lib/site';
+import { faq, grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
+
+const modelos = (await coleccion('modelos', ({ data }) => data.publico)).sort(
+  (a, b) => a.data.orden - b.data.orden,
+);
 
 const titulo = 'Cotízalo';
-const descripcion = `Elige T5, T1 o S5 y déjanos tus datos. Te respondemos desde el concesionario. También puedes escribir a ${ORG.email}.`;
+const descripcion = COTIZA.bajada;
 
 const schema = grafo(
   organizacion(),
   sitioWeb(),
   pagina({ path: '/cotizalo', titulo, descripcion, tipo: 'ContactPage' }),
   migas([{ nombre: titulo, path: '/cotizalo' }]),
+  faq(FAQ_COTIZA),
 );
 ---
 
 <Base {titulo} {descripcion} path="/cotizalo" {schema} barraAccion={false}>
   <Hero
-    rotulo="Cotízalo"
-    titulo="Elige tu ARCFOX"
+    rotulo={COTIZA.rotulo}
+    titulo={COTIZA.titular}
     bajada={descripcion}
+    accion={{ texto: 'Pedir cotización', href: '#formulario' }}
+    secundaria={{ texto: 'Ver modelos', href: '/modelos' }}
   />
 
-  <Seccion>
+  <Seccion campo="tinte">
+    <Encabezado
+      rotulo="Qué incluye"
+      titulo="Una cotización de Ecuador"
+      bajada={`También puedes escribir a ${ORG.email}.`}
+    />
+    <Rejilla columnas={3} class="mt-14">
+      {
+        COTIZA.incluye.map((pieza) => (
+          <article class="border-t border-linea pt-6">
+            <h3 class="text-h3 font-bold text-marca">{pieza.titulo}</h3>
+            <p class="mt-3 max-w-[46ch] text-small text-tinta/75">{pieza.texto}</p>
+          </article>
+        ))
+      }
+    </Rejilla>
+  </Seccion>
+
+  {
+    PASOS.length > 0 && (
+      <Seccion campo="superficie" aire="apretado">
+        <Encabezado rotulo="Cómo funciona" titulo="De la solicitud a la respuesta" />
+        <div class="mt-10">
+          <Pasos />
+        </div>
+      </Seccion>
+    )
+  }
+
+  <Seccion id="formulario">
     <Formulario
       titulo="Cotízalo"
       bajada="Nombre, teléfono, ciudad y modelo. Te respondemos desde el concesionario más cercano."
@@ -36,9 +79,31 @@ const schema = grafo(
   </Seccion>
 
   {
+    modelos.length > 0 && (
+      <Seccion campo="superficie">
+        <Encabezado
+          rotulo="Modelos"
+          titulo="Elige antes, o en el formulario"
+          bajada="Tres SUV 100% eléctricos. La ficha cuenta el auto; la cotización, el precio de este país."
+        />
+        <ListaIndice
+          numerada
+          class="mt-14"
+          items={modelos.map((m) => ({
+            titulo: m.data.nombre,
+            bajada: m.data.bajada,
+            href: `/modelos/${m.id}`,
+            meta: m.data.rotulo,
+          }))}
+        />
+      </Seccion>
+    )
+  }
+
+  {
     SEDES.length > 0 && (
       <Seccion campo="tinte">
-        <h2 class="text-h2 font-bold text-marca">Dónde estamos</h2>
+        <Encabezado rotulo="Red" titulo="Dónde estamos" />
         <div class="tira mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {SEDES.map((sede) => (
             <address class="campo-claro not-italic rounded-[var(--radius-lg)] border border-linea bg-superficie p-6">
@@ -70,4 +135,11 @@ const schema = grafo(
       </Seccion>
     )
   }
+
+  <Seccion campo="superficie">
+    <Encabezado rotulo="Preguntas" titulo="Antes de enviar" />
+    <div class="mt-10">
+      <Faq items={FAQ_COTIZA} grupo="faq-cotiza" />
+    </div>
+  </Seccion>
 </Base>

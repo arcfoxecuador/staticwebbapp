@@ -131,6 +131,12 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   recorrido hero cinematográfico → escenario claro T5/T1/S5 → mosaico de rasgos
   → Sobre ARCFOX → Cotízalo. El escenario gira fotografías 2D ordenadas desde el
   markdown y sincroniza el modelo activo con el formulario; no hay malla 3D.
+- **Marca y conversión**: `/nosotros` cuenta nombre (ARC + FOX), Born free,
+  de’Silva, BAIC 1958, BluePark × Magna y la cronología hasta Ecuador — hechos
+  de Global y Argentina. No publica garantía en km, 800 V ni programas de
+  sustentabilidad de otro país. `/cotizalo`, `/test-drive` y `/concesionarios`
+  explican el proceso local (pasos, qué incluye, FAQ) sin precios ni sedes
+  extranjeras. Calle y horario de sede siguen pendientes en `SEDES`.
 - **Contenido**: `METRICAS`, `PASOS`, `PILARES` y `FAQ` de `site.ts` — *pendiente*.
   Sus bloques no se pintan mientras estén vacíos.
 - **Colecciones**: los tres `ejemplo.md` de `src/content/` vienen **despublicados**

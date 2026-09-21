@@ -3,24 +3,32 @@ import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
 import Encabezado from '../components/bloques/Encabezado.astro';
+import Rejilla from '../components/bloques/Rejilla.astro';
 import Pasos from '../components/bloques/Pasos.astro';
 import Formulario from '../components/bloques/Formulario.astro';
+import ListaIndice from '../components/bloques/ListaIndice.astro';
+import Faq from '../components/bloques/Faq.astro';
 import Figura from '../components/ui/Figura.astro';
-import { PASOS } from '../lib/site';
-import { grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
+import { coleccion } from '../lib/contenido';
+import { FAQ_PRUEBA, PASOS, PRUEBA } from '../lib/site';
+import { faq, grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
 import type { Imagen } from '../lib/imagenes';
 
 import t5 from '../assets/t5-45-gris.webp';
 
+const modelos = (await coleccion('modelos', ({ data }) => data.publico)).sort(
+  (a, b) => a.data.orden - b.data.orden,
+);
+
 const titulo = 'Test drive';
-const descripcion =
-  'Reserva una prueba de manejo de un ARCFOX en Ecuador. Elige modelo y ciudad; te contactamos para coordinar fecha y concesionario.';
+const descripcion = PRUEBA.bajada;
 
 const schema = grafo(
   organizacion(),
   sitioWeb(),
   pagina({ path: '/test-drive', titulo, descripcion }),
   migas([{ nombre: titulo, path: '/test-drive' }]),
+  faq(FAQ_PRUEBA),
 );
 
 const fotoPrueba: Imagen = {
@@ -31,7 +39,13 @@ const fotoPrueba: Imagen = {
 ---
 
 <Base {titulo} {descripcion} path="/test-drive" {schema} barraAccion={false}>
-  <Hero rotulo="Pruébalo" titulo="Pide un test drive" bajada={descripcion} />
+  <Hero
+    rotulo={PRUEBA.rotulo}
+    titulo={PRUEBA.titular}
+    bajada={descripcion}
+    accion={{ texto: 'Reservar prueba', href: '#reserva' }}
+    secundaria={{ texto: 'Ver concesionarios', href: '/concesionarios' }}
+  />
 
   {
     PASOS.length > 0 && (
@@ -51,11 +65,58 @@ const fotoPrueba: Imagen = {
     )
   }
 
-  <Seccion>
+  <Seccion campo="superficie">
+    <Encabezado
+      rotulo="Qué esperas"
+      titulo="La prueba, sin inventar la cita"
+      bajada="Modelo, ciudad y un asesor que confirma el resto. Duración y papeles los dice esa sede."
+    />
+    <Rejilla columnas={3} class="mt-14">
+      {
+        PRUEBA.esperas.map((pieza) => (
+          <article class="border-t border-linea pt-6">
+            <h3 class="text-h3 font-bold text-marca">{pieza.titulo}</h3>
+            <p class="mt-3 max-w-[46ch] text-small text-tinta/75">{pieza.texto}</p>
+          </article>
+        ))
+      }
+    </Rejilla>
+  </Seccion>
+
+  <Seccion id="reserva">
     <Formulario
       titulo="Reserva tu prueba"
       bajada="Nombre, teléfono, ciudad y modelo. Con eso coordinamos la cita."
       origen="/test-drive"
     />
+  </Seccion>
+
+  {
+    modelos.length > 0 && (
+      <Seccion campo="tinte">
+        <Encabezado
+          rotulo="Modelos"
+          titulo="T5, T1 o S5"
+          bajada="Elige en el formulario o entra a la ficha. La disponibilidad del auto la confirma el concesionario."
+        />
+        <ListaIndice
+          numerada
+          class="mt-14"
+          items={modelos.map((m) => ({
+            titulo: m.data.nombre,
+            bajada: m.data.bajada,
+            href: `/modelos/${m.id}`,
+            meta: m.data.rotulo,
+          }))}
+        />
+      </Seccion>
+    )
+  }
+
+  <Seccion campo="superficie">
+    <Encabezado rotulo="Preguntas" titulo="Antes de reservar" />
+    <div class="mt-10">
+      <Faq items={FAQ_PRUEBA} grupo="faq-prueba" />
+    </div>
   </Seccion>
 </Base>

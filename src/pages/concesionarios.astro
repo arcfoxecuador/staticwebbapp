@@ -1,31 +1,40 @@
 ---
 /* La red ya se presenta como tal: mapa, vías de contacto y fichas de sede.
    Las calles y el teléfono real entran en `site.ts` cuando existan; aquí no
-   se explica un lanzamiento ni se promete una dirección que no hay. */
+   se explica un lanzamiento ni se promete una dirección que no hay.
+   Colombia publica malls y horarios de Bogotá y Cali: no entran. */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
 import Encabezado from '../components/bloques/Encabezado.astro';
+import Rejilla from '../components/bloques/Rejilla.astro';
 import Formulario from '../components/bloques/Formulario.astro';
-import { ORG, SEDES } from '../lib/site';
-import { grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
+import Faq from '../components/bloques/Faq.astro';
+import { FAQ_RED, ORG, RED, SEDES } from '../lib/site';
+import { faq, grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
 
 const titulo = 'Concesionarios';
-const descripcion =
-  'Red de concesionarios ARCFOX en Ecuador. Correo, teléfono y sedes para visitar, cotizar o pedir un test drive.';
+const descripcion = RED.bajada;
 
 const schema = grafo(
   organizacion(),
   sitioWeb(),
   pagina({ path: '/concesionarios', titulo, descripcion }),
   migas([{ nombre: titulo, path: '/concesionarios' }]),
+  faq(FAQ_RED),
 );
 
 const mapa = SEDES.find((sede) => sede.mapa)?.mapa;
 ---
 
 <Base {titulo} {descripcion} path="/concesionarios" {schema}>
-  <Hero rotulo="Red" titulo="Concesionarios en Ecuador" bajada={descripcion} />
+  <Hero
+    rotulo={RED.rotulo}
+    titulo={RED.titular}
+    bajada={descripcion}
+    accion={{ texto: 'Escribir a la red', href: '#contacto-red' }}
+    secundaria={{ texto: 'Pedir test drive', href: '/test-drive' }}
+  />
 
   <Seccion campo="tinte" contenido={false}>
     <div class="medida">
@@ -69,6 +78,24 @@ const mapa = SEDES.find((sede) => sede.mapa)?.mapa;
   </Seccion>
 
   <Seccion>
+    <Encabezado
+      rotulo="En la sede"
+      titulo="Tres cosas que puedes hacer"
+      bajada="La red es de Ecuador. Una sede de Argentina o Colombia no atiende esta cotización."
+    />
+    <Rejilla columnas={3} class="mt-14">
+      {
+        RED.acciones.map((pieza) => (
+          <article class="border-t border-linea pt-6">
+            <h3 class="text-h3 font-bold text-marca">{pieza.titulo}</h3>
+            <p class="mt-3 max-w-[46ch] text-small text-tinta/75">{pieza.texto}</p>
+          </article>
+        ))
+      }
+    </Rejilla>
+  </Seccion>
+
+  <Seccion campo="superficie">
     <Encabezado rotulo="Contacto" titulo="Correo, teléfono y sedes" />
 
     <dl class="revela mt-10 grid gap-8 border-y border-linea py-8 sm:grid-cols-2">
@@ -134,12 +161,19 @@ const mapa = SEDES.find((sede) => sede.mapa)?.mapa;
     </ul>
   </Seccion>
 
-  <Seccion campo="tinte">
+  <Seccion campo="tinte" id="contacto-red">
     <Formulario
       titulo="¿En qué ciudad estás?"
       bajada="Nombre, teléfono, ciudad y modelo. Te contactamos desde el punto más cercano."
       origen="/concesionarios"
     />
+  </Seccion>
+
+  <Seccion>
+    <Encabezado rotulo="Preguntas" titulo="Antes de ir" />
+    <div class="mt-10">
+      <Faq items={FAQ_RED} grupo="faq-red" />
+    </div>
   </Seccion>
 </Base>
 

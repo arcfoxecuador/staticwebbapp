@@ -213,14 +213,27 @@ export const FAQ: readonly { p: string; r: string }[] = [
   },
 ];
 
-/** La página /nosotros. Los hechos salen de ARCFOX Global › About
-    (https://www.arcfoxglobal.com/about/aboutArcfox). La garantía en kilómetros
-    de esa misma página no entra: es estrategia global, no la de Ecuador. */
+/** La página /nosotros. Hechos de marca de ARCFOX Global › About y de
+    ARCFOX Argentina › Nosotros. La garantía en kilómetros de Global, los
+    800 V / 708 km / Huawei de Colombia y los programas «un árbol por compra»
+    de Argentina no entran: no son la oferta de Ecuador. */
 export const SOBRE = {
   rotulo: 'La marca',
   titular: 'Inspirada en el Ártico',
   bajada:
     'Exploración y un límite que se empuja. ARCFOX es la marca de vehículos 100% eléctricos de BAIC; en Ecuador el catálogo son el T5, el T1 y el S5.',
+  nombre: [
+    {
+      titulo: 'ARC',
+      texto:
+        'El Ártico: avances sin miedo y un paisaje que no perdona lo de más. Así nombra la marca su primera mitad.',
+    },
+    {
+      titulo: 'FOX',
+      texto:
+        'El zorro ártico: sabiduría y agilidad. El animal que sobrevive donde otros no llegan.',
+    },
+  ],
   filosofia: [
     {
       titulo: 'Visión',
@@ -237,11 +250,210 @@ export const SOBRE = {
       texto: 'Born free. El lema oficial de la marca en ARCFOX Global.',
     },
   ],
+  diseno: {
+    rotulo: 'Identidad',
+    titulo: 'Walter de’Silva',
+    cargo: 'Concepto e identidad de la marca, con EDAG',
+    texto:
+      'En más de cuarenta años diseñó para Audi, Lamborghini, Volkswagen, SEAT y Alfa Romeo. Con ARCFOX lideró, por primera vez, un proyecto de nueva energía para la división eléctrica premium de BAIC. Su regla: reducir a lo esencial y quitar lo que no hace falta.',
+    cita: 'Es hora de ser libres como la personalidad e impronta del zorro del Ártico.',
+    fuente: 'ARCFOX Argentina, Nosotros',
+  },
+  origen: [
+    {
+      titulo: 'BAIC',
+      texto:
+        'Beijing Automotive Group se funda en 1958. ARCFOX es su marca 100% eléctrica: no es un motor de combustión reconvertido.',
+    },
+    {
+      titulo: 'BluePark × Magna',
+      texto:
+        'Empresa conjunta de BAIC New Energy y Magna (51:49). La planta de Zhenjiang, China, produce 150.000 unidades al año, ampliables a 300.000. Fue la primera vez que Magna fabricó vehículos fuera de Europa.',
+    },
+  ],
+  cronologia: [
+    {
+      cuando: '2018',
+      titulo: 'La alianza',
+      texto: 'BAIC y Magna firman la plataforma de vehículos eléctricos de nueva generación.',
+    },
+    {
+      cuando: '2019',
+      titulo: 'IMC y Zhenjiang',
+      texto:
+        'Se lanza la arquitectura IMC y abre la planta inteligente de BluePark Magna. ARCFOX entra en producción ahí.',
+    },
+    {
+      cuando: '2020',
+      titulo: 'Alpha T',
+      texto:
+        'El primer modelo de la marca pasa a producción en serie. Es historia; no está en el catálogo de Ecuador.',
+    },
+    {
+      cuando: '2021',
+      titulo: 'Alpha S',
+      texto: 'Llegan Alpha S y Alpha S HI. Tampoco se venden aquí: el catálogo local es T5, T1 y S5.',
+    },
+    {
+      cuando: '2026',
+      titulo: 'Ecuador',
+      texto: 'ARCFOX entra a la red local con tres SUV 100% eléctricos.',
+    },
+  ],
 } as const;
 
 export const PLAN_GLOBAL: Metrica[] = [
+  { valor: '1958', etiqueta: 'BAIC se funda', fuente: 'ARCFOX Argentina, Nosotros' },
   { valor: '6', etiqueta: 'Regiones', fuente: 'ARCFOX Global, About' },
   { valor: '40+', etiqueta: 'Países y regiones', fuente: 'ARCFOX Global, About' },
+];
+
+export const FAQ_MARCA: readonly { p: string; r: string }[] = [
+  {
+    p: '¿De dónde viene el nombre ARCFOX?',
+    r: 'ARC evoca el Ártico; FOX, al zorro ártico: sabiduría y agilidad. El lema oficial de la marca es Born free. Lo publica la ficha de marca de ARCFOX Argentina, sobre la misma identidad global.',
+  },
+  {
+    p: '¿Quién diseñó ARCFOX?',
+    r: 'Walter de’Silva, con EDAG, desarrolló el concepto e identidad de la marca y varios modelos para la división eléctrica premium de BAIC. Lo publica ARCFOX Argentina › Nosotros.',
+  },
+  {
+    p: '¿ARCFOX es de BAIC?',
+    r: 'Sí. ARCFOX es la marca de vehículos 100% eléctricos de Beijing Automotive Group (BAIC), fundada en 1958. Se fabrica en la planta conjunta de BAIC BluePark y Magna en Zhenjiang.',
+  },
+  {
+    p: '¿Los Alpha S y Alpha T se venden en Ecuador?',
+    r: 'No. Son los primeros modelos de la marca, de 2020 y 2021. El catálogo de Ecuador son el T5, el T1 y el S5.',
+  },
+  {
+    p: '¿Puedo copiar la garantía de Global o de Colombia?',
+    r: 'No. Global y Colombia publican periodos distintos. La garantía de Ecuador se confirma en el concesionario; un dato de otro país no se vende como local.',
+  },
+];
+
+/** Cotízalo, test drive y la red: el proceso es el mismo (elige, te
+    contactamos, siguiente paso) y las tres páginas lo leen de `PASOS`.
+    Lo propio de cada una es qué recibes, qué esperas y qué haces en sede. */
+export const COTIZA = {
+  rotulo: 'Cotízalo',
+  titular: 'Elige tu ARCFOX',
+  bajada:
+    'Nombre, ciudad y modelo. Un asesor del concesionario te arma la cotización de Ecuador — no la de otro país.',
+  incluye: [
+    {
+      titulo: 'Precio de Ecuador',
+      texto:
+        'Condiciones comerciales locales. Un precio de Colombia o de la prensa de otro mercado no se publica aquí.',
+    },
+    {
+      titulo: 'El modelo que eliges',
+      texto: 'T5, T1 o S5, con la ficha y el equipamiento que correspondan a la versión de este país.',
+    },
+    {
+      titulo: 'El siguiente paso',
+      texto: 'Visita, test drive o cierre, en la ciudad de la red que elijas.',
+    },
+  ],
+} as const;
+
+export const FAQ_COTIZA: readonly { p: string; r: string }[] = [
+  {
+    p: '¿Hay precios publicados en la web?',
+    r: 'No. El precio, el equipamiento y las condiciones de Ecuador se confirman en el concesionario. Un precio de otro país no se copia.',
+  },
+  {
+    p: '¿Qué recibo al enviar el formulario?',
+    r: 'Un asesor del punto más cercano te contacta con la cotización del modelo que elegiste y el siguiente paso en tu ciudad.',
+  },
+  {
+    p: '¿Puedo cotizar sin elegir modelo?',
+    r: 'El formulario pide un modelo. Si aún no decides, elige el que más se acerque: T5 crossover, T1 familiar o S5 fastback. El asesor te ayuda a comparar.',
+  },
+  {
+    p: '¿En qué ciudades cotizan?',
+    r: `En la red de Ecuador: ${SEDES.map((s) => s.ciudad).join(', ')}. Indica tu ciudad y te contacta el punto más cercano.`,
+  },
+];
+
+export const PRUEBA = {
+  rotulo: 'Pruébalo',
+  titular: 'Pide un test drive',
+  bajada:
+    'Reserva una prueba de T5, T1 o S5 en Ecuador. El concesionario de tu ciudad coordina fecha y auto.',
+  esperas: [
+    {
+      titulo: 'Un auto 100% eléctrico',
+      texto: 'T5, T1 o S5. Sin motor de combustión ni híbrido: la prueba es la respuesta al acelerar.',
+    },
+    {
+      titulo: 'Tu ciudad',
+      texto: 'Una ciudad de la red de Ecuador. No se agenda en una sede de otro país.',
+    },
+    {
+      titulo: 'Fecha coordinada',
+      texto:
+        'Un asesor te escribe para cerrar día y hora. Qué llevar a la cita lo confirma esa sede: aquí no se inventa.',
+    },
+  ],
+} as const;
+
+export const FAQ_PRUEBA: readonly { p: string; r: string }[] = [
+  {
+    p: '¿Tengo que comprar para probarlo?',
+    r: 'No. El test drive es para conocer el auto. Si después quieres cotizar, el mismo concesionario sigue la conversación.',
+  },
+  {
+    p: '¿Qué modelos puedo probar?',
+    r: 'Los tres del catálogo de Ecuador: T5, T1 y S5. La disponibilidad del auto el día de la cita la confirma el concesionario.',
+  },
+  {
+    p: '¿En qué ciudades hay prueba?',
+    r: `En ${SEDES.map((s) => s.ciudad).join(', ')}. Elige ciudad en el formulario y te contactamos desde el punto más cercano.`,
+  },
+  {
+    p: '¿Cuánto dura y qué documento llevo?',
+    r: 'Lo define el concesionario al coordinar. No publicamos una duración ni una lista de papeles que aún no está cerrada.',
+  },
+];
+
+export const RED = {
+  rotulo: 'Red',
+  titular: 'Concesionarios en Ecuador',
+  bajada:
+    'Tres ciudades. Ver el auto, cotizar o pedir un test drive. La calle y el horario de cada sede se publican cuando el concesionario los cierre.',
+  acciones: [
+    {
+      titulo: 'Ver el auto',
+      texto: 'T5, T1 o S5 en persona. Las cifras de ficha se confirman ahí, no con la web de otro país.',
+    },
+    {
+      titulo: 'Cotizar',
+      texto: 'Precio, equipamiento y condiciones de Ecuador. El formulario de esta página llega al punto más cercano.',
+    },
+    {
+      titulo: 'Probarlo',
+      texto: 'Reserva un test drive. El mismo concesionario coordina fecha y modelo.',
+    },
+  ],
+} as const;
+
+export const FAQ_RED: readonly { p: string; r: string }[] = [
+  {
+    p: '¿Dónde están las sedes?',
+    r: `En ${SEDES.map((s) => s.ciudad).join(', ')}. La calle exacta y el horario se publican cuando cada concesionario los cierre. Escríbenos y te contactamos desde el punto de tu ciudad.`,
+  },
+  {
+    p: '¿Puedo ir sin cita?',
+    r: 'Mejor escribe primero: así el asesor confirma auto, horario y sede. El formulario de esta página o el de Cotízalo bastan.',
+  },
+  {
+    p: '¿Hay postventa en el menú?',
+    r: 'La página de postventa existe para revisar, pero la red de talleres aún no está cerrada. No se promociona hasta que haya talleres que publicar.',
+  },
+  {
+    p: '¿Atienden un teléfono o WhatsApp?',
+    r: 'El correo oficial está en esta página. Teléfono y WhatsApp se publican cuando el número esté cerrado; mientras tanto, el formulario es la vía.',
+  },
 ];
 
 // ── Asistente conversacional (opcional) ─────────────────────────────────────
