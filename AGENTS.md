@@ -52,6 +52,7 @@ src/
 │   ├── schema.ts         constructores de JSON-LD (@graph único por página)
 │   ├── contenido.ts      la capa de datos: interruptor ORIGEN (colecciones | cms)
 │   ├── imagenes.ts       de dónde sale una imagen: CMS → src/assets → nada
+│   ├── orbitas.ts        secuencias 360 (glob propio; imagenes.ts no las traga)
 │   └── ui.ts             variantes() — cva reescrito en 40 líneas, sin dependencia
 ├── content.config.ts     colecciones zod: servicios · articulos · equipo
 ├── content/              los .md que las alimentan
@@ -75,10 +76,11 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
 
 | Ruta | Archivo |
 | --- | --- |
-| `/` | `pages/index.astro` — portada de producto: hero, escenario, mosaico, marca y cotización |
+| `/` | `pages/index.astro` — portada de producto: hero, escenario, mosaico, puerta a marca y a `/cotizalo` |
 | `/modelos` | `pages/modelos/index.astro` |
 | `/modelos/{slug}` | `pages/modelos/[slug].astro` |
-| `/nosotros` | `pages/nosotros.astro` |
+| `/nosotros` | `pages/nosotros.astro` — Sobre ARCFOX (como About en Global) |
+| `/cotizalo` | `pages/cotizalo.astro` — cotización (como Contact Us en Global) |
 | `/concesionarios` | `pages/concesionarios.astro` |
 | `/test-drive` | `pages/test-drive.astro` |
 | `/postventa` | `pages/postventa.astro` — `noindex`, fuera del menú; URL viva para revisar |
@@ -139,8 +141,9 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
 - **Imagen de compartición**: `npm run og` genera un provisional. *Pendiente el
   diseño real* (1200×630, mismo nombre de archivo).
 - **Fotografía**: hero, interiores, modelos, `sobre.webp` y `cotizar.webp` son
-  material local real. Para giro 3D siguen pendientes un GLB por modelo/color o
-  secuencias equiangulares completas; los ángulos actuales sólo permiten spin 2D.
+  material local real. Las órbitas 2D completas (30 frames T5, 36 T1/S5) ya
+  están en `src/assets/orbitas/`; el escenario gira esa secuencia, no una malla.
+  Siguen pendientes un GLB por modelo/color.
 - **Formulario**: `PUBLIC_FORMULARIO_ENDPOINT` — *pendiente*. Sin él, el bloque no
   se pinta y `/contacto` muestra las vías directas.
 - **Analítica**: `PUBLIC_GA4_ID` / `PUBLIC_CLARITY_ID` — *pendiente*. Sin ninguno no

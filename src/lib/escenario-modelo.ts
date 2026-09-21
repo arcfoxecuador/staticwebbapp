@@ -82,6 +82,7 @@ const seleccionarModelo = (indice: number, actualizarUrl = true) => {
   pintarCabecera(id);
   pintarFormulario(id);
   if (actualizarUrl) escribirHash(id);
+  precargarGrupo(panel.querySelector('[data-color].esta-activo'));
 };
 
 const indiceDe = (id: string) => panelesDe().findIndex((panel) => idDe(panel) === id);
@@ -102,6 +103,68 @@ const idDesdeHash = () => {
   return indiceDe(bruto) >= 0 ? bruto : '';
 };
 
+const urlsDe = (grupo: HTMLElement | null): string[] => {
+  const bruto = grupo?.dataset.orbita;
+  if (!bruto) return [];
+  try {
+    const leido = JSON.parse(bruto) as unknown;
+    return Array.isArray(leido) ? leido.filter((u): u is string => typeof u === 'string') : [];
+  } catch {
+    return [];
+  }
+};
+
+const srcDe = (img: HTMLImageElement) => img.currentSrc || img.getAttribute('src') || '';
+
+const mismaUrl = (img: HTMLImageElement, url: string) => {
+  const actual = srcDe(img);
+  return actual === url || actual.endsWith(url) || url.endsWith(actual);
+};
+
+const precargadas = new Set<string>();
+
+const precargar = (urls: string[]) => {
+  const clave = urls[0] ?? '';
+  if (!clave || precargadas.has(clave)) return;
+  precargadas.add(clave);
+  for (const url of urls) {
+    const precarga = new Image();
+    precarga.src = url;
+  }
+};
+
+const precargarGrupo = (grupo: HTMLElement | null) => {
+  precargar(urlsDe(grupo));
+};
+
+const capasDe = (grupo: HTMLElement | null) =>
+  Array.from(grupo?.querySelectorAll<HTMLImageElement>('[data-fotograma]') ?? []);
+
+/* El fotograma visible no cambia de src: se pinta en la capa oculta, se
+   espera a decode() y recién entonces se intercambian. Quitar el srcset
+   del <Image> y poner otro src en el mismo nodo deja el plato en blanco
+   un frame — es el titileo. */
+const pintarUrl = async (grupo: HTMLElement | null, url: string, pedido: { n: number }) => {
+  if (!grupo || !url) return;
+  const capas = capasDe(grupo);
+  if (!capas.length) return;
+  const visible = capas.find((capa) => capa.classList.contains('esta-activo')) ?? capas[0];
+  if (mismaUrl(visible, url)) return;
+  const oculta = capas.find((capa) => capa !== visible) ?? visible;
+  const este = ++pedido.n;
+  oculta.removeAttribute('srcset');
+  oculta.removeAttribute('sizes');
+  oculta.src = url;
+  try {
+    await oculta.decode();
+  } catch {
+    return;
+  }
+  if (este !== pedido.n) return;
+  oculta.classList.add('esta-activo');
+  if (oculta !== visible) visible.classList.remove('esta-activo');
+};
+
 const montarGiro = (panel: HTMLElement) => {
   const colores = Array.from(panel.querySelectorAll<HTMLButtonElement>('[data-color-control]'));
   const grupos = Array.from(panel.querySelectorAll<HTMLElement>('[data-color]'));
@@ -109,45 +172,69 @@ const montarGiro = (panel: HTMLElement) => {
   let indiceFotograma = 0;
   let inicioX: number | null = null;
   let ultimoPaso = 0;
+  const pedido = { n: 0 };
 
   const grupoActivo = () => panel.querySelector<HTMLElement>('[data-color].esta-activo');
+
   const mostrarFotograma = (direccion: number) => {
-    const fotogramas = Array.from(grupoActivo()?.querySelectorAll<HTMLElement>('[data-fotograma]') ?? []);
-    if (fotogramas.length < 2) return;
-    indiceFotograma = (indiceFotograma + direccion + fotogramas.length) % fotogramas.length;
-    fotogramas.forEach((fotograma, i) => fotograma.classList.toggle('esta-activo', i === indiceFotograma));
+    const grupo = grupoActivo();
+    const urls = urlsDe(grupo);
+    if (urls.length < 2) return;
+    indiceFotograma = (indiceFotograma + direccion + urls.length) % urls.length;
+    const url = urls[indiceFotograma];
+    if (url) void pintarUrl(grupo, url, pedido);
+  };
+
+  const activarColor = (color: string) => {
+    const grupo = grupos.find((item) => item.dataset.color === color);
+    if (!grupo) return;
+    precargarGrupo(grupo);
+    colores.forEach((item) => {
+      const activo = item.dataset.colorControl === color;
+      item.classList.toggle('esta-activo', activo);
+      item.setAttribute('aria-pressed', activo ? 'true' : 'false');
+    });
+    grupos.forEach((item) => {
+      const activo = item === grupo;
+      item.classList.toggle('esta-activo', activo);
+      item.setAttribute('aria-hidden', activo ? 'false' : 'true');
+    });
+    indiceFotograma = 0;
+    const primera = urlsDe(grupo)[0];
+    /* El grupo nuevo ya trae el frame 0 en las dos capas. No se reasigna
+       el src: eso es lo que hacía titilar al cambiar de color. */
+    if (primera) void pintarUrl(grupo, primera, pedido);
   };
 
   colores.forEach((control) => {
+    /* Al pasar por el swatch se llena la caché; el clic ya no espera red. */
+    control.addEventListener('pointerenter', () => {
+      const color = control.dataset.colorControl;
+      precargarGrupo(grupos.find((item) => item.dataset.color === color) ?? null);
+    });
     control.addEventListener('click', () => {
       const color = control.dataset.colorControl;
-      colores.forEach((item) => {
-        const activo = item === control;
-        item.classList.toggle('esta-activo', activo);
-        item.setAttribute('aria-pressed', activo ? 'true' : 'false');
-      });
-      grupos.forEach((grupo) => {
-        const activo = grupo.dataset.color === color;
-        grupo.classList.toggle('esta-activo', activo);
-        grupo.setAttribute('aria-hidden', activo ? 'false' : 'true');
-      });
-      indiceFotograma = 0;
+      if (color) activarColor(color);
     });
   });
 
   giro?.addEventListener('keydown', (evento) => {
     if (evento.key !== 'ArrowLeft' && evento.key !== 'ArrowRight') return;
     evento.preventDefault();
+    precargarGrupo(grupoActivo());
     mostrarFotograma(evento.key === 'ArrowLeft' ? -1 : 1);
   });
   giro?.addEventListener('pointerdown', (evento) => {
+    precargarGrupo(grupoActivo());
     inicioX = evento.clientX;
     ultimoPaso = 0;
     giro.setPointerCapture(evento.pointerId);
   });
   giro?.addEventListener('pointermove', (evento) => {
     if (inicioX === null) return;
-    const paso = Math.trunc((evento.clientX - inicioX) / 34);
+    /* ~10 px por fotograma: 300–360 px recorren una órbita de 30–36 frames.
+       El / 34 anterior, pensado para 6 ángulos, se sentía pegajoso. */
+    const paso = Math.trunc((evento.clientX - inicioX) / 10);
     if (paso === ultimoPaso) return;
     mostrarFotograma(paso > ultimoPaso ? 1 : -1);
     ultimoPaso = paso;
@@ -158,6 +245,8 @@ const montarGiro = (panel: HTMLElement) => {
   giro?.addEventListener('pointercancel', () => {
     inicioX = null;
   });
+
+  if (!panel.hidden) precargarGrupo(grupoActivo());
 };
 
 document.querySelectorAll<HTMLButtonElement>('[data-modelo-anterior]').forEach((boton) => {

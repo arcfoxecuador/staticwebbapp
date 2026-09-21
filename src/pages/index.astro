@@ -9,7 +9,7 @@ import HeroImagen from '../components/bloques/HeroImagen.astro';
 import EscenarioModelo from '../components/bloques/EscenarioModelo.astro';
 import Mosaico, { type ColumnaExtra } from '../components/bloques/Mosaico.astro';
 import Cierre from '../components/bloques/Cierre.astro';
-import Formulario from '../components/bloques/Formulario.astro';
+import Boton from '../components/ui/Boton.astro';
 import Zorro from '../components/ui/Zorro.astro';
 
 import hero from '../assets/hero.webp';
@@ -17,12 +17,12 @@ import t5Cuarto from '../assets/t5-45-gris.webp';
 import t1Kv2 from '../assets/t1-kv2.webp';
 import s5Cuarto from '../assets/s5-45.webp';
 import s5Bajo from '../assets/s5-bajo.webp';
-import sobre from '../assets/sobre.webp';
 import cotizar from '../assets/t5-340.webp';
 
 import { coleccion } from '../lib/contenido';
 import { imagenPorArchivo } from '../lib/imagenes';
-import { ORG, PILARES, PORTADA } from '../lib/site';
+import { resolverOrbita } from '../lib/orbitas';
+import { CTA, ORG, PILARES, PORTADA } from '../lib/site';
 import { grafo, listaDeServicios, organizacion, pagina, sitioWeb } from '../lib/schema';
 
 const entradas = (await coleccion('modelos', ({ data }) => data.publico)).sort(
@@ -52,6 +52,17 @@ const cierrePorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
   t5: { imagen: cotizar, alt: 'ARCFOX T5, vista de tres cuartos para cotizar.' },
   t1: { imagen: t1Kv2, alt: 'ARCFOX T1, toma de marca para cotizar.' },
   s5: { imagen: s5Bajo, alt: 'ARCFOX S5, vista baja para cotizar.' },
+};
+
+/* El zorro es el emblema y no cambia. El auto de esta losa SÍ: si se
+   quedara el T5 al elegir T1, la isla mentiría. Toma frontal o tres
+   cuartos para que la placa se lea junto al animal. */
+const sobrePorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
+  t5: { imagen: t5Cuarto, alt: 'ARCFOX T5 gris, trompa junto al emblema de la marca.' },
+  /* kv2 pone la placa del T1 a un tamaño de lectura; kv es el pabellón
+     entero y en 390 el auto se perdía detrás del zorro. */
+  t1: { imagen: t1Kv2, alt: 'ARCFOX T1 celeste, trompa junto al emblema de la marca.' },
+  s5: { imagen: s5Cuarto, alt: 'ARCFOX S5, trompa junto al emblema de la marca.' },
 };
 
 /* LAS COLUMNAS DE LA DERECHA DEL TABLERO. Tres por modelo: la cuarta función
@@ -92,21 +103,48 @@ const tableroExtraPorId: Record<string, ColumnaTablero[]> = {
   ],
 };
 
+const colorDesdeFotos = (
+  etiqueta: string,
+  muestra: string | undefined,
+  fotos: { imagen: ImageMetadata; alt: string }[],
+) => {
+  const primera = fotos[0];
+  if (!primera) return undefined;
+  return {
+    etiqueta,
+    muestra,
+    imagen: primera.imagen,
+    alt: primera.alt,
+    urls: fotos.map((foto) => foto.imagen.src),
+  };
+};
+
 const modelos = entradas.map((entrada) => {
   const angulos = resolverFotogramas(entrada.data.angulos);
   const variantes = entrada.data.variantes
     .map((variante, indice) => {
+      if (variante.orbita && variante.fotogramas) {
+        const orbita = resolverOrbita(variante.orbita, variante.fotogramas);
+        if (orbita) {
+          return {
+            etiqueta: variante.etiqueta,
+            muestra: variante.muestra,
+            imagen: orbita.imagen,
+            alt: variante.alt,
+            urls: orbita.urls,
+          };
+        }
+      }
       const propia = resolverFotogramas([{ archivo: variante.archivo, alt: variante.alt }]);
-      return {
-        etiqueta: variante.etiqueta,
-        muestra: variante.muestra,
-        fotogramas: indice === 0 && angulos.length ? angulos : propia,
-      };
+      return colorDesdeFotos(
+        variante.etiqueta,
+        variante.muestra,
+        indice === 0 && angulos.length ? angulos : propia,
+      );
     })
-    .filter((color) => color.fotogramas.length > 0);
-  const colores = variantes.length
-    ? variantes
-    : [{ etiqueta: 'Disponible', fotogramas: angulos }];
+    .filter((color): color is NonNullable<typeof color> => Boolean(color));
+  const sinVariante = colorDesdeFotos('Disponible', undefined, angulos);
+  const colores = variantes.length ? variantes : sinVariante ? [sinVariante] : [];
   const datos = [
     ...entrada.data.datos,
     ...entrada.data.cotas.map((cota) => ({
@@ -176,7 +214,7 @@ const modelos = entradas.map((entrada) => {
       });
     })(),
   };
-}).filter((modelo) => modelo.colores.some((color) => color.fotogramas.length > 0));
+}).filter((modelo) => modelo.colores.length > 0);
 
 const descripcion = ORG.descripcion;
 const schema = grafo(
@@ -220,22 +258,30 @@ const schema = grafo(
 
   <section id="sobre" class="sobre-portada campo-oscuro relative isolate overflow-clip bg-marca">
     <div class="relative min-h-[72svh] overflow-clip">
-      <Image
-        src={sobre}
-        alt="ARCFOX T5 en el escenario de marca."
-        widths={[800, 1440, 1920]}
-        sizes="100vw"
-        class="absolute inset-0 h-full w-full object-cover"
-      />
+      {
+        modelos.map((modelo, indice) => (
+          <Image
+            src={sobrePorId[modelo.id]?.imagen ?? t5Cuarto}
+            alt={sobrePorId[modelo.id]?.alt ?? modelo.nombre}
+            widths={[800, 1440, 1920]}
+            sizes="100vw"
+            loading="lazy"
+            data-modelo-vista={modelo.id}
+            data-activo={indice === 0 ? '' : undefined}
+            class="sobre-fondo absolute inset-0 h-full w-full object-cover"
+          />
+        ))
+      }
       {/* Recorte generado: el material local no trae un zorro de campaña.
-          La llegada la decide `.llega-zorro`, no esta caja. */}
+          La llegada la decide `.llega-zorro`, no esta caja. El animal
+          no se conmuta: es la marca, no el modelo. */}
       <Zorro class="sobre-zorro absolute bottom-0 left-0 z-0" />
       <a
         href="/nosotros"
         class="losa-entra group absolute inset-x-0 bottom-0 z-10 flex min-h-[10.5rem] flex-col items-end justify-end bg-marca px-6 py-8 text-right text-white md:inset-x-auto md:right-0 md:w-[min(24rem,38vw)] md:px-8"
       >
         <span class="text-eyebrow uppercase tracking-[0.18em]">Sobre ARCFOX</span>
-        <span class="mt-3 max-w-[14ch] font-display text-subtitulo font-semibold uppercase tracking-[0.08em]">
+        <span class="sobre-titular mt-3 font-display text-subtitulo font-semibold uppercase">
           Conoce la marca
         </span>
         {/* El subrayado del enlace, no un indicador: con un tercio lleno se leía
@@ -259,32 +305,99 @@ const schema = grafo(
       alt: cierrePorId[modelo.id]?.alt ?? modelo.nombre,
     }))}
   >
-    <Formulario titulo="Cotízalo" bajada="Elige tu ARCFOX. Te contactamos desde Quito." origen="/" compacto />
+    {/* La ficha vive en `/cotizalo`, como Contact Us en Global. Aquí
+        sólo se abre la puerta: un formulario embebido competiría con
+        la página dedicada y el ancla `/#cotizalo` seguiría existiendo. */}
+    <div>
+      <h2 class="revela-titular equilibra font-display text-h2 font-semibold uppercase tracking-[0.14em] text-white">
+        Cotízalo
+      </h2>
+      <p class="revela mt-4 max-w-[46ch] text-lead text-white/75">
+        Elige tu ARCFOX. Te contactamos desde el concesionario.
+      </p>
+      <div class="revela mt-8">
+        <Boton href={CTA.href} tamano="lg">{CTA.texto}</Boton>
+      </div>
+    </div>
   </Cierre>
 </Base>
 
 <style>
-  /* El emblema acompaña al auto: su altura no debe competir con la sección.
-     El límite ligado al viewport también protege las ventanas poco altas. */
+  /* El zorro es fijo. El auto se conmuta con data-activo: si el recorte
+     apuntara al vacío de la toma (15 % a la izquierda), en 390 sólo se
+     leía suelo y el emblema quedaba tapado por la losa. */
+  .sobre-fondo {
+    transition: opacity 480ms var(--ease-out);
+  }
+  .sobre-fondo:not([data-activo]) {
+    opacity: 0;
+  }
+  .sobre-fondo[data-activo] {
+    opacity: 1;
+  }
+
   .sobre-portada :global(.sobre-zorro) {
     width: clamp(7rem, 18vw, 16rem);
     max-width: 24svh;
   }
 
+  .sobre-titular {
+    max-width: 14ch;
+    letter-spacing: 0.08em;
+  }
+
   @media (width >= 48rem) {
-    .sobre-portada > div > img {
-      object-position: 25% 50%;
+    .sobre-fondo {
+      object-position: 78% 55%;
     }
   }
 
   @media (width < 48rem) {
-    .sobre-portada > div > img {
-      object-position: 15% 50%;
+    .sobre-portada > div {
+      min-height: 88svh;
     }
-    /* La ficha ocupa todo el borde inferior en móvil; las patas quedan justo
-       por encima para que el emblema no desaparezca detrás de ella. */
+    /* A sangre el 3/4 llena la izquierda y el zorro se sentaba encima
+       del techo. El auto es una losa a la derecha: trompa y placa,
+       el animal se queda. `top: auto` + bottom lo encogía contra la losa. */
+    .sobre-fondo {
+      inset: auto;
+      top: 8%;
+      right: 0;
+      width: 76%;
+      height: 68%;
+      mask-image: linear-gradient(to right, transparent, var(--color-marca) 14%);
+    }
+    .sobre-fondo[data-modelo-vista='t5'] {
+      object-position: 16% 50%;
+    }
+    /* kv2 trae el wordmark de la toma arriba: un Y bajo lo colaba
+       en el recorte. */
+    .sobre-fondo[data-modelo-vista='t1'] {
+      object-position: 30% 90%;
+    }
+    .sobre-fondo[data-modelo-vista='s5'] {
+      object-position: 72% 52%;
+    }
+    /* Encima de la losa, no detrás: si comparte el borde inferior,
+       las patas desaparecen detrás de «Conoce la marca». */
     .sobre-portada :global(.sobre-zorro) {
-      bottom: 12rem;
+      bottom: 12.25rem;
+      left: 0.25rem;
+      width: 9.25rem;
+      max-width: 32svh;
+      z-index: 1;
+    }
+    /* 0.08 em en 390 come la A de MARCA y pega CONOCE LA. */
+    .sobre-titular {
+      max-width: none;
+      letter-spacing: 0.04em;
+      font-size: clamp(1.35rem, 6.4vw, 1.85rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sobre-fondo {
+      transition: none;
     }
   }
 

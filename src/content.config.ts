@@ -37,6 +37,10 @@ const variante = z.object({
   muestra: z.string().optional(),
   archivo: z.string(),
   alt: z.string(),
+  /** Prefijo de la órbita (`t5-blanco`). Con `fotogramas` arma la secuencia
+      sin listar cientos de archivos en el markdown. */
+  orbita: z.string().optional(),
+  fotogramas: z.number().int().positive().optional(),
 });
 
 const angulo = z.object({

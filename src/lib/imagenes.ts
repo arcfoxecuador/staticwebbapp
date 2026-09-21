@@ -37,9 +37,21 @@ const LOCALES = {
   }),
 } as const;
 
-const ARCHIVOS = import.meta.glob<{ default: ImageMetadata }>('../assets/**/*.{webp,avif,png,jpg}', {
-  eager: true,
-});
+/* Dos globs, no `assets/**`. Las órbitas son 240 archivos: si entran aquí,
+   cada página que importe este módulo las arrastra al grafo de Vite. El
+   primer fotograma (`*-00`) sí: la ficha lo usa como `archivo` de variante. */
+const ARCHIVOS = {
+  ...import.meta.glob<{ default: ImageMetadata }>('../assets/*.{webp,avif,png,jpg}', {
+    eager: true,
+  }),
+  ...import.meta.glob<{ default: ImageMetadata }>(
+    '../assets/{modelos,articulos,equipo,servicios}/*.{webp,avif,png,jpg}',
+    { eager: true },
+  ),
+  ...import.meta.glob<{ default: ImageMetadata }>('../assets/orbitas/*-00.{webp,avif}', {
+    eager: true,
+  }),
+};
 
 export type Familia = keyof typeof LOCALES;
 
