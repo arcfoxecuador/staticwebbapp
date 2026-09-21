@@ -111,7 +111,7 @@ export type NavZona = {
     permite que cabecera, barra móvil y cierre compartan texto y destino. */
 export const CTA = {
   texto: 'Cotízalo',
-  href: '/#cotizalo',
+  href: '/cotizalo',
 } as const;
 
 export const NAV: NavZona[] = [
@@ -126,7 +126,7 @@ export const NAV: NavZona[] = [
   },
   { texto: 'Concesionarios', href: '/concesionarios' },
   { texto: 'Test drive', href: '/test-drive' },
-  { texto: 'Sobre ARCFOX', href: '/#sobre' },
+  { texto: 'Sobre ARCFOX', href: '/nosotros' },
   { texto: CTA.texto, href: CTA.href },
   /* Postventa NO entra aquí a propósito: la página existe para revisar
      (`/postventa`) pero el servicio no está cerrado. Un enlace en cabecera,
@@ -205,12 +205,43 @@ export const FAQ: readonly { p: string; r: string }[] = [
   },
   {
     p: '¿Dónde puedo ver un ARCFOX o pedir un test drive?',
-    r: 'En la red de concesionarios. Correo, teléfono y sedes están en Concesionarios. Completa Cotízalo o pide un test drive y te contactamos con el punto más cercano.',
+    r: 'En la red de concesionarios. Correo, teléfono y sedes están en Concesionarios. Completa la página Cotízalo o pide un test drive y te contactamos con el punto más cercano.',
   },
   {
     p: '¿Puedo copiar precios o autonomías de la web de Argentina?',
     r: 'No. Equipo, cifras y condiciones comerciales de Ecuador se confirman aquí. Un dato de otro país no se publica como si fuera local.',
   },
+];
+
+/** La página /nosotros. Los hechos salen de ARCFOX Global › About
+    (https://www.arcfoxglobal.com/about/aboutArcfox). La garantía en kilómetros
+    de esa misma página no entra: es estrategia global, no la de Ecuador. */
+export const SOBRE = {
+  rotulo: 'La marca',
+  titular: 'Inspirada en el Ártico',
+  bajada:
+    'Exploración y un límite que se empuja. ARCFOX es la marca de vehículos 100% eléctricos de BAIC; en Ecuador el catálogo son el T5, el T1 y el S5.',
+  filosofia: [
+    {
+      titulo: 'Visión',
+      texto:
+        'Marca premium de nueva energía, con desempeño e innovación de diseño. Lo publica ARCFOX Global.',
+    },
+    {
+      titulo: 'Misión',
+      texto:
+        'Diseño que le da un trato humano a la técnica, y una experiencia más nueva. Lo publica ARCFOX Global.',
+    },
+    {
+      titulo: 'Eslogan',
+      texto: 'Born free. El lema oficial de la marca en ARCFOX Global.',
+    },
+  ],
+} as const;
+
+export const PLAN_GLOBAL: Metrica[] = [
+  { valor: '6', etiqueta: 'Regiones', fuente: 'ARCFOX Global, About' },
+  { valor: '40+', etiqueta: 'Países y regiones', fuente: 'ARCFOX Global, About' },
 ];
 
 // ── Asistente conversacional (opcional) ─────────────────────────────────────
@@ -442,11 +473,11 @@ export const ANALITICA = {
 /** El aviso del pie. Vacío = no se pinta. Si el sector está regulado, esto no
     es opcional y no lo redacta quien programa. */
 export const AVISO_LEGAL =
-  'Las imágenes son ilustrativas. Las cifras que se publican corresponden a la homologación global de ARCFOX; la versión, el equipamiento y las condiciones comerciales para Ecuador se confirman en el concesionario oficial. Un dato de otro país no se vende como local.';
+  'Las imágenes son ilustrativas. Las cifras que se publican corresponden a ARCFOX Global; la versión, el equipamiento y las condiciones comerciales para Ecuador se confirman en el concesionario oficial. Un dato de otro país no se vende como local.';
 
-/** Nota corta junto a cada bloque de cifras. Misma idea que AVISO_LEGAL, en una línea. */
+/** Nota corta junto a cada bloque de cifras. Misma idea que AVISO_LEGAL. */
 export const AVISO_CIFRAS =
-  'Cifras de homologación global ARCFOX. La versión para Ecuador se confirma en el concesionario.';
+  'Las cifras de esta ficha son las de ARCFOX Global; donde Global no publica, se cita Argentina o Colombia y se nombra el país. La versión para Ecuador se confirma en el concesionario.';
 
 /* LAS DOS RUTAS LEGALES, VACÍAS A PROPÓSITO — y cada una vacía por un motivo
    distinto del otro.

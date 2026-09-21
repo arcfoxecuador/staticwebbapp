@@ -1,15 +1,7 @@
 ---
-/* Contacto. Es la página de conversión, y las dos decisiones que la hacen
-   funcionar son restas:
-
-   1. `barraAccion={false}`. La barra fija de móvil repite el CTA que ya ES el
-      contenido de esta página, y encima tapa el formulario justo cuando alguien
-      está escribiendo. Un CTA que compite consigo mismo resta.
-   2. El correo y el teléfono van JUNTO al formulario, no en otra sección. Quien
-      prefiere escribir por su cuenta no debería tener que buscarlo.
-
-   `ContactPage` en el JSON-LD: es lo que hace que un motor pueda responder «¿cómo
-   contacto con X?» con el dato correcto en vez de con un enlace. */
+/* Cotízalo es la página de conversión, como Contact Us en Global
+   (`/contactUs`): el menú abre una URL propia, no un ancla de la
+   portada. `barraAccion={false}` porque el CTA ya es el contenido. */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
@@ -17,24 +9,29 @@ import Formulario from '../components/bloques/Formulario.astro';
 import { ORG, SEDES } from '../lib/site';
 import { grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
 
-const titulo = 'Contacto';
-const descripcion = `Escríbenos a ${ORG.email} o déjanos tus datos y te respondemos dentro de un día hábil.`;
+const titulo = 'Cotízalo';
+const descripcion = `Elige T5, T1 o S5 y déjanos tus datos. Te respondemos desde el concesionario. También puedes escribir a ${ORG.email}.`;
 
 const schema = grafo(
   organizacion(),
   sitioWeb(),
-  pagina({ path: '/contacto', titulo, descripcion, tipo: 'ContactPage' }),
-  migas([{ nombre: titulo, path: '/contacto' }]),
+  pagina({ path: '/cotizalo', titulo, descripcion, tipo: 'ContactPage' }),
+  migas([{ nombre: titulo, path: '/cotizalo' }]),
 );
 ---
 
-<Base {titulo} {descripcion} path="/contacto" {schema} barraAccion={false}>
-  <Hero rotulo="Hablemos" titulo="Cuéntanos qué necesitas" bajada={descripcion} />
+<Base {titulo} {descripcion} path="/cotizalo" {schema} barraAccion={false}>
+  <Hero
+    rotulo="Cotízalo"
+    titulo="Elige tu ARCFOX"
+    bajada={descripcion}
+  />
 
   <Seccion>
     <Formulario
-      titulo="Escríbenos"
-      bajada="Nombre, teléfono, ciudad y modelo. Te respondemos desde el concesionario."
+      titulo="Cotízalo"
+      bajada="Nombre, teléfono, ciudad y modelo. Te respondemos desde el concesionario más cercano."
+      origen="/cotizalo"
     />
   </Seccion>
 
@@ -46,9 +43,6 @@ const schema = grafo(
           {SEDES.map((sede) => (
             <address class="campo-claro not-italic rounded-[var(--radius-lg)] border border-linea bg-superficie p-6">
               <p class="text-h3 font-bold text-marca">{sede.nombre}</p>
-              {/* Cada línea existe sólo si su dato existe. Con la calle ausente,
-                  escribirla igual dejaba una línea vacía y un salto de más justo
-                  donde el visitante busca la dirección. */}
               <p class="mt-3 text-small text-tinta/75">
                 {sede.calle && (
                   <>

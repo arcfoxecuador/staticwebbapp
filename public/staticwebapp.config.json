@@ -9,6 +9,11 @@
   },
   "routes": [
     {
+      "route": "/contacto",
+      "redirect": "/cotizalo",
+      "statusCode": 301
+    },
+    {
       "route": "/_astro/*",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"

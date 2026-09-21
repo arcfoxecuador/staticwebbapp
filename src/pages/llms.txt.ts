@@ -91,6 +91,8 @@ export const GET: APIRoute = async () => {
     `## Fuentes`,
     '',
     `- [Sitio completo](${url('/')})`,
+    `- [Sobre ARCFOX](${url('/nosotros')})`,
+    `- [Cotízalo](${url('/cotizalo')})`,
     `- [Sitemap](${url('/sitemap-index.xml')})`,
     '',
   );

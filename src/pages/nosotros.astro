@@ -1,23 +1,24 @@
 ---
-/* La marca, no el catálogo. Los tres autos se recorren en la portada;
-   esta página cuenta quién es ARCFOX. */
+/* La marca, no el catálogo. En Global esto es /about/aboutArcfox: una
+   página propia del menú, no un ancla de la portada. Los hechos de
+   filosofía y plan salen de esa ficha; el recorrido T5/T1/S5 se queda
+   en `/` y en `/modelos`. */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
 import Encabezado from '../components/bloques/Encabezado.astro';
 import Rejilla from '../components/bloques/Rejilla.astro';
-import Figura from '../components/ui/Figura.astro';
 import Metricas from '../components/bloques/Metricas.astro';
 import Escena from '../components/bloques/Escena.astro';
 import Cierre from '../components/bloques/Cierre.astro';
-import Boton from '../components/ui/Boton.astro';
 
 import sobre from '../assets/sobre.webp';
 
 import { coleccion } from '../lib/contenido';
 import { imagenDeEntrada } from '../lib/imagenes';
-import { METRICAS, ORG } from '../lib/site';
+import { ORG, PLAN_GLOBAL, SOBRE } from '../lib/site';
 import { grafo, migas, organizacion, pagina, persona, sitioWeb } from '../lib/schema';
+import Figura from '../components/ui/Figura.astro';
 
 const equipo = (await coleccion('equipo')).sort((a, b) => a.data.orden - b.data.orden);
 
@@ -36,33 +37,50 @@ const schema = grafo(
 ---
 
 <Base {titulo} {descripcion} path="/nosotros" {schema}>
-  <Hero
-    rotulo={ORG.tagline}
-    titulo="Sobre ARCFOX"
-    bajada="Marca de vehículos 100% eléctricos de BAIC. En Ecuador el auto se recorre en la portada, uno a la vez."
-  />
-
-  {
-    METRICAS.length > 0 && (
-      <Seccion campo="tinte" aire="apretado">
-        <Metricas items={METRICAS} />
-      </Seccion>
-    )
-  }
+  <Hero rotulo={SOBRE.rotulo} titulo={SOBRE.titular} bajada={SOBRE.bajada} />
 
   <Escena
     imagen={sobre}
     alt="ARCFOX en un paisaje nocturno junto al zorro, emblema de la marca."
     rotulo="BAIC"
     titulo="Distintos por naturaleza"
-    bajada="Diseño, autonomía y recarga para el uso diario. Sin cifras de otro país presentadas como locales."
+    bajada="Diseño, autonomía y recarga para el uso diario. Las cifras de producto son las de ARCFOX Global; la versión para Ecuador se confirma en el concesionario."
     altura="media"
     anclaje="centro"
   />
 
+  <Seccion campo="superficie">
+    <Encabezado rotulo="Filosofía" titulo="Cómo se nombra la marca" />
+    <Rejilla columnas={3} class="mt-14">
+      {
+        SOBRE.filosofia.map((pieza) => (
+          <article class="border-t border-linea pt-6">
+            <h3 class="text-h3 font-bold text-marca">{pieza.titulo}</h3>
+            <p class="mt-3 max-w-[46ch] text-small text-tinta/75">{pieza.texto}</p>
+          </article>
+        ))
+      }
+    </Rejilla>
+  </Seccion>
+
+  {
+    PLAN_GLOBAL.length > 0 && (
+      <Seccion campo="tinte" aire="apretado">
+        <Encabezado
+          rotulo="Plan global"
+          titulo="Seis regiones, más de cuarenta países"
+          bajada="Lo publica ARCFOX Global. Ecuador entra en esa red; la venta y el servicio locales se confirman en el concesionario."
+        />
+        <div class="mt-10">
+          <Metricas items={PLAN_GLOBAL} />
+        </div>
+      </Seccion>
+    )
+  }
+
   {
     equipo.length > 0 && (
-      <Seccion>
+      <Seccion campo="superficie">
         <Encabezado rotulo="Equipo" titulo="Quién hace el trabajo" />
 
         <Rejilla columnas={3} navegable={equipo.length > 8} class="mt-14">
@@ -102,17 +120,6 @@ const schema = grafo(
       </Seccion>
     )
   }
-
-  <Seccion>
-    <Encabezado
-      rotulo="La gama"
-      titulo="Un auto a la vez"
-      bajada="El T5, el T1 y el S5 se recorren en la portada, un auto a la vez."
-    />
-    <div class="mt-10">
-      <Boton href="/" tamano="lg">Ver el auto</Boton>
-    </div>
-  </Seccion>
 
   <Cierre titulo="¿Hablamos?" bajada="Ciudad y modelo. Te contactamos con el concesionario." />
 </Base>

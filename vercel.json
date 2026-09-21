@@ -5,6 +5,9 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/contacto", "destination": "/cotizalo", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/(.*)",

@@ -86,7 +86,6 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
 | `/postventa` | `pages/postventa.astro` — `noindex`, fuera del menú; URL viva para revisar |
 | `/bitacora` | `pages/bitacora/index.astro` |
 | `/bitacora/{slug}` | `pages/bitacora/[slug].astro` |
-| `/contacto` | `pages/contacto.astro` |
 | `/landing` | `pages/landing.astro` — `noindex` en arcfox.com.ec; home de followdafox.com |
 | `/lanzamiento` | `pages/lanzamiento.astro` — `noindex` en arcfox.com.ec; home del proyecto `arcfox-lanzamiento` |
 | `/gracias` | `pages/gracias.astro` — `noindex` |
@@ -145,7 +144,7 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   están en `src/assets/orbitas/`; el escenario gira esa secuencia, no una malla.
   Siguen pendientes un GLB por modelo/color.
 - **Formulario**: `PUBLIC_FORMULARIO_ENDPOINT` — *pendiente*. Sin él, el bloque no
-  se pinta y `/contacto` muestra las vías directas.
+  se pinta y `/cotizalo` muestra las vías directas.
 - **Analítica**: `PUBLIC_GA4_ID` / `PUBLIC_CLARITY_ID` — *pendiente*. Sin ninguno no
   se monta ni el script ni el banner de cookies.
 - **Asistente**: `ASISTENTE.activo` en `false` en el sitio. El chat de la teaser
