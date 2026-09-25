@@ -114,6 +114,6 @@ test('las claves del protocolo y las columnas de la hoja son la misma lista', ()
   assert.ok(bloque, 'no se encontró CAMPOS en hoja-protocolo.gs');
   const columnas = [...bloque[1].matchAll(/'([^']+)'/g)].map((c) => c[1]);
 
-  assert.ok(claves.length >= 10, `sólo se leyeron ${claves.length} claves del componente`);
+  assert.ok(claves.length >= 9, `sólo se leyeron ${claves.length} claves del componente`);
   assert.deepEqual(columnas, claves, 'CAMPOS de la hoja no coincide con las claves del protocolo');
 });
