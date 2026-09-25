@@ -215,10 +215,10 @@ export const ASISTENTE = {
    zorro» y la puerta «Continuar» — dos campañas en el mismo lanzamiento. */
 const CAMPAÑA = {
   titulo: 'Antes de abrir la puerta',
-  ceja: 'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad.',
+  ceja: 'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad eléctrica.',
   titular: 'Antes de abrir la puerta déjanos hacerte unas preguntas.',
   bajada:
-    'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad, con ARCFOX en Ecuador.',
+    'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad eléctrica, con ARCFOX en Ecuador.',
   cta: 'Continuar',
   chatEtiqueta: 'Abrir las preguntas y el chat de ARCFOX',
 

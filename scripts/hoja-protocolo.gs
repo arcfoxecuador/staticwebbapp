@@ -46,7 +46,6 @@ const CAMPOS = [
   'nombre',
   'correo',
   'whatsapp',
-  'instagram',
 ];
 
 const CABECERA = ['fecha', 'id', 'origen'].concat(CAMPOS);
