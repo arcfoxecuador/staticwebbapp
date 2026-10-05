@@ -256,7 +256,7 @@ llegar al sitio.
   viven en Environment de ESE proyecto. Un push a `main` reconstruye los tres
   si están ligados al mismo repo.
 - **Descripción oficial** (la que va al JSON-LD y a `llms.txt`):
-  «ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV de diseño, autonomía y recarga para uso diario.»
+  «ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV y un sedán de diseño, autonomía y recarga para uso diario.»
 - **El primer commit es el andamiaje del kit, no trabajo de este proyecto.** Por eso
   existe: `git diff <ese commit>` responde «¿esto lo escribimos nosotros o venía de
   la plantilla?», que es justo la pregunta que aparece al revisar el sitio antes de
