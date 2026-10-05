@@ -685,11 +685,11 @@ export const ANALITICA = {
 /** El aviso del pie. Vacío = no se pinta. Si el sector está regulado, esto no
     es opcional y no lo redacta quien programa. */
 export const AVISO_LEGAL =
-  'Las imágenes son ilustrativas. Las cifras que se publican corresponden a ARCFOX Global; la versión, el equipamiento y las condiciones comerciales para Ecuador se confirman en el concesionario oficial. Un dato de otro país no se vende como local.';
+  'Las imágenes son ilustrativas. Las cifras que se publican son las que confirma ARCFOX Ecuador sobre la ficha global de la marca; la versión, el equipamiento y las condiciones comerciales se confirman en el concesionario oficial.';
 
 /** Nota corta junto a cada bloque de cifras. Misma idea que AVISO_LEGAL. */
 export const AVISO_CIFRAS =
-  'Las cifras de esta ficha son las de ARCFOX Global; donde Global no publica, se cita Argentina o Colombia y se nombra el país. La versión para Ecuador se confirma en el concesionario.';
+  'Las cifras de esta ficha son las que confirma ARCFOX Ecuador sobre la ficha global de la marca. La versión para Ecuador se confirma en el concesionario.';
 
 /* LAS DOS RUTAS LEGALES, VACÍAS A PROPÓSITO — y cada una vacía por un motivo
    distinto del otro.
