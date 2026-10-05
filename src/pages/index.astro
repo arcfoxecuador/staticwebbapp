@@ -45,7 +45,7 @@ const heroPorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
   /* t1-kv es la misma escena de pabellón que hero.webp: a sangre se leen
      como el mismo auto. kv2 es la toma de dos T1 frente a la ciudad. */
   t1: { imagen: t1Kv2, alt: 'Dos ARCFOX T1 en el escenario de marca junto al agua.' },
-  s5: { imagen: s5Cuarto, alt: 'ARCFOX S5, SUV fastback 100% eléctrico.' },
+  s5: { imagen: s5Cuarto, alt: 'ARCFOX S5, sedán 100% eléctrico.' },
 };
 
 const cierrePorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
@@ -174,7 +174,7 @@ const modelos = entradas.map((entrada) => {
   const textos = (entrada.data.destacados.length ? entrada.data.destacados : PILARES)
     .slice(0, 3)
     .map((item, i) => ({
-      titulo: 'titulo' in item ? item.titulo : PILARES[i]?.titulo,
+      titulo: 'puntos' in item ? (item.tituloPortada ?? item.titulo) : PILARES[i]?.titulo,
       bajada: 'puntos' in item ? item.puntos[0] : PILARES[i]?.texto,
     }));
 

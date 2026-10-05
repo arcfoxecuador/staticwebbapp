@@ -20,7 +20,7 @@ export const ORG = {
   tagline: 'Distintos por naturaleza',
   /** Una frase. Es la que va a `description` del JSON-LD y a llms.txt: escríbela
       como la escribiría alguien citando a esta empresa, no como un eslogan. */
-  descripcion: 'ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV de diseño, autonomía y recarga para uso diario.',
+  descripcion: 'ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV y un sedán de diseño, autonomía y recarga para uso diario.',
   fundacion: '',
 
   email: 'contacto@arcfox.com.ec',
@@ -119,9 +119,9 @@ export const NAV: NavZona[] = [
     texto: 'Modelos',
     href: '/',
     hijos: [
-      { texto: 'ARCFOX T5', href: '/#t5', bajada: 'SUV crossover 100% eléctrico' },
-      { texto: 'ARCFOX T1', href: '/#t1', bajada: 'SUV familiar 100% eléctrico' },
-      { texto: 'ARCFOX S5', href: '/#s5', bajada: 'SUV de líneas fastback' },
+      { texto: 'ARCFOX T5', href: '/#t5', bajada: 'SUV familiar 100% eléctrico' },
+      { texto: 'ARCFOX T1', href: '/#t1', bajada: 'SUV crossover 100% eléctrico' },
+      { texto: 'ARCFOX S5', href: '/#s5', bajada: 'Sedán 100% eléctrico' },
     ],
   },
   { texto: 'Concesionarios', href: '/concesionarios' },
@@ -221,7 +221,7 @@ export const SOBRE = {
   rotulo: 'La marca',
   titular: 'Inspirada en el Ártico',
   bajada:
-    'Exploración y un límite que se empuja. ARCFOX es la marca de vehículos 100% eléctricos de BAIC; en Ecuador el catálogo son el T5, el T1 y el S5.',
+    'Nace del espíritu explorador del Ártico: ir siempre un poco más lejos. ARCFOX es la marca de vehículos 100% eléctricos de BAIC, y en Ecuador su gama la forman el T5, el T1 y el S5.',
   nombre: [
     {
       titulo: 'ARC',
@@ -297,7 +297,7 @@ export const SOBRE = {
     {
       cuando: '2026',
       titulo: 'Ecuador',
-      texto: 'ARCFOX entra a la red local con tres SUV 100% eléctricos.',
+      texto: 'ARCFOX entra a la red local con dos SUV y un sedán 100% eléctricos.',
     },
   ],
 } as const;
@@ -367,7 +367,7 @@ export const FAQ_COTIZA: readonly { p: string; r: string }[] = [
   },
   {
     p: '¿Puedo cotizar sin elegir modelo?',
-    r: 'El formulario pide un modelo. Si aún no decides, elige el que más se acerque: T5 crossover, T1 familiar o S5 fastback. El asesor te ayuda a comparar.',
+    r: 'El formulario pide un modelo. Si aún no decides, elige el que más se acerque: T5 familiar, T1 crossover o S5 sedán. El asesor te ayuda a comparar.',
   },
   {
     p: '¿En qué ciudades cotizan?',

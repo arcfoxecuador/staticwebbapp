@@ -79,9 +79,9 @@ const buscarLocal = (familia: Familia, slug: string) => {
    concretos y no caduca mientras esos archivos existan. */
 const ALT_LOCAL: Partial<Record<Familia, Record<string, string>>> = {
   modelos: {
-    t5: 'ARCFOX T5, SUV crossover 100% eléctrico, vista de tres cuartos.',
-    t1: 'ARCFOX T1, SUV familiar 100% eléctrico.',
-    s5: 'ARCFOX S5, SUV fastback 100% eléctrico.',
+    t5: 'ARCFOX T5, SUV familiar 100% eléctrico, vista de tres cuartos.',
+    t1: 'ARCFOX T1, SUV crossover 100% eléctrico.',
+    s5: 'ARCFOX S5, sedán 100% eléctrico.',
   },
 };
 

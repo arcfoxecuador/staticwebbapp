@@ -75,6 +75,11 @@ const modelos = defineCollection({
       .array(
         z.object({
           titulo: z.string(),
+          /* En el tablero de la portada el rótulo va junto a OTRA foto que en
+             la ficha: «Lectura del entorno» nombra asistencias, pero en la
+             portada cae bajo el habitáculo. Este rótulo sólo cambia la
+             portada; la ficha conserva el título que describe sus puntos. */
+          tituloPortada: z.string().optional(),
           puntos: z.array(z.string()),
           archivo: z.string().optional(),
           alt: z.string().optional(),
