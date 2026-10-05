@@ -715,4 +715,7 @@ export const AVISO_CIFRAS =
 export const LEGAL = {
   privacidad: '',
   terminos: '',
+  /* Calidad y Seguridad y Salud Ocupacional, en una página propia. Ésta sí
+     tiene texto: lo envió Foton y vive literal en `lib/politicas.ts`. */
+  politicas: '/politicas',
 } as const;
