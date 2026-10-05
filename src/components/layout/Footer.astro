@@ -55,7 +55,7 @@ const anio = new Date().getFullYear();
     <div class="mt-6 flex flex-col gap-2 text-small text-white/45 md:flex-row md:justify-between">
       <p>© {anio} {ORG.nombreLegal}</p>
       {
-        (LEGAL.privacidad || LEGAL.terminos) && (
+        (LEGAL.privacidad || LEGAL.terminos || LEGAL.politicas) && (
           <ul class="flex gap-6">
             {LEGAL.privacidad && (
               <li>
@@ -68,6 +68,13 @@ const anio = new Date().getFullYear();
               <li>
                 <a href={LEGAL.terminos} class="hover:text-white">
                   Términos
+                </a>
+              </li>
+            )}
+            {LEGAL.politicas && (
+              <li>
+                <a href={LEGAL.politicas} class="hover:text-white">
+                  Políticas
                 </a>
               </li>
             )}

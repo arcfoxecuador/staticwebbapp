@@ -1,0 +1,89 @@
+---
+/* Las políticas corporativas que Foton pide publicar en la web. Una sola página
+   para las dos: son documentos cortos y de lectura ocasional, y un enlace en el
+   pie basta para encontrarlos. Cada una lleva su ancla (#calidad, #seguridad)
+   para que se pueda enlazar directo.
+
+   El texto vive en `lib/politicas.ts` y es literal del documento: aquí sólo se
+   compone. Los compromisos de Calidad van numerados porque el documento los
+   numera; los de Seguridad no, porque el documento usa viñetas. */
+import Base from '../layouts/Base.astro';
+import Seccion from '../components/bloques/Seccion.astro';
+import Encabezado from '../components/bloques/Encabezado.astro';
+import { POLITICAS } from '../lib/politicas';
+---
+
+<Base
+  titulo="Políticas"
+  descripcion="Política de Gestión de la Calidad y Política de Seguridad y Salud Ocupacional de ARCFOX Ecuador."
+  path="/politicas"
+>
+  <Seccion aire="amplio">
+    <Encabezado
+      rotulo="Legales"
+      titulo="Políticas"
+      bajada="Los compromisos de calidad y de seguridad y salud en el trabajo que rigen a ARCFOX en Ecuador."
+      nivel="h1"
+      tamano="h1"
+    />
+
+    <nav aria-label="Políticas de esta página" class="mt-8">
+      <ul class="flex flex-wrap gap-x-6 gap-y-2">
+        {
+          POLITICAS.map((politica) => (
+            <li>
+              <a href={`#${politica.id}`} class="enlace-subrayado inline-flex min-h-11 items-center text-marca">
+                {politica.titulo}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </Seccion>
+
+  {
+    POLITICAS.map((politica, indice) => (
+      <Seccion id={politica.id} campo={indice % 2 === 0 ? 'superficie' : 'suelo'}>
+        <article class="max-w-[68ch]">
+          <Encabezado titulo={politica.titulo} rotulo={politica.codigo ? `Documento ${politica.codigo}` : undefined} />
+
+          <div class="mt-8 space-y-4 text-tinta/80">
+            {politica.introduccion.map((parrafo) => <p>{parrafo}</p>)}
+          </div>
+
+          {politica.compromisos.some((c) => c.titulo) ? (
+            <ol class="mt-6 list-decimal space-y-4 pl-6 text-tinta/80">
+              {politica.compromisos.map((c) => (
+                <li>
+                  {c.titulo && <strong class="font-semibold text-tinta">{c.titulo}: </strong>}
+                  {c.texto}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <ul class="mt-6 list-disc space-y-4 pl-6 text-tinta/80">
+              {politica.compromisos.map((c) => <li>{c.texto}</li>)}
+            </ul>
+          )}
+
+          <div class="mt-6 space-y-4 text-tinta/80">
+            {politica.cierre.map((parrafo) => <p>{parrafo}</p>)}
+          </div>
+
+          {politica.referencia && (
+            <p class="mt-8 text-small text-tinta/60">Documento de referencia: {politica.referencia}</p>
+          )}
+
+          {politica.firma && (
+            <p class="mt-8 text-small text-tinta/60">
+              {politica.firma.lugar}
+              <br />
+              {politica.firma.cargo}: {politica.firma.nombre}
+            </p>
+          )}
+        </article>
+      </Seccion>
+    ))
+  }
+</Base>
