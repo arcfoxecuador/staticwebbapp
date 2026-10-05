@@ -67,30 +67,24 @@ const protocolo = [
   },
   {
     clave: 'nombre',
-    pregunta: 'Danos tu usuario de Instagram y número de WhatsApp para enviar tu invitación',
+    pregunta: 'Danos tu número de WhatsApp para enviar tu invitación',
     tipo: 'text',
     autocomplete: 'name',
     placeholder: 'Nombre',
   },
   {
     clave: 'correo',
-    pregunta: 'Danos tu usuario de Instagram y número de WhatsApp para enviar tu invitación',
+    pregunta: 'Danos tu número de WhatsApp para enviar tu invitación',
     tipo: 'email',
     autocomplete: 'email',
     placeholder: 'Correo',
   },
   {
     clave: 'whatsapp',
-    pregunta: 'Danos tu usuario de Instagram y número de WhatsApp para enviar tu invitación',
+    pregunta: 'Danos tu número de WhatsApp para enviar tu invitación',
     tipo: 'tel',
     autocomplete: 'tel',
     placeholder: 'WhatsApp',
-  },
-  {
-    clave: 'instagram',
-    pregunta: 'Danos tu usuario de Instagram y número de WhatsApp para enviar tu invitación',
-    tipo: 'text',
-    placeholder: 'Usuario de Instagram',
   },
 ] as const;
 ---
@@ -373,7 +367,7 @@ const protocolo = [
         guardar(null);
         pregunta.textContent = 'Tu perfil ha sido registrado. Revisa tus mensajes para recibir la invitación.';
         progreso.textContent = 'ACCESO REGISTRADO';
-        ayuda.textContent = 'Te escribiremos por WhatsApp o Instagram';
+        ayuda.textContent = 'Te escribiremos por WhatsApp';
         return;
       }
 
