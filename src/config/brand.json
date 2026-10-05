@@ -42,7 +42,7 @@
   ],
   "differentiators": [],
   "keyPhrases": ["Distintos por naturaleza"],
-  "boilerplate": "ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV de diseño, autonomía y recarga para uso diario.",
+  "boilerplate": "ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV y un sedán de diseño, autonomía y recarga para uso diario.",
   "terminology": [
     { "prefer": "vehículos 100% eléctricos", "avoid": "híbridos", "note": "T5, T1 y S5 son a batería: no llevan combustión ni híbrido." },
     { "prefer": "concesionario", "avoid": "agencia", "note": "" }
