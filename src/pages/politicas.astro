@@ -1,12 +1,12 @@
 ---
 /* Las políticas corporativas que Foton pide publicar en la web. Una sola página
-   para las dos: son documentos cortos y de lectura ocasional, y un enlace en el
-   pie basta para encontrarlos. Cada una lleva su ancla (#calidad, #seguridad)
-   para que se pueda enlazar directo.
+   para las tres: son documentos cortos y de lectura ocasional, y un enlace en el
+   pie basta para encontrarlos. Cada una lleva su ancla
+   (#calidad, #ambiental, #seguridad) para que se pueda enlazar directo.
 
    El texto vive en `lib/politicas.ts` y es literal del documento: aquí sólo se
-   compone. Los compromisos de Calidad van numerados porque el documento los
-   numera; los de Seguridad no, porque el documento usa viñetas. */
+   compone. Los compromisos de Calidad y Ambiental van numerados porque el
+   documento los numera; los de Seguridad no, porque el documento usa viñetas. */
 import Base from '../layouts/Base.astro';
 import Seccion from '../components/bloques/Seccion.astro';
 import Encabezado from '../components/bloques/Encabezado.astro';
@@ -15,14 +15,14 @@ import { POLITICAS } from '../lib/politicas';
 
 <Base
   titulo="Políticas"
-  descripcion="Política de Gestión de la Calidad y Política de Seguridad y Salud Ocupacional de ARCFOX Ecuador."
+  descripcion="Política de Gestión de la Calidad, Política Ambiental y Política de Seguridad y Salud Ocupacional de ARCFOX Ecuador."
   path="/politicas"
 >
   <Seccion aire="amplio">
     <Encabezado
       rotulo="Legales"
       titulo="Políticas"
-      bajada="Los compromisos de calidad y de seguridad y salud en el trabajo que rigen a ARCFOX en Ecuador."
+      bajada="Los compromisos de calidad, ambientales y de seguridad y salud en el trabajo que rigen a ARCFOX en Ecuador."
       nivel="h1"
       tamano="h1"
     />
@@ -67,9 +67,11 @@ import { POLITICAS } from '../lib/politicas';
             </ul>
           )}
 
-          <div class="mt-6 space-y-4 text-tinta/80">
-            {politica.cierre.map((parrafo) => <p>{parrafo}</p>)}
-          </div>
+          {politica.cierre.length > 0 && (
+            <div class="mt-6 space-y-4 text-tinta/80">
+              {politica.cierre.map((parrafo) => <p>{parrafo}</p>)}
+            </div>
+          )}
 
           {politica.referencia && (
             <p class="mt-8 text-small text-tinta/60">Documento de referencia: {politica.referencia}</p>

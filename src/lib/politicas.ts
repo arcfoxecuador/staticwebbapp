@@ -6,8 +6,10 @@
    único que se quitó es lo interno del documento (control de versiones,
    distribución, responsabilidades), que no es para el público.
 
-   De la de Calidad se publica la sección POLÍTICAS y su referencia normativa;
-   la de Seguridad se publica entera, con su firma. */
+   De la de Calidad y la Ambiental se publica la sección POLÍTICAS y su
+   referencia normativa; la de Seguridad se publica entera, con su firma. La
+   Ambiental llegó aparte (L-80-AW-05-01, elaborada el 07/10/2026) y su propio
+   documento asigna a Marketing «subirla a la página web de ARCFOX». */
 
 export interface Politica {
   /** Ancla de la sección dentro de /politicas. */
@@ -68,6 +70,54 @@ export const POLITICAS: Politica[] = [
       'Esta Política de Calidad es comunicada y entendida dentro de toda la organización y está disponible para las partes interesadas pertinentes. Nos comprometemos a revisar regularmente nuestra Política de Calidad para asegurar su continua adecuación y relevancia.',
     ],
     referencia: 'ISO 9001:2015',
+  },
+  {
+    id: 'ambiental',
+    titulo: 'Política Ambiental',
+    codigo: 'L-80-AW-05-01',
+    introduccion: [
+      'En ARCFOX, estamos comprometidos con la excelencia en la gestión ambiental en todas nuestras operaciones de comercialización. Reconocemos la importancia de la sostenibilidad ambiental y estamos comprometidos al cuidado y conservación del ambiente y al cumplimiento de los requisitos legales, normativa ambiental vigente y las expectativas de nuestros clientes y partes interesadas.',
+      'Para asegurar esto, hemos establecido la siguiente Política Ambiental:',
+    ],
+    compromisos: [
+      {
+        titulo: 'Cumplimiento Legal y Reglamentario',
+        texto:
+          'Nos comprometemos a cumplir con todas las leyes, regulaciones y normativas ambientales aplicables a nuestras operaciones de comercialización. Mantendremos un sistema de monitoreo continuo para asegurar que nuestras prácticas se alineen con las exigencias legales vigentes.',
+      },
+      {
+        titulo: 'Prevención de la Contaminación y Reducción de Impactos',
+        texto:
+          'Implementaremos medidas para prevenir la contaminación y minimizar los impactos ambientales asociados con nuestras actividades, incluyendo la gestión adecuada de residuos no peligrosos, generados en nuestras operaciones.',
+      },
+      {
+        titulo: 'Uso Eficiente de Recursos',
+        texto:
+          'Fomentaremos el uso eficiente de recursos naturales en nuestras operaciones, promoviendo prácticas sostenibles en la gestión de energía, agua y materiales. Estableceremos objetivos para reducir el consumo de recursos y minimizar el desperdicio en nuestros centros de servicio.',
+      },
+      {
+        titulo: 'Innovación y Mejora Continua',
+        texto:
+          'Adoptaremos tecnologías y prácticas innovadoras que contribuyan a la sostenibilidad ambiental, incluyendo la optimización de procesos y la implementación de soluciones que reduzcan nuestro impacto ambiental. Evaluaremos y revisaremos continuamente nuestro desempeño para identificar áreas de mejora y establecer metas ambientales claras.',
+      },
+      {
+        titulo: 'Responsabilidad y Participación',
+        texto:
+          'Promoveremos una cultura de responsabilidad ambiental entre nuestros empleados, proveedores y clientes. Realizamos capacitaciones sobre prácticas ambientales y motivaremos a nuestro personal a participar activamente en iniciativas de sostenibilidad.',
+      },
+      {
+        titulo: 'Comunicación y Transparencia',
+        texto:
+          'Mantendremos una comunicación abierta y transparente con nuestros empleados, clientes y la comunidad sobre nuestras políticas y desempeño ambiental.',
+      },
+      {
+        titulo: 'Adaptabilidad y Resiliencia',
+        texto:
+          'Evaluaremos y gestionaremos los riesgos ambientales asociados con nuestras operaciones para garantizar nuestra capacidad de adaptación.',
+      },
+    ],
+    cierre: [],
+    referencia: 'ISO 14001:2026',
   },
   {
     id: 'seguridad',
