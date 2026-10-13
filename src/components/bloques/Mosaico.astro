@@ -158,16 +158,28 @@ const grupos = tablero
         abajo y no dentro de una casilla, porque al llegar al final quedaba
         encima de una foto clara y dejaba de verse. */}
     <div class="tablero-linea" aria-hidden="true"><span></span></div>
-    {/* LA PISTA DEL TABLERO. La pidió el cliente: tres columnas quietas no
-        dicen que hay seis. Va en la franja oscura, frente a la línea, y se
-        apaga en cuanto alguien mueve el tablero, igual que la pista de giro. */}
-    <p class="aviso-tablero" aria-hidden="true">
-      <span class="aviso-tactil">Desliza para ver más</span>
-      <span class="aviso-mouse">Arrastra para ver más</span>
-      <svg width="26" height="10" viewBox="0 0 26 10" fill="none">
-        <path d="M0 5h24M20 1l4 4-4 4" stroke="currentColor" stroke-width="1.4" />
-      </svg>
-    </p>
+    {/* LAS FLECHAS DEL TABLERO. Las pidió el cliente: tres columnas quietas
+        no dicen que hay seis. Dos botones y un contador en la franja oscura,
+        frente a la línea: dicen que hay más, cuántas faltan y dejan avanzar
+        sin arrastrar. Nacen ocultos: sin JS los botones no harían nada, y el
+        tablero sigue moviéndose con la rueda y el dedo. */}
+    <div class="tablero-mando" hidden>
+      <div class="tablero-botones">
+        <button type="button" data-tablero-anterior aria-label="Columna anterior" aria-disabled="true">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M8 1.5 3.5 6 8 10.5" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+        </button>
+        <button type="button" data-tablero-siguiente aria-label="Columna siguiente">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+        </button>
+      </div>
+      <p class="tablero-contador" aria-hidden="true">
+        <span data-tablero-visto>01</span> / {String(grupos.length + columnasExtra.length).padStart(2, '0')}
+      </p>
+    </div>
     </div>
   )
 }
@@ -269,7 +281,8 @@ const grupos = tablero
      una columna; mientras se arrastra se apaga para que no tire hacia atrás. */
   .tablero-caja {
     position: relative;
-    padding-block-end: 2.75rem;
+    /* Alto de la franja: el botón de 2.25rem y medio rem por lado. */
+    padding-block-end: 3.5rem;
     /* La línea de tiempo de la entrada móvil vive aquí, FUERA del scroll
        horizontal. Con `view()` cada casilla medía su entrada contra el propio
        tablero, que ya la contiene entera, y en móvil nacía terminada. */
@@ -324,7 +337,8 @@ const grupos = tablero
   .tablero-linea {
     position: absolute;
     right: 1.5rem;
-    bottom: 1.25rem;
+    /* Centrada con los botones: medio alto de la franja. */
+    bottom: 1.75rem;
     width: 7rem;
     height: 1px;
     background: color-mix(in srgb, var(--color-marca-clara) 55%, transparent);
@@ -348,54 +362,65 @@ const grupos = tablero
     }
   }
 
-  /* El aviso comparte renglón con la línea, a la izquierda: la franja dice
-     «hay más» y «cuánto falta» a la vez. Blanco y no `acento`, que es del CTA. */
-  .aviso-tablero {
+  /* El mando comparte renglón con la línea, a la izquierda: la franja dice
+     «hay más», «cuánto falta» y deja avanzar. Blanco sobre la franja y no
+     `acento`, que es del CTA; cuadrado y sin sombra, como las losas. */
+  .tablero-mando {
     position: absolute;
     left: 1.5rem;
-    bottom: 0.85rem;
+    bottom: 0.625rem;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    margin: 0;
-    font-size: var(--text-eyebrow);
-    line-height: 1;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--color-white);
-    pointer-events: none;
-    transition: opacity 400ms var(--ease-out);
+    gap: 1rem;
   }
-  .aviso-tablero svg {
-    animation: empujar-aviso 1.4s var(--ease-out) infinite;
-  }
-  @keyframes empujar-aviso {
-    0%, 100% { transform: translateX(0); }
-    50%      { transform: translateX(6px); }
-  }
-  .aviso-mouse {
+  .tablero-mando[hidden],
+  .tablero-caja[data-sin-recorrido] .tablero-mando {
     display: none;
   }
-  @media (pointer: fine) {
-    .aviso-tactil { display: none; }
-    .aviso-mouse { display: inline; }
+  .tablero-botones {
+    display: flex;
+    gap: 1px;
   }
-  .tablero-caja[data-deslizado] .aviso-tablero,
-  .tablero-caja[data-sin-recorrido] .aviso-tablero {
-    opacity: 0;
+  .tablero-botones button {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--color-marca-clara) 60%, transparent);
+    background: none;
+    color: var(--color-white);
+    cursor: pointer;
+    transition:
+      border-color 160ms var(--ease-out),
+      opacity 160ms var(--ease-out);
   }
-  .tablero-caja[data-deslizado] .aviso-tablero svg {
-    animation: none;
+  .tablero-botones button:hover:not([aria-disabled='true']) {
+    border-color: var(--color-white);
+  }
+  .tablero-botones button:focus-visible {
+    outline: 2px solid var(--color-white);
+    outline-offset: 2px;
+  }
+  /* `aria-disabled` y no `disabled`: un botón deshabilitado suelta el foco y
+     quien llega al final con el teclado se quedaría en ninguna parte. */
+  .tablero-botones button[aria-disabled='true'] {
+    opacity: 0.3;
+    cursor: default;
+  }
+  .tablero-contador {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-eyebrow);
+    line-height: 1;
+    letter-spacing: 0.14em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-white);
   }
   @media (width >= 48rem) {
-    .aviso-tablero {
+    .tablero-mando {
       left: 2rem;
     }
-  }
-  /* Durante el amago el snap se apaga: si no, cada cuadro del scroll
-     programado se acomodaría de vuelta en la columna y no se vería nada. */
-  .mosaico-tablero.esta-amagando {
-    scroll-snap-type: none;
   }
 
   /* LA LOSA DE CIFRA. La cifra no se parte («459–1.352 L» con la L sola en
@@ -502,11 +527,8 @@ const grupos = tablero
     .mosaico-tablero > *,
     .mosaico-tablero .celda-texto > *,
     .tablero-linea > span,
-    .aviso-tablero {
+    .tablero-botones button {
       transition: none;
-    }
-    .aviso-tablero svg {
-      animation: none;
     }
   }
 </style>
@@ -517,32 +539,8 @@ const grupos = tablero
      se suman el arrastre, el acomodo en la columna más cercana al soltar y la
      línea que dice qué tramo del tablero se está viendo. Sin JS el tablero
      sigue desplazándose con la rueda y el dedo. */
-  const reducido = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const comportamiento = (): ScrollBehavior => (reducido() ? 'auto' : 'smooth');
-
-  /* EL AMAGO. El cliente pidió que se note que el tablero sigue a la derecha:
-     al entrar en pantalla la fila se corre un tramo y vuelve, como si alguien
-     la empujara. Si nadie la toca, se repite cada `ESPERA` mientras siga a la
-     vista y el mouse no esté encima; pasar el mouse por el tablero también la
-     dispara, porque es justo cuando alguien lo está mirando. Hasta
-     `AMAGOS_MAXIMOS` por tablero: una pista que no se calla nunca se vuelve
-     ruido. Es JavaScript y no `animation-timeline` porque depende del tiempo,
-     no del scroll, y porque mueve `scrollLeft`: un `transform` correría las
-     casillas por encima del contenedor sin mover la línea de progreso. */
-  const ESPERA = 7000;
-  const AMAGOS_MAXIMOS = 4;
-  const DURACION_IDA = 420;
-  const DURACION_VUELTA = 560;
-  // Quien ya movió un tablero aprendió el gesto para los tres modelos.
-  let aprendido = false;
-  const alAprender: Array<() => void> = [];
-  const aprender = () => {
-    if (aprendido) return;
-    aprendido = true;
-    alAprender.forEach((fn) => fn());
-  };
-  const salida = (t: number) => 1 - (1 - t) ** 3;
-  const suave = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+  const comportamiento = (): ScrollBehavior =>
+    matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 
   document.querySelectorAll<HTMLElement>('.mosaico-tablero').forEach((tablero) => {
     const caja = tablero.closest<HTMLElement>('.tablero-caja');
@@ -575,9 +573,6 @@ const grupos = tablero
     let apretado = false;
     let movio = false;
     tablero.addEventListener('pointerdown', (evento) => {
-      // Cualquier toque, con dedo o mouse, enseña el gesto y corta el amago
-      // donde vaya: el arrastre sigue desde ahí y el snap lo acomoda.
-      aprender();
       if (evento.pointerType !== 'mouse' || evento.button !== 0 || caja?.hasAttribute('data-sin-recorrido')) return;
       apretado = true;
       movio = false;
@@ -623,98 +618,41 @@ const grupos = tablero
     new ResizeObserver(pintar).observe(tablero);
     pintar();
 
-    if (!caja) return;
-    let amagos = 0;
-    let visible = false;
-    let encima = false;
-    let cuadro = 0;
-    let reloj = 0;
-    let ultimo = 0;
-
-    const cortar = () => {
-      cancelAnimationFrame(cuadro);
-      cuadro = 0;
-      tablero.classList.remove('esta-amagando');
-    };
-    const programar = (ms: number) => {
-      clearTimeout(reloj);
-      reloj = window.setTimeout(() => {
-        // Con el mouse encima no se repite: el amago de hover ya habló.
-        if (encima) programar(ESPERA);
-        else amagar();
-      }, ms);
-    };
-    const amagar = () => {
-      if (
-        aprendido ||
-        cuadro ||
-        !visible ||
-        amagos >= AMAGOS_MAXIMOS ||
-        reducido() ||
-        caja.hasAttribute('data-sin-recorrido')
-      )
-        return;
-      amagos += 1;
-      const desde = tablero.scrollLeft;
-      const columna = (tablero.firstElementChild as HTMLElement | null)?.offsetWidth ?? 0;
-      // Un cuarto de columna: en 390 son unos 85 px y en escritorio unos 110.
-      const tramo = Math.min(columna * 0.28, recorrido() - desde);
-      const inicio = performance.now();
-      tablero.classList.add('esta-amagando');
-      const paso = (ahora: number) => {
-        const t = ahora - inicio;
-        const avance =
-          t < DURACION_IDA
-            ? salida(t / DURACION_IDA)
-            : 1 - suave(Math.min(1, (t - DURACION_IDA) / DURACION_VUELTA));
-        tablero.scrollLeft = desde + tramo * avance;
-        if (t < DURACION_IDA + DURACION_VUELTA) {
-          cuadro = requestAnimationFrame(paso);
-          return;
-        }
-        cortar();
-        ultimo = performance.now();
-        if (amagos < AMAGOS_MAXIMOS) programar(ESPERA);
+    // EL MANDO. «Visto» cuenta las columnas que tienen más de la mitad en
+    // pantalla: en escritorio arranca en 03 y en móvil en 01, y llega a 06 al
+    // final. Avanza de parada en parada, las mismas del snap.
+    const mando = caja?.querySelector<HTMLElement>('.tablero-mando');
+    const anterior = mando?.querySelector<HTMLButtonElement>('[data-tablero-anterior]');
+    const siguiente = mando?.querySelector<HTMLButtonElement>('[data-tablero-siguiente]');
+    const visto = mando?.querySelector<HTMLElement>('[data-tablero-visto]');
+    if (mando && anterior && siguiente && visto) {
+      const paradas = () => {
+        const tope = recorrido();
+        return [...new Set(Array.from(tablero.children, (col) => Math.min(tope, (col as HTMLElement).offsetLeft)))];
       };
-      cuadro = requestAnimationFrame(paso);
-    };
-
-    alAprender.push(() => {
-      cortar();
-      clearTimeout(reloj);
-      caja.toggleAttribute('data-deslizado', true);
-    });
-    // El dedo y el mouse ya avisan en `pointerdown`; faltan la rueda lateral
-    // del trackpad y las flechas con el tablero enfocado.
-    tablero.addEventListener(
-      'wheel',
-      (evento) => {
-        if (Math.abs(evento.deltaX) > Math.abs(evento.deltaY)) aprender();
-      },
-      { passive: true },
-    );
-    tablero.addEventListener('keydown', (evento) => {
-      if (evento.key.startsWith('Arrow') || evento.key === 'Home' || evento.key === 'End') aprender();
-    });
-    tablero.addEventListener('pointerenter', (evento) => {
-      if (evento.pointerType !== 'mouse') return;
-      encima = true;
-      // Tres segundos desde el último: quien entra y sale no lo ve en bucle.
-      if (performance.now() - ultimo > 3000) amagar();
-    });
-    tablero.addEventListener('pointerleave', () => {
-      encima = false;
-    });
-    // Un observador y no `view()`: lo que dispara el amago es «ya está a la
-    // vista», un instante, no un tramo del scroll. Los tableros de los modelos
-    // inactivos nacen ocultos y entran aquí cuando se muestran.
-    new IntersectionObserver(
-      ([entrada]) => {
-        visible = Boolean(entrada?.isIntersecting);
-        if (visible) programar(amagos ? ESPERA : 900);
-        else clearTimeout(reloj);
-      },
-      { threshold: 0.5 },
-    ).observe(tablero);
+      const contar = () => {
+        const borde = tablero.scrollLeft + tablero.clientWidth;
+        const vistas = Array.from(tablero.children).filter((col) => {
+          const { offsetLeft, offsetWidth } = col as HTMLElement;
+          return offsetLeft + offsetWidth / 2 < borde;
+        }).length;
+        visto.textContent = String(vistas).padStart(2, '0');
+        anterior.setAttribute('aria-disabled', String(tablero.scrollLeft <= 1));
+        siguiente.setAttribute('aria-disabled', String(tablero.scrollLeft >= recorrido() - 1));
+      };
+      const ir = (sentido: 1 | -1) => {
+        const actual = tablero.scrollLeft;
+        const lista = paradas();
+        const destino =
+          sentido > 0 ? lista.find((p) => p > actual + 2) : lista.reverse().find((p) => p < actual - 2);
+        if (destino !== undefined) tablero.scrollTo({ left: destino, behavior: comportamiento() });
+      };
+      anterior.addEventListener('click', () => ir(-1));
+      siguiente.addEventListener('click', () => ir(1));
+      tablero.addEventListener('scroll', contar, { passive: true });
+      new ResizeObserver(contar).observe(tablero);
+      mando.hidden = false;
+      contar();
+    }
   });
 </script>
