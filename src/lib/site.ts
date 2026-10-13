@@ -234,10 +234,11 @@ const CAMPAÑA = {
       Ecuador (UTC-5). En ISO y con la Z explícita para que ni el navegador ni
       `datetime` tengan que adivinar la zona del visitante. */
   destinoISO: '2026-09-15T05:00:00.000Z',
-  /** Al llegar a cero. No enlaza a arcfox.com.ec: el sitio oficial puede no
-      estar público ese día, y una campaña que promete un destino muerto es peor
-      que una campaña que sólo anuncia. */
-  llegada: 'Ya está aquí',
+  /** Al llegar a cero. Vacío a propósito: el cliente pidió retirar «Ya está
+      aquí» (revisión del 2026-10-13) y, con la fecha pasada, la regla sola
+      cierra el titular sin anunciar nada. Vacío no deja un hueco: el contador
+      quita el párrafo de la fecha en vez de pintarlo sin texto. */
+  llegada: '',
   /** Las cuatro unidades del contador. `clave` es el nombre que busca el script
       en `data-unidad`; la etiqueta se pinta en versales por CSS. */
   unidades: [

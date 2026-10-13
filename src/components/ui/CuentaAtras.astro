@@ -20,7 +20,7 @@ interface Props {
   destinoISO: string;
   /** La fecha en texto, visible mientras el script no haya encendido el reloj. */
   fechaVisible: string;
-  /** Lo que sustituye a la fecha al llegar a cero. */
+  /** Lo que sustituye a la fecha al llegar a cero. Vacío, la fecha desaparece. */
   llegada: string;
   unidades: readonly Unidad[];
   /** `inicio` alinea a la izquierda (teaser); `centro`, centrado (puerta). */
@@ -108,7 +108,13 @@ const {
 
           if (!Number.isFinite(destino) || resta <= 0) {
             caja.removeAttribute('data-viva');
-            if (resta <= 0) caja.querySelector('[data-fecha]').textContent = caja.dataset.llegada;
+            if (resta <= 0) {
+              /* Sin texto de llegada se quita el párrafo, no se vacía: vacío
+                 seguiría ocupando su margen y separaría la regla del CTA. */
+              const fecha = caja.querySelector('[data-fecha]');
+              if (caja.dataset.llegada) fecha.textContent = caja.dataset.llegada;
+              else fecha.remove();
+            }
             return true;
           }
 

@@ -805,6 +805,11 @@
      tamaño de titular, y una viuda justo en la pregunta es una viuda en lo
      único que alguien lee para decidir si abre. */
   h1, h2, h3, h4, summary { text-wrap: balance; }
+
+  /* `list-none` basta en Chrome y Firefox, pero Safari pinta su triángulo en
+     `::-webkit-details-marker` aunque el summary no sea `list-item`. Junto al
+     selector de modelos de la cabecera se leía como un botón de «play». */
+  summary::-webkit-details-marker { display: none; }
   p, li, dd, figcaption, blockquote { text-wrap: pretty; }
 
   /* FOCO VISIBLE. Dos tokens según el campo, y la razón es medible.
