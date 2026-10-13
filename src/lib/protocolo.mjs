@@ -1,4 +1,4 @@
-/* LAS REGLAS DE LOS CUATRO CAMPOS ABIERTOS DEL PROTOCOLO.
+/* LAS REGLAS DE LOS CUATRO CAMPOS ABIERTOS DEL PROTOCOLO Y DE SU CONSENTIMIENTO.
 
    En `.mjs` y no en `.ts` por la misma razón que `rutas.mjs`: aquí lo importa
    `scripts/verificar-protocolo.mjs`, que corre en Node crudo dentro de
@@ -95,8 +95,20 @@ function instagram(valor) {
   return bien(`@${usuario}`);
 }
 
+/** Aceptación de la política de tratamiento de datos personales.
+
+    La casilla entrega `acepto` marcada y nada sin marcar. Necesita regla propia
+    porque la de por defecto sólo pide contenido: cualquier texto pasaría como
+    consentimiento, y esta columna es la constancia de que se dio. */
+function consentimiento(valor) {
+  if (valor.toLowerCase() !== 'acepto') {
+    return mal('Marca la casilla para aceptar la política de tratamiento de datos personales.');
+  }
+  return bien('Acepto');
+}
+
 /** @type {Record<string, (valor: string) => Resultado>} */
-const REGLAS = { nombre, correo, whatsapp, instagram };
+const REGLAS = { nombre, correo, whatsapp, instagram, consentimiento };
 
 /**
  * Valida y normaliza una respuesta del protocolo.
