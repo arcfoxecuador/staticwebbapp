@@ -63,6 +63,29 @@ const { modelos } = Astro.props;
               aria-label={`Gira el ${modelo.nombre} arrastrando o con las flechas del teclado`}
             >
               <div class="marco" aria-hidden="true"></div>
+              {/* LA PISTA DE GIRO. La pidió el cliente: «Arrastra para girar», en
+                  gris y debajo del plato, no bastaba para que se entendiera que
+                  el auto gira. La órbita dibuja el gesto alrededor de la base y
+                  el sello dice «360°», que es la palabra que la gente reconoce.
+                  Va antes de los fotogramas para que el auto quede encima de la
+                  órbita; el sello sube con su propio z-index. Se apaga en cuanto
+                  alguien gira el auto: a quien ya giró no le enseña nada. */}
+              <div class="pista-giro" aria-hidden="true">
+                <svg class="orbita" viewBox="0 0 400 60" preserveAspectRatio="none" fill="none">
+                  <path pathLength="1" d="M60 52 C 10 44, 10 16, 120 8" />
+                  <path pathLength="1" d="M340 8 C 390 16, 390 44, 280 52" />
+                  <path pathLength="1" d="M112 2 L124 8 L112 14" />
+                  <path pathLength="1" d="M288 46 L276 52 L288 58" />
+                </svg>
+                <span class="sello-360">
+                  <svg width="30" height="18" viewBox="0 0 30 18" fill="none">
+                    <ellipse cx="15" cy="9" rx="13" ry="5.5" stroke="currentColor" stroke-width="1.3" stroke-dasharray="3 2.2" />
+                    <path d="M5.2 11.6 2 12.8l1.7-3" stroke="currentColor" stroke-width="1.3" />
+                    <path d="M24.8 6.4 28 5.2l-1.7 3" stroke="currentColor" stroke-width="1.3" />
+                  </svg>
+                  360°
+                </span>
+              </div>
               {modelo.colores.map((color, indiceColor) => (
                 <div
                   class:list={['fotogramas', indiceColor === 0 && 'esta-activo']}
@@ -109,7 +132,9 @@ const { modelos } = Astro.props;
                 </div>
               ))}
             </div>
-            <p class="aviso-giro">Arrastra para girar</p>
+            <p class="aviso-giro">
+              <span aria-hidden="true">←</span> Arrastra para girar el auto <span aria-hidden="true">→</span>
+            </p>
 
             {modelo.colores.length > 1 && (
               <fieldset class="colores">
@@ -261,15 +286,75 @@ const { modelos } = Astro.props;
   .fotograma.esta-activo {
     opacity: 1;
   }
+  /* La órbita se apoya en la sombra del auto: 24% desde abajo del plato es
+     donde caen las ruedas de los tres modelos con `object-fit: contain`. */
+  .pista-giro {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 400ms var(--ease-out);
+  }
+  .plato[data-girado] .pista-giro {
+    opacity: 0;
+  }
+  .orbita {
+    position: absolute;
+    left: 50%;
+    bottom: 24%;
+    width: 84%;
+    height: 13%;
+    overflow: visible;
+    transform: translateX(-50%);
+    color: color-mix(in srgb, var(--color-marca) 55%, transparent);
+  }
+  .orbita path {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+    /* Se dibuja con la sección, como el marco: llega trazada justo cuando
+       el auto ya está posado. `pathLength="1"` deja el guion en una unidad. */
+    stroke-dasharray: 1;
+    animation: trazar-orbita linear both;
+    animation-timeline: view();
+    animation-range: cover 18% cover 46%;
+  }
+  @keyframes trazar-orbita {
+    from { stroke-dashoffset: 1; }
+    to   { stroke-dashoffset: 0; }
+  }
+  .sello-360 {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    bottom: calc(24% - 1.2rem);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.7rem;
+    transform: translateX(-50%);
+    border: 1px solid color-mix(in srgb, var(--color-marca) 30%, transparent);
+    background: var(--color-fondo);
+    color: var(--color-marca);
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.06em;
+  }
   .aviso-giro {
     /* Fuera del plato: si vive encima del fotograma, en 390 el S5 lo
-       pisa porque el auto llena el contain. */
+       pisa porque el auto llena el contain. En tinta plena y no al 60%:
+       es la instrucción de la sección, no una nota al pie. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
     margin: 0.65rem 0 0;
-    text-align: center;
     font-size: var(--text-eyebrow);
+    font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--color-tinta) 60%, transparent);
+    color: var(--color-tinta);
   }
   .colores {
     display: flex;
@@ -374,6 +459,13 @@ const { modelos } = Astro.props;
     }
   }
   @media (prefers-reduced-motion: reduce) {
+    .orbita path {
+      animation: none;
+      stroke-dasharray: none;
+    }
+    .pista-giro {
+      transition: none;
+    }
     .plano,
     .marco {
       animation: none;

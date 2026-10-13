@@ -181,6 +181,8 @@ const montarGiro = (panel: HTMLElement) => {
     const urls = urlsDe(grupo);
     if (urls.length < 2) return;
     indiceFotograma = (indiceFotograma + direccion + urls.length) % urls.length;
+    /* El primer giro apaga la pista de este plato: ya cumplió. */
+    giro?.setAttribute('data-girado', '');
     const url = urls[indiceFotograma];
     if (url) void pintarUrl(grupo, url, pedido);
   };
