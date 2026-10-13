@@ -95,6 +95,17 @@ test('instagram: guarda el usuario, no la URL', () => {
   falla('instagram', 'a'.repeat(31)); // Instagram corta en 30
 });
 
+test('consentimiento: sólo pasa la casilla marcada', () => {
+  /* La casilla entrega `acepto` marcada y cadena vacía sin marcar. En la hoja
+     queda `Acepto`: la columna es la constancia de que esa persona aceptó la
+     política de datos, y la fecha de la fila dice cuándo. */
+  pasa('consentimiento', 'acepto', 'Acepto');
+  falla('consentimiento', '');
+  /* Sin regla propia, cualquier texto no vacío pasaría como consentimiento. */
+  falla('consentimiento', 'no');
+  falla('consentimiento', 'false');
+});
+
 test('una clave sin regla propia sólo exige contenido', () => {
   pasa('ciudad', '  Quito ', 'Quito');
   falla('ciudad', '   ');
@@ -114,6 +125,6 @@ test('las claves del protocolo y las columnas de la hoja son la misma lista', ()
   assert.ok(bloque, 'no se encontró CAMPOS en hoja-protocolo.gs');
   const columnas = [...bloque[1].matchAll(/'([^']+)'/g)].map((c) => c[1]);
 
-  assert.ok(claves.length >= 9, `sólo se leyeron ${claves.length} claves del componente`);
+  assert.ok(claves.length >= 10, `sólo se leyeron ${claves.length} claves del componente`);
   assert.deepEqual(columnas, claves, 'CAMPOS de la hoja no coincide con las claves del protocolo');
 });

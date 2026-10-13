@@ -9,7 +9,7 @@
    ver `finalizar()`. Prometer un registro que no ha ocurrido es peor que no
    tener formulario, porque nadie se entera de que se está perdiendo gente. */
 import Boton from './Boton.astro';
-import { ORG, PROTOCOLO } from '../../lib/site';
+import { LEGAL, ORG, PROTOCOLO } from '../../lib/site';
 
 interface Props {
   rotulo?: string;
@@ -81,10 +81,18 @@ const protocolo = [
   },
   {
     clave: 'whatsapp',
-    pregunta: 'Danos tu número de WhatsApp para enviar tu invitación',
+    pregunta: 'Compártenos tu número de WhatsApp para enviar tu invitación',
     tipo: 'tel',
     autocomplete: 'tel',
     placeholder: 'Número de WhatsApp',
+  },
+  /* El último paso y no una casilla junto a otro campo: así la aceptación
+     queda en su propia columna de la hoja, y nadie la marca de pasada mientras
+     corrige un número de teléfono. */
+  {
+    clave: 'consentimiento',
+    pregunta: 'Antes de enviarte la invitación, confirma que aceptas nuestra política de tratamiento de datos personales',
+    tipo: 'checkbox',
   },
 ] as const;
 ---
@@ -143,6 +151,25 @@ const protocolo = [
           <input data-valor autocomplete="off" aria-describedby="protocolo-error" />
           <button type="submit">↵</button>
         </label>
+        {/* La casilla va en su propio bloque y no dentro de `.comando-entrada`:
+            aquella es un `<label>` y el enlace a la política no puede vivir
+            dentro de otra etiqueta interactiva. Sin la ruta en `LEGAL` el texto
+            se pinta sin enlace — un enlace a un 404 es peor que ninguno. */}
+        <div class="comando-consentimiento" data-consentimiento hidden>
+          <label>
+            <input type="checkbox" data-acepto aria-describedby="protocolo-error" />
+            <span>
+              Acepto la{' '}
+              {LEGAL.privacidad ? (
+                <a href={LEGAL.privacidad} target="_blank" rel="noopener">política de tratamiento de datos personales</a>
+              ) : (
+                'política de tratamiento de datos personales'
+              )}
+            </span>
+          </label>
+          <button type="submit" aria-label="Aceptar y enviar">↵</button>
+        </div>
+        <button type="button" class="comando-nuevo" data-nuevo-registro hidden>Nuevo registro</button>
       </div>
 
       {/* `role="alert"` y no el `aria-live="polite"` del acuse de contacto: esto
@@ -185,35 +212,48 @@ const protocolo = [
     respuestas: Record<string, string>;
   }
 
-  /* LA COLA DE UN SOLO ELEMENTO. Quien completa las diez preguntas y pierde el
-     envío por un túnel del metro es exactamente el lead que más caro sale de
+  /* LA COLA DE PENDIENTES. Quien completa las diez preguntas y pierde el envío
+     por un túnel del metro es exactamente el lead que más caro sale de
      conseguir, así que el registro fallido se guarda y se reintenta al abrir
-     cualquier página del sitio. Cinco intentos y se descarta: una entrada
-     inmortal reintentando contra un endpoint mal configurado escribe basura en
-     la hoja cada vez que el visitante vuelve. */
+     cualquier página del sitio y al volver la conexión. Cinco intentos y se
+     descarta: una entrada inmortal reintentando contra un endpoint mal
+     configurado escribe basura en la hoja cada vez que el visitante vuelve.
+
+     ES UNA LISTA, NO UN HUECO, desde que existe «Nuevo registro»: en un evento
+     el mismo equipo registra a una persona tras otra sin recargar, y con un
+     solo hueco el segundo registro sin conexión borraba al primero. */
   const CLAVE_COLA = 'arcfox:protocolo-pendiente';
   const MAXIMO_INTENTOS = 5;
 
   /* `localStorage` lanza —no devuelve null— en Safari privado y con las cookies
      de terceros bloqueadas. Sin este envoltorio, un navegador con la privacidad
      apretada rompería el flujo entero por no poder guardar un reintento. */
-  const guardar = (envio: EnvioProtocolo | null) => {
+  const escribirCola = (cola: EnvioProtocolo[]) => {
     try {
-      if (envio) localStorage.setItem(CLAVE_COLA, JSON.stringify(envio));
+      if (cola.length) localStorage.setItem(CLAVE_COLA, JSON.stringify(cola));
       else localStorage.removeItem(CLAVE_COLA);
     } catch {
       /* Sin almacenamiento no hay reintento. El envío en curso no se ve afectado. */
     }
   };
 
-  const pendiente = (): EnvioProtocolo | null => {
+  /* Acepta también el objeto suelto que guardaba la versión anterior: un
+     visitante con un pendiente de antes no lo pierde al cambiar el código. */
+  const leerCola = (): EnvioProtocolo[] => {
     try {
       const crudo = localStorage.getItem(CLAVE_COLA);
-      return crudo ? (JSON.parse(crudo) as EnvioProtocolo) : null;
+      if (!crudo) return [];
+      const dato = JSON.parse(crudo) as EnvioProtocolo | EnvioProtocolo[];
+      return Array.isArray(dato) ? dato : [dato];
     } catch {
-      return null;
+      return [];
     }
   };
+
+  const encolar = (envio: EnvioProtocolo) =>
+    escribirCola([...leerCola().filter((otro) => otro.id !== envio.id), envio]);
+
+  const desencolar = (id: string) => escribirCola(leerCola().filter((otro) => otro.id !== id));
 
   /** Identificador de envío. Lo usa la hoja para NO escribir dos veces la misma
       fila: sin él, un reintento sobre un POST que en realidad sí llegó duplica
@@ -242,15 +282,30 @@ const protocolo = [
     }
   };
 
-  /* Reintento al cargar. Va fuera del bucle de instancias porque la cola es del
-     visitante, no del componente: da igual en qué página aterrice después. */
+  /* Reintento. Va fuera del bucle de instancias porque la cola es del
+     visitante, no del componente: da igual en qué página aterrice después.
+     `reintentando` evita dos pasadas a la vez —la carga y el evento `online`
+     pueden coincidir— que mandarían el mismo pendiente dos veces. */
+  let reintentando = false;
+
   const reintentar = async () => {
-    const envio = pendiente();
     const endpoint = document.querySelector<HTMLFormElement>('[data-endpoint]')?.dataset.endpoint;
-    if (!envio || !endpoint) return;
-    if (envio.intentos >= MAXIMO_INTENTOS) return guardar(null);
-    guardar({ ...envio, intentos: envio.intentos + 1 });
-    if (await enviar(endpoint, envio)) guardar(null);
+    if (reintentando || !endpoint) return;
+    reintentando = true;
+    try {
+      /* Uno tras otro y no en paralelo: Apps Script serializa con un bloqueo
+         igualmente, y en ráfaga sólo se ganan esperas que caducan. */
+      for (const envio of leerCola()) {
+        if (envio.intentos >= MAXIMO_INTENTOS) {
+          desencolar(envio.id);
+          continue;
+        }
+        encolar({ ...envio, intentos: envio.intentos + 1 });
+        if (await enviar(endpoint, envio)) desencolar(envio.id);
+      }
+    } finally {
+      reintentando = false;
+    }
   };
 
   document.querySelectorAll<HTMLElement>('[data-protocolo-comando]').forEach((raiz) => {
@@ -266,36 +321,57 @@ const protocolo = [
     const respuesta = raiz.querySelector<HTMLElement>('[data-respuesta]');
     const ayuda = raiz.querySelector<HTMLElement>('[data-ayuda]');
     const error = raiz.querySelector<HTMLElement>('[data-error]');
-    if (!superficie || !formulario || !config || !pregunta || !progreso || !opciones || !entrada || !valor || !mensajeUsuario || !respuesta || !ayuda || !error) return;
+    const consentimiento = raiz.querySelector<HTMLElement>('[data-consentimiento]');
+    const acepto = raiz.querySelector<HTMLInputElement>('[data-acepto]');
+    const nuevo = raiz.querySelector<HTMLButtonElement>('[data-nuevo-registro]');
+    if (!superficie || !formulario || !config || !pregunta || !progreso || !opciones || !entrada || !valor || !mensajeUsuario || !respuesta || !ayuda || !error || !consentimiento || !acepto || !nuevo) return;
 
     const pasos = JSON.parse(config.textContent ?? '[]') as PasoComando[];
     const respuestas: Record<string, string> = {};
     let indice = 0;
     let avanzando = false;
+    /* Cada registro es una ronda. `finalizar()` espera a la red, y si mientras
+       tanto alguien cierra y empieza otro, su respuesta tardía no puede pintar
+       «registrado» encima de las preguntas del siguiente. */
+    let ronda = 0;
 
     /* Sello anti-bot: milisegundos entre la carga y el envío. Diez preguntas no
        se contestan en tres segundos, así que la hoja puede descartar cualquier
        cosa por debajo de ese umbral sin riesgo de dejar fuera a un humano. Es la
        misma idea del formulario de contacto, y por el mismo motivo: un captcha
        lo paga quien sí es humano. */
-    const inicio = Date.now();
+    let inicio = Date.now();
+
+    /* El paso de la casilla responde con ella; los demás, con el campo de texto. */
+    const control = () => (pasos[indice]?.tipo === 'checkbox' ? acepto : valor);
 
     const limpiarError = () => {
       error.textContent = '';
       valor.removeAttribute('aria-invalid');
+      acepto.removeAttribute('aria-invalid');
     };
 
     const mostrarError = (mensaje: string) => {
       error.textContent = mensaje;
-      valor.setAttribute('aria-invalid', 'true');
+      const activo = control();
+      activo.setAttribute('aria-invalid', 'true');
       /* Ni se borra el campo ni se mueve el foco: quien escribió «ana@correo»
          quiere corregir dos letras, no volver a teclearlo entero. */
-      valor.focus({ preventScroll: true });
+      activo.focus({ preventScroll: true });
     };
 
     /* El error desaparece al primer cambio, no al reenviar. Un mensaje en rojo
        que sigue ahí mientras ya estás corrigiendo dice que sigues equivocado. */
     valor.addEventListener('input', limpiarError);
+    acepto.addEventListener('change', limpiarError);
+
+    /* Enter en una casilla no envía el formulario —sólo lo hace en un campo de
+       texto—, y en el resto del protocolo Enter es «confirmar». */
+    acepto.addEventListener('keydown', (evento) => {
+      if (evento.key !== 'Enter') return;
+      evento.preventDefault();
+      formulario.requestSubmit();
+    });
 
     /* Un ancestro animado con `transform` redefine el bloque de un elemento
        fixed. Sacar sólo la superficie a `<body>` evita que la paleta se mida
@@ -318,9 +394,18 @@ const protocolo = [
 
     const numeroVisible = () => Math.min(indice + 1, 7);
 
+    /* Aparece cuando ya no queda nada en vuelo: con el resultado del envío a la
+       vista. Antes, un segundo registro podía empezar sobre «Registrando…». */
+    const ofrecerNuevo = () => {
+      nuevo.hidden = false;
+      nuevo.focus({ preventScroll: true });
+    };
+
     const finalizar = async () => {
+      const estaRonda = ronda;
       opciones.replaceChildren();
       entrada.hidden = true;
+      consentimiento.hidden = true;
       mensajeUsuario.hidden = true;
       limpiarError();
       formulario.dataset.completo = 'true';
@@ -336,6 +421,7 @@ const protocolo = [
         pregunta.textContent = 'Protocolo completado.';
         progreso.textContent = 'SIN DESTINO';
         ayuda.textContent = 'Prototipo local · falta PUBLIC_PROTOCOLO_ENDPOINT';
+        ofrecerNuevo();
         return;
       }
 
@@ -361,13 +447,21 @@ const protocolo = [
          POST, el registro sobrevive; si el POST va bien, se borra a la vuelta.
          El `id` hace que un reintento sobre un envío que sí había llegado no
          escriba una segunda fila. */
-      guardar(envio);
+      encolar(envio);
 
-      if (await enviar(endpoint, envio)) {
-        guardar(null);
+      const llego = await enviar(endpoint, envio);
+      if (llego) {
+        desencolar(envio.id);
+        /* Si este llegó hay conexión: buen momento para los que quedaron atrás. */
+        void reintentar();
+      }
+      if (estaRonda !== ronda) return;
+
+      if (llego) {
         pregunta.textContent = 'Tu perfil ha sido registrado. Revisa tus mensajes para recibir la invitación.';
         progreso.textContent = 'ACCESO REGISTRADO';
         ayuda.textContent = 'Te escribiremos por WhatsApp';
+        ofrecerNuevo();
         return;
       }
 
@@ -383,6 +477,7 @@ const protocolo = [
       enlace.rel = 'noopener';
       enlace.textContent = 'Instagram';
       ayuda.append(enlace);
+      ofrecerNuevo();
     };
 
     const elegir = (texto: string) => {
@@ -410,9 +505,11 @@ const protocolo = [
       progreso.textContent = `${String(numeroVisible()).padStart(2, '0')} / 07`;
       opciones.replaceChildren();
       formulario.dataset.completo = 'false';
+      nuevo.hidden = true;
 
       if (paso.opciones) {
         entrada.hidden = true;
+        consentimiento.hidden = true;
         opciones.hidden = false;
         opciones.dataset.cantidad = String(paso.opciones.length);
         ayuda.textContent = 'Elige una respuesta · usa ← → y Enter';
@@ -425,8 +522,18 @@ const protocolo = [
           opciones.append(boton);
         });
         opciones.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
+      } else if (paso.tipo === 'checkbox') {
+        opciones.hidden = true;
+        delete opciones.dataset.cantidad;
+        entrada.hidden = true;
+        consentimiento.hidden = false;
+        acepto.checked = false;
+        ayuda.textContent = 'Marca la casilla y pulsa Enter para enviar';
+        acepto.focus({ preventScroll: true });
+        ajustarAlTeclado();
       } else {
         opciones.hidden = true;
+        consentimiento.hidden = true;
         delete opciones.dataset.cantidad;
         entrada.hidden = false;
         valor.type = paso.tipo ?? 'text';
@@ -442,31 +549,56 @@ const protocolo = [
       }
     };
 
-    const abrir = raiz.querySelector<HTMLElement>('[data-abrir-comando]');
-    abrir?.addEventListener('click', () => {
+    /* Vacía el registro anterior. El sello arranca de nuevo: medido desde la
+       carga, el segundo registro de un mismo equipo llegaba con horas de sello
+       y el filtro anti-bot dejaba de significar nada. */
+    const reiniciar = () => {
+      ronda += 1;
       indice = 0;
       avanzando = false;
+      inicio = Date.now();
       Object.keys(respuestas).forEach((clave) => delete respuestas[clave]);
+    };
+
+    const abrir = raiz.querySelector<HTMLElement>('[data-abrir-comando]');
+
+    const cerrar = () => {
+      superficie.hidden = true;
+      abrir?.setAttribute('aria-expanded', 'false');
+      abrir?.focus();
+    };
+
+    abrir?.addEventListener('click', () => {
+      reiniciar();
       superficie.hidden = false;
       abrir.setAttribute('aria-expanded', 'true');
       pintar();
     });
 
-    superficie.querySelector<HTMLElement>('[data-cerrar-comando]')?.addEventListener('click', () => {
-      superficie.hidden = true;
-      abrir?.setAttribute('aria-expanded', 'false');
-      abrir?.focus();
+    superficie.querySelector<HTMLElement>('[data-cerrar-comando]')?.addEventListener('click', cerrar);
+
+    /* NUEVO REGISTRO vuelve a la pantalla de inicio —la puerta con su
+       «Continuar»— y no directamente a la primera pregunta: en un evento la
+       tableta pasa de mano, y quien la recibe tiene que ver la invitación, no
+       el cuestionario a medias de otro. En modo integrado no hay puerta: se
+       vuelve a la primera pregunta. */
+    nuevo.addEventListener('click', () => {
+      reiniciar();
+      nuevo.hidden = true;
+      if (raiz.dataset.modo === 'flotante') cerrar();
+      else pintar();
     });
 
     formulario.addEventListener('submit', (evento) => {
       evento.preventDefault();
-      if (entrada.hidden || avanzando) return;
+      const casilla = pasos[indice]?.tipo === 'checkbox';
+      if (avanzando || (casilla ? consentimiento.hidden : entrada.hidden)) return;
 
       /* La validación del navegador se queda corta justo donde importa:
          `type="email"` acepta `ana@correo` y `type="tel"` no valida NADA. Por
          eso la regla es nuestra, y por eso normaliza además de comprobar — lo
          que se guarda es lo que alguien va a marcar en WhatsApp una por una. */
-      const resultado = validar(pasos[indice]!.clave, valor.value);
+      const resultado = validar(pasos[indice]!.clave, casilla ? (acepto.checked ? 'acepto' : '') : valor.value);
       if (!resultado.ok) {
         mostrarError(resultado.error);
         return;
@@ -489,8 +621,10 @@ const protocolo = [
   });
 
   /* Al final y sin `await`: el reintento de un registro anterior no puede
-     retrasar el pintado de la puerta. */
+     retrasar el pintado de la puerta. Y otra vez al volver la red, porque en
+     un evento la página no se recarga entre un registro y el siguiente. */
   void reintentar();
+  window.addEventListener('online', () => void reintentar());
 </script>
 
 <style>
@@ -659,6 +793,86 @@ const protocolo = [
   .comando-entrada button {
     border-left: 1px solid color-mix(in oklab, var(--color-superficie) 15%, transparent);
     cursor: pointer;
+  }
+
+  /* La casilla ocupa la misma franja que el campo de texto, con el mismo botón
+     de confirmar a la derecha: el paso se lee como uno más del protocolo. */
+  .comando-consentimiento {
+    display: grid;
+    grid-template-columns: 1fr 3.25rem;
+  }
+
+  .comando-consentimiento[hidden],
+  .comando-nuevo[hidden] {
+    display: none;
+  }
+
+  .comando-consentimiento label {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    min-height: 3.25rem;
+    padding: 0.6rem 1.5rem;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    cursor: pointer;
+  }
+
+  /* `accent-color` y no una casilla dibujada a mano: conserva el foco, el
+     teclado y el anuncio del lector de pantalla sin una línea de JavaScript. */
+  .comando-consentimiento input {
+    flex: none;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: 0;
+    accent-color: var(--color-campana-fria);
+    cursor: pointer;
+  }
+
+  .comando-consentimiento input:focus-visible {
+    outline: 2px solid var(--color-superficie);
+    outline-offset: 3px;
+  }
+
+  .comando-consentimiento a {
+    color: var(--color-superficie);
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  .comando-consentimiento button,
+  .comando-nuevo {
+    min-height: 3.25rem;
+    border: 0;
+    color: var(--color-superficie);
+    background: transparent;
+    font-family: var(--font-sans);
+    cursor: pointer;
+  }
+
+  .comando-consentimiento button {
+    border-left: 1px solid color-mix(in oklab, var(--color-superficie) 15%, transparent);
+  }
+
+  .comando-nuevo {
+    width: 100%;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .comando-nuevo:hover,
+  .comando-nuevo:focus-visible,
+  .comando-consentimiento button:hover,
+  .comando-consentimiento button:focus-visible {
+    background: color-mix(in oklab, var(--color-campana-fria) 20%, transparent);
+    outline: 0;
+  }
+
+  .comando-consentimiento:has(input[aria-invalid='true']) {
+    background: color-mix(in oklab, var(--color-superficie) 6%, transparent);
+    border-bottom: 2px solid var(--error-protocolo);
   }
 
   /* EL ERROR NO ES ROJO, y no por estética: la paleta está cerrada y un rojo
