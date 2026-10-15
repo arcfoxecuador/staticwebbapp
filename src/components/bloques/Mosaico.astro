@@ -177,7 +177,7 @@ const grupos = tablero
         </button>
       </div>
       <p class="tablero-contador" aria-hidden="true">
-        <span data-tablero-visto>01</span> / {String(grupos.length + columnasExtra.length).padStart(2, '0')}
+        <span data-tablero-visto>01</span> / <span data-tablero-total>{String(grupos.length + columnasExtra.length).padStart(2, '0')}</span>
       </p>
     </div>
     </div>
@@ -618,25 +618,28 @@ const grupos = tablero
     new ResizeObserver(pintar).observe(tablero);
     pintar();
 
-    // EL MANDO. «Visto» cuenta las columnas que tienen más de la mitad en
-    // pantalla: en escritorio arranca en 03 y en móvil en 01, y llega a 06 al
-    // final. Avanza de parada en parada, las mismas del snap.
+    // EL MANDO. El contador cuenta paradas, no columnas: siempre arranca en
+    // 01 y cada clic en › suma uno. Así lo pidió Lucho: contando columnas
+    // vistas, el escritorio arrancaba en 03 / 06 y parecía que ya se había
+    // avanzado. Con tres columnas a la vista y seis en total son cuatro
+    // paradas; en móvil, una a la vista, seis. Las paradas son las del snap.
     const mando = caja?.querySelector<HTMLElement>('.tablero-mando');
     const anterior = mando?.querySelector<HTMLButtonElement>('[data-tablero-anterior]');
     const siguiente = mando?.querySelector<HTMLButtonElement>('[data-tablero-siguiente]');
     const visto = mando?.querySelector<HTMLElement>('[data-tablero-visto]');
-    if (mando && anterior && siguiente && visto) {
+    const total = mando?.querySelector<HTMLElement>('[data-tablero-total]');
+    if (mando && anterior && siguiente && visto && total) {
       const paradas = () => {
         const tope = recorrido();
         return [...new Set(Array.from(tablero.children, (col) => Math.min(tope, (col as HTMLElement).offsetLeft)))];
       };
       const contar = () => {
-        const borde = tablero.scrollLeft + tablero.clientWidth;
-        const vistas = Array.from(tablero.children).filter((col) => {
-          const { offsetLeft, offsetWidth } = col as HTMLElement;
-          return offsetLeft + offsetWidth / 2 < borde;
-        }).length;
-        visto.textContent = String(vistas).padStart(2, '0');
+        const lista = paradas();
+        // La parada en curso es la última que ya quedó atrás; los dos píxeles
+        // absorben el redondeo del scroll en pantallas con zoom.
+        const actual = lista.filter((p) => p <= tablero.scrollLeft + 2).length || 1;
+        visto.textContent = String(actual).padStart(2, '0');
+        total.textContent = String(lista.length).padStart(2, '0');
         anterior.setAttribute('aria-disabled', String(tablero.scrollLeft <= 1));
         siguiente.setAttribute('aria-disabled', String(tablero.scrollLeft >= recorrido() - 1));
       };
