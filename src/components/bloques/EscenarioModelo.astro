@@ -69,7 +69,10 @@ const { modelos } = Astro.props;
                   el sello dice «360°», que es la palabra que la gente reconoce.
                   Va antes de los fotogramas para que el auto quede encima de la
                   órbita; el sello sube con su propio z-index. Se apaga en cuanto
-                  alguien gira el auto: a quien ya giró no le enseña nada. */}
+                  alguien gira el auto: a quien ya giró no le enseña nada.
+                  «Arrastra el auto» vive en el sello y no debajo del plato
+                  desde la revisión de Lucho: pegado a los colores, el aviso y
+                  sus flechas se leían como «arrastra estos cuadros». */}
               <div class="pista-giro" aria-hidden="true">
                 <svg class="orbita" viewBox="0 0 400 60" preserveAspectRatio="none" fill="none">
                   <path pathLength="1" d="M60 52 C 10 44, 10 16, 120 8" />
@@ -84,6 +87,7 @@ const { modelos } = Astro.props;
                     <path d="M24.8 6.4 28 5.2l-1.7 3" stroke="currentColor" stroke-width="1.3" />
                   </svg>
                   360°
+                  <span class="sello-gesto">← Arrastra el auto →</span>
                 </span>
               </div>
               {modelo.colores.map((color, indiceColor) => (
@@ -132,13 +136,9 @@ const { modelos } = Astro.props;
                 </div>
               ))}
             </div>
-            <p class="aviso-giro">
-              <span aria-hidden="true">←</span> Arrastra para girar el auto <span aria-hidden="true">→</span>
-            </p>
-
             {modelo.colores.length > 1 && (
               <fieldset class="colores">
-                <legend>Color</legend>
+                <legend>Elige el color</legend>
                 {modelo.colores.map((color, indiceColor) => (
                   <button
                     type="button"
@@ -340,35 +340,41 @@ const { modelos } = Astro.props;
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0.06em;
+    white-space: nowrap;
   }
-  .aviso-giro {
-    /* Fuera del plato: si vive encima del fotograma, en 390 el S5 lo
-       pisa porque el auto llena el contain. En tinta plena y no al 60%:
-       es la instrucción de la sección, no una nota al pie. */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
-    margin: 0.65rem 0 0;
+  .sello-gesto {
+    padding-left: 0.55rem;
+    border-left: 1px solid color-mix(in srgb, var(--color-marca) 20%, transparent);
     font-size: var(--text-eyebrow);
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--color-tinta);
   }
+  /* Los colores son otro gesto —tocar, no arrastrar— y lo dicen con su
+     propio rótulo y un filete que los separa del plato. */
   .colores {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 0.5rem;
-    margin-top: 0.25rem;
+    gap: 0.25rem 0.5rem;
+    width: min(100%, 26rem);
+    margin: 1.75rem auto 0;
+    padding: 1.25rem 0 0;
     border: 0;
+    border-top: 1px solid var(--color-linea);
   }
+  /* Flotada, la leyenda deja de ser «leyenda» para el fieldset y pasa a
+     ser un ítem flex más: así puede ocupar su fila centrada. */
   .colores legend {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: clip;
-    clip-path: inset(50%);
+    float: left;
+    width: 100%;
+    padding: 0;
+    text-align: center;
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-tinta) 70%, transparent);
   }
   .muestra {
     display: grid;
@@ -447,8 +453,18 @@ const { modelos } = Astro.props;
       top: 50%;
       width: 92%;
     }
-    .aviso-giro {
-      white-space: nowrap;
+    /* En 390 el sello con la instrucción medía más que el plato: se va el
+       dibujo de la elipse —«360°» ya lo dice— y se aprieta el tracking. */
+    .sello-360 {
+      gap: 0.35rem;
+      padding: 0.3rem 0.55rem;
+    }
+    .sello-360 > svg {
+      display: none;
+    }
+    .sello-gesto {
+      padding-left: 0.4rem;
+      letter-spacing: 0.06em;
     }
     .barra-datos {
       grid-template-columns: repeat(2, minmax(0, 1fr));
