@@ -1,0 +1,33 @@
+---
+/* Al final de cada página legal, los demás documentos. Quien lee la política de
+   privacidad busca casi siempre otra cosa legal enseguida, y volver al pie para
+   encontrarla es dar la vuelta entera a la página. Sale de DOCUMENTOS_LEGALES,
+   así que un documento nuevo aparece aquí sin tocar este componente. */
+import { DOCUMENTOS_LEGALES } from '../../lib/site';
+
+interface Props {
+  /** La ruta de la página que lo pinta, para no enlazarse a sí misma. */
+  actual: string;
+  class?: string;
+}
+
+const { actual, class: clase } = Astro.props;
+const otros = DOCUMENTOS_LEGALES.filter((documento) => documento.ruta !== actual);
+---
+
+{
+  otros.length > 0 && (
+    <nav aria-label="Otros documentos legales" class:list={['border-t border-linea pt-8', clase]}>
+      <p class="text-small text-tinta/60">Otros documentos legales</p>
+      <ul class="mt-2 flex flex-wrap gap-x-6">
+        {otros.map((documento) => (
+          <li>
+            <a href={documento.ruta} class="enlace-subrayado inline-flex min-h-11 items-center text-marca">
+              {documento.etiqueta}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}

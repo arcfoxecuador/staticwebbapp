@@ -22,7 +22,7 @@
    humano no. Ninguna de las dos cosas pide nada al visitante, que es la razón
    por la que no hay un captcha aquí: el captcha lo paga quien sí es humano. */
 import Boton from '../ui/Boton.astro';
-import { FORMULARIO, ORG } from '../../lib/site';
+import { AVISO_DATOS, FORMULARIO, LEGAL, ORG } from '../../lib/site';
 
 interface Props {
   titulo?: string;
@@ -32,9 +32,19 @@ interface Props {
   origen?: string;
   /** Sin la columna de correo/teléfono: el look de Cotízalo es sólo la ficha. */
   compacto?: boolean;
+  /** Qué aviso de datos lleva al pie. Test drive pide datos sensibles y legal
+      redactó uno propio; el resto usa el general. */
+  aviso?: 'general' | 'pruebaManejo';
 }
 
-const { titulo = 'Cotízalo', bajada, origen = Astro.url.pathname, compacto = false } = Astro.props;
+const {
+  titulo = 'Cotízalo',
+  bajada,
+  origen = Astro.url.pathname,
+  compacto = false,
+  aviso = 'general',
+} = Astro.props;
+const textoAviso = AVISO_DATOS[aviso];
 
 /* Sin webhook todavía el POST nativo cae al correo. Es peor que un CRM, y
    mejor que un formulario que no se pinta: el look aprobado cierra con esta
@@ -193,6 +203,40 @@ const modelos = [
           </label>
         </div>
 
+        {/* El aviso va AL PIE y ENTERO, a la vista, como en la imagen que
+            adjuntó legal: plegado tras un «ver más» o metido en una caja con
+            scroll, la aceptación deja de ser informada. */}
+        <section
+          class="aviso-datos mt-7 border border-linea bg-fondo p-4 text-small text-tinta/75"
+          aria-labelledby={`aviso-${origen}`}
+        >
+          <h3 id={`aviso-${origen}`} class="font-medium text-marca">{AVISO_DATOS.titulo}</h3>
+          <p class="mt-2">{textoAviso.responsables}</p>
+          <p class="mt-2">
+            {textoAviso.finalidades} <strong class="font-semibold text-tinta">{AVISO_DATOS.masInformacion}</strong>
+          </p>
+          <p class="mt-2">
+            {AVISO_DATOS.derechos}{' '}
+            <a href={`mailto:${AVISO_DATOS.correo}`} class="enlace-subrayado text-marca">{AVISO_DATOS.correo}</a>
+          </p>
+          <h4 class="mt-3 font-medium text-marca">{AVISO_DATOS.tituloConsentimiento}</h4>
+          <p class="mt-2">{textoAviso.consentimiento}</p>
+        </section>
+
+        {/* SIN `checked`, nunca: la aceptación la da el titular con su clic.
+            `required` hace que el navegador no envíe sin ella, con o sin JS. */}
+        <label class="mt-4 flex items-start gap-3 text-small text-tinta">
+          <input type="checkbox" name="acepta_datos" value="si" required class="casilla" />
+          <span>
+            {AVISO_DATOS.casilla}{' '}
+            {LEGAL.privacidad ? (
+              <a href={LEGAL.privacidad} class="enlace-subrayado text-marca">{AVISO_DATOS.casillaEnlace}</a>
+            ) : (
+              AVISO_DATOS.casillaEnlace
+            )}
+          </span>
+        </label>
+
         <div class="mt-7 flex flex-col gap-4">
           <Boton tipo="submit" tamano="lg" class="w-full justify-center">Enviar</Boton>
           {/* `aria-live="polite"` y no `assertive`: el acuse no es una alarma. Y
@@ -244,6 +288,16 @@ const modelos = [
     width: 1px;
     height: 1px;
     overflow: clip;
+  }
+
+  /* 20px y no el cuadradito de 13px por defecto: es la única casilla del
+     formulario y la que más cuesta acertar con el dedo. */
+  .casilla {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.1rem;
+    accent-color: var(--color-marca);
   }
 
   .acuse:empty {
