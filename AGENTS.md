@@ -187,11 +187,23 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   cabecera, pie, 404, sitemap ni robots.
 - **CMS**: el panel está en `cms-panel/`. `ORIGEN` en `'colecciones'`. No es
   Storyblok. Quién publica lo deciden las variables de `cms-panel/.env`.
-- **Textos legales**: *pendiente*. `AVISO_LEGAL` y las dos rutas de `LEGAL`
-  (privacidad, términos) están vacíos, así que ni el aviso ni los enlaces del pie
-  se pintan. No los redacta quien programa. **`LEGAL.privacidad` es requisito para
-  encender la analítica**: sin ella el banner de cookies pide un consentimiento que
-  el visitante no puede informar.
+- **Textos legales**: todos literales de lo que envió Foton/AYASA (hilo
+  «LEGALES ARCFOX»); no los redacta quien programa y no se corrigen aquí, ni las
+  erratas. El pie sigue la barra de Foton —«Legal | Políticas SIG | Términos y
+  Condiciones | Aviso de Privacidad»— desde `DOCUMENTOS_LEGALES` de `site.ts`.
+  - `/politicas` (Políticas SIG): Calidad, Ambiental y Seguridad, en
+    `lib/politicas.ts`.
+  - `/privacidad`: Aviso de Privacidad L-00-GG-09-02 v2.0, en
+    `lib/aviso-privacidad.ts`, generado desde el Word. Versión nueva = se
+    regenera entero.
+  - Cada formulario lleva al pie `AVISO_DATOS` (general, o `pruebaManejo` en test
+    drive) y una casilla obligatoria que nunca sale marcada.
+    `scripts/verificar-avisos-datos.mjs` comprueba el texto literal en `dist/`.
+  - *Pendiente*: `LEGAL.cookies` («Legal», Iván Esparza) y `LEGAL.terminos`
+    (Darío Pacheco). Vacíos = no se pintan. La puerta de lanzamiento (repo de
+    Azure) todavía no usa el aviso de legal.
+  - **`LEGAL.privacidad` es requisito para encender la analítica**: sin ella el
+    banner de cookies pide un consentimiento que el visitante no puede informar.
 - **`overrides.satteri` en `package.json` es un parche, no una decisión.** El
   procesador de markdown que trae Astro depende de `satteri`, cuya versión 0.10.4
   se publicó **sin el binario nativo de macOS ARM** (`@bruits/satteri-darwin-arm64`

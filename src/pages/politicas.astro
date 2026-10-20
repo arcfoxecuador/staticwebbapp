@@ -10,6 +10,7 @@
 import Base from '../layouts/Base.astro';
 import Seccion from '../components/bloques/Seccion.astro';
 import Encabezado from '../components/bloques/Encabezado.astro';
+import OtrosLegales from '../components/ui/OtrosLegales.astro';
 import { POLITICAS } from '../lib/politicas';
 ---
 
@@ -88,4 +89,8 @@ import { POLITICAS } from '../lib/politicas';
       </Seccion>
     ))
   }
+
+  <Seccion>
+    <OtrosLegales actual="/politicas" class="max-w-[68ch]" />
+  </Seccion>
 </Base>

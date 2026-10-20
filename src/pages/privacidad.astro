@@ -1,0 +1,95 @@
+---
+/* EL AVISO DE PRIVACIDAD. El texto no vive aquí: sale literal del Word de legal
+   a `lib/aviso-privacidad.ts`, y esta página sólo le da forma. Es la página a la
+   que apuntan el pie, la casilla de cada formulario y el banner de cookies, vía
+   `LEGAL.privacidad`.
+
+   Los encabezados del documento vienen en MAYÚSCULAS y así se publican; lo que se
+   ajusta es el tamaño, no el texto, para que veinte títulos seguidos no griten. */
+import Base from '../layouts/Base.astro';
+import Seccion from '../components/bloques/Seccion.astro';
+import OtrosLegales from '../components/ui/OtrosLegales.astro';
+import { AVISO_PRIVACIDAD } from '../lib/aviso-privacidad';
+import { AVISO_DATOS } from '../lib/site';
+
+/* El correo del delegado aparece varias veces dentro de párrafos. Se parte el
+   texto alrededor y se pinta como enlace: el texto no cambia, sólo se puede pulsar. */
+const CORREO = AVISO_DATOS.correo;
+const trozos = (texto: string) => texto.split(CORREO);
+---
+
+<Base
+  titulo="Aviso de Privacidad"
+  descripcion="Cómo tratan tus datos personales las empresas responsables de ARCFOX en Ecuador, para qué los usan y cómo ejercer tus derechos."
+  path="/privacidad"
+>
+  <Seccion aire="amplio">
+    <article class="aviso max-w-[72ch]">
+      <h1 class="entra equilibra text-h1 font-bold text-marca">Aviso de Privacidad</h1>
+      <p class="entra entra-2 mt-6 text-small text-tinta/60">
+        Documento {AVISO_PRIVACIDAD.codigo} · Versión {AVISO_PRIVACIDAD.version} · {AVISO_PRIVACIDAD.fecha}
+      </p>
+
+      <div class="mt-12 text-tinta/80">
+        {
+          AVISO_PRIVACIDAD.bloques.map((b) => {
+            if (b.t === 'h2') return <h2 class="mt-14 text-h3 font-semibold text-marca">{b.texto}</h2>;
+            if (b.t === 'h3') return <h3 class="mt-10 text-dato font-semibold text-marca">{b.texto}</h3>;
+            if (b.t === 'h4') return <h4 class="mt-6 font-semibold text-tinta">{b.texto}</h4>;
+            if (b.t === 'p')
+              return (
+                <p class="mt-4">
+                  {trozos(b.texto).map((t, i) =>
+                    i === 0 ? t : [<a href={`mailto:${CORREO}`} class="enlace-subrayado text-marca">{CORREO}</a>, t],
+                  )}
+                </p>
+              );
+            if (b.t === 'ul')
+              return (
+                <ul class="mt-4 flex list-disc flex-col gap-2 pl-6">
+                  {b.items.map((it) => (
+                    <li>
+                      {it.fuerte && <strong class="font-semibold text-tinta">{it.fuerte} </strong>}
+                      {it.texto}
+                      {it.lineas?.map((l) => (
+                        <>
+                          <br />
+                          {l}
+                        </>
+                      ))}
+                    </li>
+                  ))}
+                </ul>
+              );
+            return (
+              <div class="mt-6 overflow-x-auto" tabindex="0" role="region" aria-label="Historial de versiones">
+                {/* En móvil la tabla se desplaza dentro de su caja; con
+                    `tabindex` también se desplaza con teclado. */}
+                <table class="w-full border-collapse text-left text-small">
+                  <thead>
+                    <tr>
+                      {AVISO_PRIVACIDAD.versiones.cabecera.map((c) => (
+                        <th scope="col" class="border border-linea px-3 py-2 font-semibold text-marca">{c}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {AVISO_PRIVACIDAD.versiones.filas.map((fila) => (
+                      <tr>
+                        {fila.map((c) => (
+                          <td class="border border-linea px-3 py-2 align-top">{c}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })
+        }
+      </div>
+
+      <OtrosLegales actual="/privacidad" class="mt-16" />
+    </article>
+  </Seccion>
+</Base>

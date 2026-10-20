@@ -4,7 +4,7 @@
    de marketing: es la letra chica, no un párrafo de venta. */
 import Marca from '../ui/Marca.astro';
 import Zorro from '../ui/Zorro.astro';
-import { ORG, NAV, AVISO_LEGAL, LEGAL } from '../../lib/site';
+import { ORG, NAV, AVISO_LEGAL, DOCUMENTOS_LEGALES } from '../../lib/site';
 
 const anio = new Date().getFullYear();
 ---
@@ -55,29 +55,15 @@ const anio = new Date().getFullYear();
     <div class="mt-6 flex flex-col gap-2 text-small text-white/45 md:flex-row md:justify-between">
       <p>© {anio} {ORG.nombreLegal}</p>
       {
-        (LEGAL.privacidad || LEGAL.terminos || LEGAL.politicas) && (
-          <ul class="flex gap-6">
-            {LEGAL.privacidad && (
+        DOCUMENTOS_LEGALES.length > 0 && (
+          <ul class="flex flex-wrap gap-x-6 gap-y-2">
+            {DOCUMENTOS_LEGALES.map((documento) => (
               <li>
-                <a href={LEGAL.privacidad} class="hover:text-white">
-                  Privacidad
+                <a href={documento.ruta} class="hover:text-white">
+                  {documento.etiqueta}
                 </a>
               </li>
-            )}
-            {LEGAL.terminos && (
-              <li>
-                <a href={LEGAL.terminos} class="hover:text-white">
-                  Términos
-                </a>
-              </li>
-            )}
-            {LEGAL.politicas && (
-              <li>
-                <a href={LEGAL.politicas} class="hover:text-white">
-                  Políticas
-                </a>
-              </li>
-            )}
+            ))}
           </ul>
         )
       }

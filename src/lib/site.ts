@@ -692,8 +692,9 @@ export const AVISO_LEGAL =
 export const AVISO_CIFRAS =
   'Las cifras de esta ficha son las que confirma ARCFOX Ecuador sobre la ficha global de la marca. La versión para Ecuador se confirma en el concesionario.';
 
-/* LAS DOS RUTAS LEGALES, VACÍAS A PROPÓSITO — y cada una vacía por un motivo
-   distinto del otro.
+/* LAS RUTAS LEGALES. Las que siguen vacías lo están a propósito: `cookies` y
+   `terminos` esperan el texto de Foton (Iván Esparza y Darío Pacheco en el hilo
+   «LEGALES ARCFOX»).
 
    Vacío = el enlace no se pinta. Es la alternativa a lo que hace casi cualquier
    plantilla: dejar `/privacidad` escrito en el pie desde el primer día. Ese
@@ -714,9 +715,66 @@ export const AVISO_CIFRAS =
    URL externa, que es lo habitual cuando el texto lo publica el gestor legal del
    cliente. */
 export const LEGAL = {
-  privacidad: '',
-  terminos: '',
+  /** La política de cookies. Foton la llama «Legal» en su barra. */
+  cookies: '',
   /* Calidad, Ambiental y Seguridad y Salud Ocupacional, en una página propia. Ésta sí
      tiene texto: lo envió Foton y vive literal en `lib/politicas.ts`. */
   politicas: '/politicas',
+  terminos: '',
+  /** El Aviso de Privacidad de AYASA (L-00-GG-09-02), publicado literal. */
+  privacidad: '/privacidad',
+} as const;
+
+/* Los documentos legales en el orden y con los nombres de la barra que pidió
+   Foton: «Legal | Políticas SIG | Términos y Condiciones | Aviso de Privacidad».
+   El pie y cada página legal leen esta lista; sólo entra lo que tiene ruta. */
+export const DOCUMENTOS_LEGALES: { ruta: string; etiqueta: string }[] = [
+  { ruta: LEGAL.cookies, etiqueta: 'Legal' },
+  { ruta: LEGAL.politicas, etiqueta: 'Políticas SIG' },
+  { ruta: LEGAL.terminos, etiqueta: 'Términos y Condiciones' },
+  { ruta: LEGAL.privacidad, etiqueta: 'Aviso de Privacidad' },
+].filter((documento) => documento.ruta);
+
+/* EL AVISO DE TRATAMIENTO DE DATOS, LITERAL. Lo redactó el área legal de AYASA
+   (Vanessa Estévez, 30-sep-2026) y «su contenido no puede ser modificado»: ni
+   una coma se corrige aquí, ni siquiera las que parecen erratas. Va al pie de
+   cada formulario con su casilla, que NUNCA sale marcada.
+
+   Dos variantes porque test drive pide además datos sensibles (copia de cédula
+   y licencia) y legal redactó un aviso propio para eso. Cotización, citas de
+   posventa y cotización de repuestos usan el general.
+
+   `scripts/verificar-formulario.mjs` comprueba frases literales en `dist/`: si
+   alguien «mejora» la redacción, la puerta falla. */
+const RESPONSABLES =
+  'AUTOMOTORES Y ANEXOS S.A. (A.Y.A.S.A.), FOTON DEL ECUADOR SOCIEDAD CIVIL Y COMERCIAL, TELEMÁTICA EQUINOCCIAL TELEQUINOX S.A., ALMACENERA AUTOMOTRIZ ALMOTRIZ S.A., ENAERENTACAR S.A., en adelante (LAS EMPRESAS) en calidad de Responsables del Tratamiento, informan al cliente sobre el uso interno de sus datos personales:';
+const FINALIDADES =
+  'LAS EMPRESAS tratarán sus datos personales identificativos y de contacto para las siguientes finalidades: atender sus requerimientos comerciales, contacto directo y proactivo, actividades de marketing y sondeo de mercado, envío de encuestas de satisfacción y gestión de la relación comercial.';
+const CONSERVACION =
+  'La conservación de los datos personales será por el tiempo estrictamente necesario para el cumplimiento de las finalidades detalladas en el presente aviso, empleando las medidas tecnológicas, administrativas o jurídicas que sean necesarias para garantizar la protección de sus datos.';
+const CORREO_DATOS = 'datos@ayasa.com.ec';
+const consentimiento = (datos: string) =>
+  `El Cliente, libre y voluntariamente autoriza a LAS EMPRESAS a tratar sus datos personales: ${datos} para que LAS EMPRESAS puedan: consultar, transferir, validar; y, en general, tratar los datos personales únicamente en cumplimiento de las finalidades detalladas en el presente aviso. El Cliente declara que ha sido informado sobre los usos internos de sus datos personales y el proceso para el ejercicio de sus derechos, por tanto, garantiza la veracidad de la información entregada y se compromete a comunicar de manera oportuna cualquier cambio o modificación de los mismos. LAS EMPRESAS no serán responsables de los resultados derivados del procesamiento de datos personales inexactos, erróneos o falaces.`;
+
+export const AVISO_DATOS = {
+  titulo: 'AVISO DE TRATAMIENTO DE DATOS',
+  correo: CORREO_DATOS,
+  /** Lo sigue `correo`, que se pinta como enlace. */
+  derechos: 'El Cliente, en calidad de titular, puede ejercer sus derechos de protección de datos personales enviando un correo electrónico a:',
+  /** Cierra el párrafo de finalidades. Va aparte porque legal la escribe en negrita. */
+  masInformacion: 'Más información en nuestro Aviso de Privacidad colocado en la Página Web.',
+  tituloConsentimiento: 'Declaración de consentimiento informado. -',
+  /** «Declaro que he leído…» — el final, «Aviso de Privacidad», enlaza a LEGAL.privacidad. */
+  casilla: 'Declaro que he leído y acepto el tratamiento de mis datos personales, así como el',
+  casillaEnlace: 'Aviso de Privacidad',
+  general: {
+    responsables: RESPONSABLES,
+    finalidades: `${FINALIDADES} La base legal para la ejecución de estas actividades es su consentimiento expreso e inequívoco. ${CONSERVACION}`,
+    consentimiento: consentimiento('identificativos y de contacto'),
+  },
+  pruebaManejo: {
+    responsables: RESPONSABLES,
+    finalidades: `${FINALIDADES} Los datos personales sensibles (copia de cédula y licencia) serán utilizados para validar la identidad del cliente que se encuentra en posesión temporal del vehículo y para acreditar que se encuentra legalmente habilitado para su conducción durante la prueba de manejo solicitada. ${CONSERVACION}`,
+    consentimiento: consentimiento('identificativos, de contacto y sensibles'),
+  },
 } as const;
