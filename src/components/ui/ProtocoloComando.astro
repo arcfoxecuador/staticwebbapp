@@ -9,7 +9,7 @@
    ver `finalizar()`. Prometer un registro que no ha ocurrido es peor que no
    tener formulario, porque nadie se entera de que se está perdiendo gente. */
 import Boton from './Boton.astro';
-import { LEGAL, ORG, PROTOCOLO } from '../../lib/site';
+import { AVISO_DATOS, LEGAL, ORG, PROTOCOLO } from '../../lib/site';
 
 interface Props {
   rotulo?: string;
@@ -91,7 +91,7 @@ const protocolo = [
      corrige un número de teléfono. */
   {
     clave: 'consentimiento',
-    pregunta: 'Antes de enviarte la invitación, confirma que aceptas nuestra política de tratamiento de datos personales',
+    pregunta: 'Antes de enviarte la invitación, lee el aviso y acepta el tratamiento de tus datos personales',
     tipo: 'checkbox',
   },
 ] as const;
@@ -154,16 +154,34 @@ const protocolo = [
         {/* La casilla va en su propio bloque y no dentro de `.comando-entrada`:
             aquella es un `<label>` y el enlace a la política no puede vivir
             dentro de otra etiqueta interactiva. Sin la ruta en `LEGAL` el texto
-            se pinta sin enlace — un enlace a un 404 es peor que ninguno. */}
+            se pinta sin enlace — un enlace a un 404 es peor que ninguno.
+
+            El aviso va ENCIMA de la casilla, ENTERO y sin caja con scroll
+            propia: así lo pidió legal de AYASA, y plegado tras un «ver más» la
+            aceptación deja de ser informada. Es el general —la puerta no pide
+            cédula ni licencia— y sus textos salen literales de `AVISO_DATOS`.
+            Si no cabe en pantalla, se desplaza la paleta entera, no el aviso. */}
         <div class="comando-consentimiento" data-consentimiento hidden>
+          <section class="comando-aviso" aria-labelledby="protocolo-aviso">
+            <p id="protocolo-aviso" class="comando-aviso-titulo">{AVISO_DATOS.titulo}</p>
+            <p>{AVISO_DATOS.general.responsables}</p>
+            <p>
+              {AVISO_DATOS.general.finalidades} <strong>{AVISO_DATOS.masInformacion}</strong>
+            </p>
+            <p>
+              {AVISO_DATOS.derechos} <a href={`mailto:${AVISO_DATOS.correo}`}>{AVISO_DATOS.correo}</a>
+            </p>
+            <p class="comando-aviso-titulo">{AVISO_DATOS.tituloConsentimiento}</p>
+            <p>{AVISO_DATOS.general.consentimiento}</p>
+          </section>
           <label>
             <input type="checkbox" data-acepto aria-describedby="protocolo-error" />
             <span>
-              Acepto la{' '}
+              {AVISO_DATOS.casilla}{' '}
               {LEGAL.privacidad ? (
-                <a href={LEGAL.privacidad} target="_blank" rel="noopener">política de tratamiento de datos personales</a>
+                <a href={LEGAL.privacidad} target="_blank" rel="noopener">{AVISO_DATOS.casillaEnlace}</a>
               ) : (
-                'política de tratamiento de datos personales'
+                AVISO_DATOS.casillaEnlace
               )}
             </span>
           </label>
@@ -805,6 +823,43 @@ const protocolo = [
   .comando-consentimiento[hidden],
   .comando-nuevo[hidden] {
     display: none;
+  }
+
+  /* El aviso ocupa la fila entera, encima de la casilla y del ↵. Letra menor
+     que la pregunta pero no gris de pie de página: es lo que se está aceptando,
+     y tiene que poder leerse sin esfuerzo sobre el panel oscuro. */
+  .comando-aviso {
+    grid-column: 1 / -1;
+    padding: 1rem 1.5rem 0.25rem;
+    color: color-mix(in oklab, var(--color-superficie) 80%, transparent);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    line-height: 1.55;
+  }
+
+  .comando-aviso p {
+    margin: 0 0 0.55rem;
+  }
+
+  .comando-aviso strong,
+  .comando-aviso .comando-aviso-titulo {
+    color: var(--color-superficie);
+    font-weight: 600;
+  }
+
+  .comando-aviso .comando-aviso-titulo {
+    letter-spacing: 0.06em;
+  }
+
+  /* LO QUE SE DESPLAZA ES LA PALETA, NO EL AVISO. Entero, el aviso es más alto
+     que una pantalla de móvil, y la paleta flotante vive pegada al borde
+     inferior: sin tope, la casilla y el ↵ quedarían fuera de la vista. Sólo en
+     este paso, porque en los demás el panel cabe de sobra; y es seguro aquí
+     porque nada dentro de la paleta se anima con `animation-timeline`. */
+  .comando-superficie.flotante:has([data-consentimiento]:not([hidden])) {
+    max-height: calc(100dvh - 2rem - var(--desplazamiento-teclado, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .comando-consentimiento label {
