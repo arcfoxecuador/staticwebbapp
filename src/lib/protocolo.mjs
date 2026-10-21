@@ -95,14 +95,14 @@ function instagram(valor) {
   return bien(`@${usuario}`);
 }
 
-/** Aceptación de la política de tratamiento de datos personales.
+/** Aceptación del tratamiento de datos personales (aviso de AYASA).
 
     La casilla entrega `acepto` marcada y nada sin marcar. Necesita regla propia
     porque la de por defecto sólo pide contenido: cualquier texto pasaría como
     consentimiento, y esta columna es la constancia de que se dio. */
 function consentimiento(valor) {
   if (valor.toLowerCase() !== 'acepto') {
-    return mal('Marca la casilla para aceptar la política de tratamiento de datos personales.');
+    return mal('Marca la casilla para aceptar el tratamiento de tus datos personales.');
   }
   return bien('Acepto');
 }

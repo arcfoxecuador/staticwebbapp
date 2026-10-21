@@ -448,6 +448,55 @@ export const AVISO_CIFRAS =
    URL externa, que es lo habitual cuando el texto lo publica el gestor legal del
    cliente. */
 export const LEGAL = {
-  privacidad: '',
+  /* El Aviso de Privacidad de AYASA (L-00-GG-09-02) vive en el sitio completo,
+     en Vercel, y no aquí: este repositorio sólo publica la puerta. URL
+     absoluta porque la puerta se sirve desde otro dominio (followdafox.ec), y
+     una ruta relativa apuntaría a un 404 de este. Si el sitio completo cambia
+     de dominio, cambia aquí. */
+  privacidad: 'https://arcfox-ruddy.vercel.app/privacidad',
   terminos: '',
+} as const;
+
+/* EL AVISO DE TRATAMIENTO DE DATOS, LITERAL. Lo redactó el área legal de AYASA
+   (Vanessa Estévez, 30-sep-2026) y «su contenido no puede ser modificado»: ni
+   una coma se corrige aquí, ni siquiera las que parecen erratas. Va al pie de
+   cada formulario con su casilla, que NUNCA sale marcada.
+
+   Dos variantes porque test drive pide además datos sensibles (copia de cédula
+   y licencia) y legal redactó un aviso propio para eso. Cotización, citas de
+   posventa y cotización de repuestos usan el general.
+
+   `scripts/verificar-avisos-datos.mjs` comprueba frases literales en `dist/`: si
+   alguien «mejora» la redacción, la puerta falla. */
+const RESPONSABLES =
+  'AUTOMOTORES Y ANEXOS S.A. (A.Y.A.S.A.), FOTON DEL ECUADOR SOCIEDAD CIVIL Y COMERCIAL, TELEMÁTICA EQUINOCCIAL TELEQUINOX S.A., ALMACENERA AUTOMOTRIZ ALMOTRIZ S.A., ENAERENTACAR S.A., en adelante (LAS EMPRESAS) en calidad de Responsables del Tratamiento, informan al cliente sobre el uso interno de sus datos personales:';
+const FINALIDADES =
+  'LAS EMPRESAS tratarán sus datos personales identificativos y de contacto para las siguientes finalidades: atender sus requerimientos comerciales, contacto directo y proactivo, actividades de marketing y sondeo de mercado, envío de encuestas de satisfacción y gestión de la relación comercial.';
+const CONSERVACION =
+  'La conservación de los datos personales será por el tiempo estrictamente necesario para el cumplimiento de las finalidades detalladas en el presente aviso, empleando las medidas tecnológicas, administrativas o jurídicas que sean necesarias para garantizar la protección de sus datos.';
+const CORREO_DATOS = 'datos@ayasa.com.ec';
+const consentimiento = (datos: string) =>
+  `El Cliente, libre y voluntariamente autoriza a LAS EMPRESAS a tratar sus datos personales: ${datos} para que LAS EMPRESAS puedan: consultar, transferir, validar; y, en general, tratar los datos personales únicamente en cumplimiento de las finalidades detalladas en el presente aviso. El Cliente declara que ha sido informado sobre los usos internos de sus datos personales y el proceso para el ejercicio de sus derechos, por tanto, garantiza la veracidad de la información entregada y se compromete a comunicar de manera oportuna cualquier cambio o modificación de los mismos. LAS EMPRESAS no serán responsables de los resultados derivados del procesamiento de datos personales inexactos, erróneos o falaces.`;
+
+export const AVISO_DATOS = {
+  titulo: 'AVISO DE TRATAMIENTO DE DATOS',
+  correo: CORREO_DATOS,
+  /** Lo sigue `correo`, que se pinta como enlace. */
+  derechos: 'El Cliente, en calidad de titular, puede ejercer sus derechos de protección de datos personales enviando un correo electrónico a:',
+  /** Cierra el párrafo de finalidades. Va aparte porque legal la escribe en negrita. */
+  masInformacion: 'Más información en nuestro Aviso de Privacidad colocado en la Página Web.',
+  tituloConsentimiento: 'Declaración de consentimiento informado. -',
+  /** «Declaro que he leído…» — el final, «Aviso de Privacidad», enlaza a LEGAL.privacidad. */
+  casilla: 'Declaro que he leído y acepto el tratamiento de mis datos personales, así como el',
+  casillaEnlace: 'Aviso de Privacidad',
+  general: {
+    responsables: RESPONSABLES,
+    finalidades: `${FINALIDADES} La base legal para la ejecución de estas actividades es su consentimiento expreso e inequívoco. ${CONSERVACION}`,
+    consentimiento: consentimiento('identificativos y de contacto'),
+  },
+  pruebaManejo: {
+    responsables: RESPONSABLES,
+    finalidades: `${FINALIDADES} Los datos personales sensibles (copia de cédula y licencia) serán utilizados para validar la identidad del cliente que se encuentra en posesión temporal del vehículo y para acreditar que se encuentra legalmente habilitado para su conducción durante la prueba de manejo solicitada. ${CONSERVACION}`,
+    consentimiento: consentimiento('identificativos, de contacto y sensibles'),
+  },
 } as const;
