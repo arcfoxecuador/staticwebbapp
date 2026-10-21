@@ -35,7 +35,9 @@ const SELLO_MINIMO = 3000;
 
 /* EL ORDEN DE ESTA LISTA ES EL ORDEN DE LAS COLUMNAS. Son las claves de
    `protocolo` en `ProtocoloComando.astro`, y tienen que coincidir literalmente:
-   una clave que no esté aquí se descarta en silencio. */
+   una clave que no esté aquí se descarta en silencio. Una clave nueva va AL
+   FINAL: las filas ya escritas no se mueven, y en medio desplazaría todas las
+   columnas siguientes bajo una cabecera que ya no es la suya. */
 const CAMPOS = [
   'busqueda',
   'momento',
@@ -46,6 +48,7 @@ const CAMPOS = [
   'nombre',
   'correo',
   'whatsapp',
+  'consentimiento',
 ];
 
 const CABECERA = ['fecha', 'id', 'origen'].concat(CAMPOS);
@@ -69,6 +72,7 @@ function doPost(e) {
     const libro = SpreadsheetApp.getActive();
     const hoja = libro.getSheetByName(HOJA) || libro.insertSheet(HOJA);
     if (hoja.getLastRow() === 0) hoja.appendRow(CABECERA);
+    else alDia(hoja);
 
     /* IDEMPOTENCIA. El navegador reintenta un envío que no pudo CONFIRMAR, que
        no es lo mismo que un envío que no llegó: sin esta comprobación, un corte
@@ -98,6 +102,14 @@ function doPost(e) {
   } finally {
     bloqueo.releaseLock();
   }
+}
+
+/** Pone la cabecera al día cuando `CAMPOS` crece. La cabecera sólo se escribe
+    con la hoja vacía, así que una hoja que ya tenía registros recibiría la
+    columna nueva SIN nombre: los datos llegan, pero nadie sabe qué son. */
+function alDia(hoja) {
+  const rango = hoja.getRange(1, 1, 1, CABECERA.length);
+  if (rango.getValues()[0].join('|') !== CABECERA.join('|')) rango.setValues([CABECERA]);
 }
 
 /** ¿Ya está esta id en la columna B? Lee sólo esa columna, no la hoja entera. */

@@ -102,6 +102,41 @@ test('cada página de modelo lleva el aviso de datos', () => {
   for (const archivo of modelos) comprobarAviso(join('modelos', archivo));
 });
 
+/* LA PUERTA TAMBIÉN RECOGE DATOS PERSONALES —nombre, correo, WhatsApp— y los
+   manda a la hoja de cálculo, así que lleva el mismo aviso que un formulario:
+   el general, porque no pide cédula ni licencia. No es un `<form data-gracias>`
+   ni su casilla lleva `required`: el protocolo valida paso a paso en JS, y un
+   control obligatorio oculto bloquearía el Enter de cada pregunta anterior.
+   `/landing` pinta la misma puerta, así que se comprueba también allí. */
+function comprobarPuerta(ruta) {
+  const bloque = leer(ruta).match(/<div\b[^>]*\bdata-consentimiento\b[^>]*>[\s\S]*?<\/label>/i)?.[0];
+  assert.ok(bloque, `${ruta}: el protocolo no tiene paso de consentimiento`);
+  const texto = textoPlano(bloque);
+  for (const frase of FRASES_COMUNES) {
+    assert.ok(texto.includes(frase), `${ruta}: el aviso no dice literalmente «${frase.slice(0, 60)}…»`);
+  }
+  assert.ok(!texto.includes(FRASE_SENSIBLES), `${ruta}: el aviso de datos sensibles es sólo para test drive`);
+  assert.ok(texto.includes('identificativos y de contacto para que LAS EMPRESAS puedan'), `${ruta}: la declaración debería ser la general`);
+  assert.match(
+    bloque,
+    /<strong\b[^>]*>\s*Más información en nuestro Aviso de Privacidad colocado en la Página Web\.\s*<\/strong>/,
+    `${ruta}: «Más información en nuestro Aviso de Privacidad…» va en negrita, como en el correo de legal`,
+  );
+  const casilla = bloque.match(/<input\b[^>]*\btype="checkbox"[^>]*>/i)?.[0];
+  assert.ok(casilla, `${ruta}: falta la casilla de aceptación`);
+  assert.ok(!/\schecked(?=[\s>=\/])/.test(casilla), `${ruta}: la casilla no puede venir premarcada`);
+  assert.ok(texto.includes(CASILLA), `${ruta}: el texto de la casilla no es el literal de legal`);
+  assert.match(
+    bloque,
+    /<a\b[^>]*href="\/privacidad"[^>]*>\s*Aviso de Privacidad\s*<\/a>/,
+    `${ruta}: «Aviso de Privacidad» de la casilla debería enlazar a /privacidad`,
+  );
+}
+
+for (const ruta of ['lanzamiento.html', 'landing.html']) {
+  test(`${ruta}: la puerta lleva el aviso de datos y la casilla sin marcar`, () => comprobarPuerta(ruta));
+}
+
 /* Se comprueban el principio, el final y el código del documento, para notar
    si la conversión desde el Word dejó algo fuera. */
 test('privacidad.html publica el Aviso de Privacidad completo', () => {
