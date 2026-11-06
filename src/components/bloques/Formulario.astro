@@ -35,6 +35,10 @@ interface Props {
   /** Qué aviso de datos lleva al pie. Test drive pide datos sensibles y legal
       redactó uno propio; el resto usa el general. */
   aviso?: 'general' | 'pruebaManejo';
+  /** Texto del botón de envío. Cada página lo nombra por lo que pide. */
+  boton?: string;
+  /** El acuse tras enviar. Test drive tiene el suyo; el resto, el compartido. */
+  confirmacion?: string;
 }
 
 const {
@@ -43,6 +47,8 @@ const {
   origen = Astro.url.pathname,
   compacto = false,
   aviso = 'general',
+  boton = 'Solicitar cotización',
+  confirmacion = FORMULARIO.confirmacion,
 } = Astro.props;
 const textoAviso = AVISO_DATOS[aviso];
 
@@ -52,8 +58,8 @@ const textoAviso = AVISO_DATOS[aviso];
 const destino = FORMULARIO.endpoint || `mailto:${ORG.email}`;
 
 const modelos = [
-  { valor: 't5', etiqueta: 'ARCFOX T5' },
   { valor: 't1', etiqueta: 'ARCFOX T1' },
+  { valor: 't5', etiqueta: 'ARCFOX T5' },
   { valor: 's5', etiqueta: 'ARCFOX S5' },
 ];
 ---
@@ -115,6 +121,8 @@ const modelos = [
         action={destino}
         data-gracias={FORMULARIO.gracias}
         data-correo={ORG.email}
+        data-confirmacion={confirmacion}
+        data-error={FORMULARIO.error}
       >
         <input type="hidden" name="origen" value={origen} />
         {/* El sello de tiempo lo escribe el script al cargar. Sin JS se queda
@@ -135,7 +143,7 @@ const modelos = [
 
         <div class="flex flex-col gap-5">
           <label class="flex flex-col gap-2">
-            <span class="text-small font-medium text-marca">Nombre</span>
+            <span class="text-small font-medium text-marca">Nombre y apellido</span>
             <input
               type="text"
               name="nombre"
@@ -147,7 +155,7 @@ const modelos = [
           </label>
 
           <label class="flex flex-col gap-2">
-            <span class="text-small font-medium text-marca">Teléfono</span>
+            <span class="text-small font-medium text-marca">Celular</span>
             <input
               type="tel"
               name="telefono"
@@ -160,7 +168,7 @@ const modelos = [
           </label>
 
           <label class="flex flex-col gap-2">
-            <span class="text-small font-medium text-marca">Email</span>
+            <span class="text-small font-medium text-marca">Correo electrónico</span>
             <input
               type="email"
               name="email"
@@ -190,7 +198,7 @@ const modelos = [
               name="mensaje"
               rows="3"
               class="campo"
-              placeholder="Cuéntanos qué necesitas"
+              placeholder="Cuéntanos cómo podemos ayudarte."
             ></textarea>
           </label>
 
@@ -238,7 +246,7 @@ const modelos = [
         </label>
 
         <div class="mt-7 flex flex-col gap-4">
-          <Boton tipo="submit" tamano="lg" class="w-full justify-center">Enviar</Boton>
+          <Boton tipo="submit" tamano="lg" class="w-full justify-center">{boton}</Boton>
           {/* `aria-live="polite"` y no `assertive`: el acuse no es una alarma. Y
               vive FUERA del bloque que se oculta al enviar, porque una región
               viva que aparece de la nada a veces no se anuncia. */}
@@ -351,17 +359,14 @@ const modelos = [
 
         form.reset();
         if (acuse) {
-          acuse.textContent = 'Recibido. Te respondemos dentro de un día hábil.';
+          acuse.textContent = form.dataset.confirmacion ?? '';
           acuse.dataset.estado = 'ok';
         }
       } catch {
         /* El mensaje de error DA UNA SALIDA. «Ha ocurrido un error» deja al
            visitante sin nada que hacer con la información. */
         if (acuse) {
-          acuse.innerHTML =
-            'No se pudo enviar. Escríbenos directamente a <a class="enlace-subrayado" href="mailto:' +
-            (form.dataset.correo ?? '') +
-            '">correo</a> o inténtalo de nuevo.';
+          acuse.textContent = form.dataset.error ?? '';
           acuse.dataset.estado = 'error';
         }
       } finally {

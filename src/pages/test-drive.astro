@@ -3,32 +3,29 @@ import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
 import Encabezado from '../components/bloques/Encabezado.astro';
-import Rejilla from '../components/bloques/Rejilla.astro';
 import Pasos from '../components/bloques/Pasos.astro';
+import Rejilla from '../components/bloques/Rejilla.astro';
+import Tarjeta from '../components/bloques/Tarjeta.astro';
+import GamaModelos from '../components/bloques/GamaModelos.astro';
 import Formulario from '../components/bloques/Formulario.astro';
-import ListaIndice from '../components/bloques/ListaIndice.astro';
 import Faq from '../components/bloques/Faq.astro';
 import Figura from '../components/ui/Figura.astro';
-import { coleccion } from '../lib/contenido';
-import { FAQ_PRUEBA, PASOS, PRUEBA } from '../lib/site';
+import { FAQ_TEST_DRIVE, FORMULARIO, PASOS } from '../lib/site';
 import { faq, grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
 import type { Imagen } from '../lib/imagenes';
 
 import t5 from '../assets/t5-45-gris.webp';
 
-const modelos = (await coleccion('modelos', ({ data }) => data.publico)).sort(
-  (a, b) => a.data.orden - b.data.orden,
-);
-
 const titulo = 'Test drive';
-const descripcion = PRUEBA.bajada;
+const descripcion =
+  'Solicita una prueba de manejo del T1, T5 o S5. Te contactaremos para consultar disponibilidad y coordinar los detalles.';
 
 const schema = grafo(
   organizacion(),
   sitioWeb(),
   pagina({ path: '/test-drive', titulo, descripcion }),
   migas([{ nombre: titulo, path: '/test-drive' }]),
-  faq(FAQ_PRUEBA),
+  faq(FAQ_TEST_DRIVE),
 );
 
 const fotoPrueba: Imagen = {
@@ -36,21 +33,27 @@ const fotoPrueba: Imagen = {
   alt: 'ARCFOX T5 gris, SUV 100% eléctrico listo para una prueba de manejo.',
   generada: false,
 };
+
+const EXPERIENCIA = [
+  { titulo: 'Respuesta eléctrica', texto: 'Experimenta la respuesta del vehículo al conducir.' },
+  { titulo: 'Comodidad a bordo', texto: 'Explora el espacio interior y tu posición al volante.' },
+  { titulo: 'Asesoría para ti', texto: 'Consulta las características, el equipamiento y las opciones del modelo.' },
+];
 ---
 
 <Base {titulo} {descripcion} path="/test-drive" {schema} barraAccion={false}>
   <Hero
-    rotulo={PRUEBA.rotulo}
-    titulo={PRUEBA.titular}
+    rotulo="Vívelo al volante"
+    titulo="Descubre cómo se siente conducir un ARCFOX"
     bajada={descripcion}
-    accion={{ texto: 'Reservar prueba', href: '#reserva' }}
+    accion={{ texto: 'Solicitar prueba', href: '#formulario' }}
     secundaria={{ texto: 'Ver concesionarios', href: '/concesionarios' }}
   />
 
   {
     PASOS.length > 0 && (
       <Seccion campo="tinte" aire="apretado">
-        <Encabezado rotulo="Cómo funciona" titulo="De la reserva a la prueba" />
+        <Encabezado rotulo="Cómo funciona" titulo="Tu experiencia comienza aquí" />
         <div class="mt-10 grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <Pasos />
           <div class="order-first lg:order-none">
@@ -65,59 +68,43 @@ const fotoPrueba: Imagen = {
     )
   }
 
-  <Seccion campo="superficie">
+  <Seccion>
     <Encabezado
-      rotulo="Qué esperas"
-      titulo="La prueba, sin inventar la cita"
-      bajada="Modelo, ciudad y un asesor que confirma el resto. Duración y papeles los dice esa sede."
+      rotulo="Tu prueba de manejo"
+      titulo="Conócelo en movimiento"
+      bajada="Descubre cómo se siente el modelo que elegiste y qué ofrece para tus recorridos."
     />
-    <Rejilla columnas={3} class="mt-14">
-      {
-        PRUEBA.esperas.map((pieza) => (
-          <article class="border-t border-linea pt-6">
-            <h3 class="text-h3 font-bold text-marca">{pieza.titulo}</h3>
-            <p class="mt-3 max-w-[46ch] text-small text-tinta/75">{pieza.texto}</p>
-          </article>
-        ))
-      }
+    <Rejilla columnas={3} class="mt-12">
+      {EXPERIENCIA.map((item) => <Tarjeta titulo={item.titulo} bajada={item.texto} brillo={false} />)}
     </Rejilla>
   </Seccion>
 
-  <Seccion id="reserva">
-    <Formulario
-      titulo="Reserva tu prueba"
-      bajada="Nombre, teléfono, ciudad y modelo. Con eso coordinamos la cita."
-      origen="/test-drive"
-      aviso="pruebaManejo"
-    />
+  <Seccion campo="tinte">
+    <div id="formulario" class="scroll-mt-24">
+      <Formulario
+        titulo="Solicita tu test drive"
+        bajada="Completa tus datos para coordinar una prueba de manejo, sujeta a disponibilidad del modelo y del punto de atención."
+        origen="/test-drive"
+        aviso="pruebaManejo"
+        boton="Solicitar test drive"
+        confirmacion={FORMULARIO.confirmacionPrueba}
+      />
+    </div>
   </Seccion>
 
-  {
-    modelos.length > 0 && (
-      <Seccion campo="tinte">
-        <Encabezado
-          rotulo="Modelos"
-          titulo="T5, T1 o S5"
-          bajada="Elige en el formulario o entra a la ficha. La disponibilidad del auto la confirma el concesionario."
-        />
-        <ListaIndice
-          numerada
-          class="mt-14"
-          items={modelos.map((m) => ({
-            titulo: m.data.nombre,
-            bajada: m.data.bajada,
-            href: `/modelos/${m.id}`,
-            meta: m.data.rotulo,
-          }))}
-        />
-      </Seccion>
-    )
-  }
+  <Seccion>
+    <Encabezado
+      rotulo="Elige tu experiencia"
+      titulo="¿Qué ARCFOX quieres conducir?"
+      bajada="Explora el T1, T5 y S5 y selecciona tu modelo de interés."
+    />
+    <GamaModelos class="mt-12" />
+  </Seccion>
 
-  <Seccion campo="superficie">
-    <Encabezado rotulo="Preguntas" titulo="Antes de reservar" />
+  <Seccion campo="tinte">
+    <Encabezado titulo="Antes de tu prueba" />
     <div class="mt-10">
-      <Faq items={FAQ_PRUEBA} grupo="faq-prueba" />
+      <Faq items={FAQ_TEST_DRIVE} grupo="faq-test-drive" />
     </div>
   </Seccion>
 </Base>

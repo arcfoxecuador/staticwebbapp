@@ -68,21 +68,24 @@ const sobrePorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
 /* LAS COLUMNAS DE LA DERECHA DEL TABLERO. Tres por modelo: la cuarta función
    con su foto y dos cifras de la ficha. Las fotos no repiten las tres primeras
    columnas. La cifra se busca por su nombre en datos, cotas o especificaciones:
-   si cambia en la ficha, cambia aquí. Cada foto lleva reserva real: las
+   si cambia en la ficha, cambia aquí — y el nombre ES la etiqueta que se pinta,
+   así que coincide con el texto aprobado. Cada foto lleva reserva real: las
    generadas del T1 se usan cuando existen y, mientras no, sale la de reserva. */
 type FotoTablero = { archivo: string; alt: string; generada?: boolean };
-type ColumnaTablero = ({ destacado: number } | { dato: string }) & { fotos: FotoTablero[] };
+/* `etiqueta` pinta el nombre aprobado cuando la ficha llama distinto a la cifra. */
+type ColumnaTablero = ({ atributo: number } | { dato: string; etiqueta?: string }) & { fotos: FotoTablero[] };
 
 const tableroExtraPorId: Record<string, ColumnaTablero[]> = {
   t5: [
-    { destacado: 3, fotos: [{ archivo: 't5-llanta', alt: 'Llanta y pinza de freno del T5.' }] },
+    { atributo: 3, fotos: [{ archivo: 't5-llanta', alt: 'Llanta y pinza de freno del T5.' }] },
     { dato: 'Potencia', fotos: [{ archivo: 't5-faro', alt: 'Faro delantero del T5.' }] },
-    { dato: 'Velocidad máx.', fotos: [{ archivo: 't5-material', alt: 'Habitáculo del T5 bajo el techo panorámico.' }] },
+    { dato: 'Velocidad máxima', fotos: [{ archivo: 't5-material', alt: 'Habitáculo del T5 bajo el techo panorámico.' }] },
   ],
   t1: [
-    { destacado: 3, fotos: [{ archivo: 't1-carretera', alt: 'T1 en marcha por una carretera junto al mar.' }] },
+    { atributo: 3, fotos: [{ archivo: 't1-carretera', alt: 'T1 en marcha por una carretera junto al mar.' }] },
     {
       dato: 'Maletero',
+      etiqueta: 'Capacidad del maletero',
       fotos: [
         { archivo: 't1-maletero-plegado', alt: 'Maletero del T1 con los asientos traseros abatidos.', generada: true },
         { archivo: 't1-kv2', alt: 'Dos ARCFOX T1 en el escenario de marca junto al agua.' },
@@ -97,9 +100,9 @@ const tableroExtraPorId: Record<string, ColumnaTablero[]> = {
     },
   ],
   s5: [
-    { destacado: 3, fotos: [{ archivo: 's5-puerta', alt: 'Volante y tablero del S5 vistos desde la puerta sin marco.' }] },
-    { dato: 'Autonomía WLTC', fotos: [{ archivo: 's5-aleta', alt: 'Aleta trasera y pilotos del S5.' }] },
-    { dato: 'Carga rápida 30–80%', fotos: [{ archivo: 's5-llanta', alt: 'Llanta del S5 con la pinza de freno verde.' }] },
+    { atributo: 3, fotos: [{ archivo: 's5-puerta', alt: 'Volante y tablero del S5 vistos desde la puerta sin marco.' }] },
+    { dato: 'Autonomía', fotos: [{ archivo: 's5-aleta', alt: 'Aleta trasera y pilotos del S5.' }] },
+    { dato: 'Carga rápida 30–80%', etiqueta: 'Carga rápida', fotos: [{ archivo: 's5-llanta', alt: 'Llanta del S5 con la pinza de freno verde.' }] },
   ],
 };
 
@@ -171,12 +174,11 @@ const modelos = entradas.map((entrada) => {
     interiores[2] ?? interiores[1] ?? detalles[1],
   ].filter((foto): foto is NonNullable<typeof foto> => Boolean(foto));
 
-  const textos = (entrada.data.destacados.length ? entrada.data.destacados : PILARES)
-    .slice(0, 3)
-    .map((item, i) => ({
-      titulo: 'puntos' in item ? (item.tituloPortada ?? item.titulo) : PILARES[i]?.titulo,
-      bajada: 'puntos' in item ? item.puntos[0] : PILARES[i]?.texto,
-    }));
+  /* Los atributos aprobados son sólo titulares: la casilla no lleva bajada.
+     PILARES queda como reserva para un modelo que aún no tenga los suyos. */
+  const textos = entrada.data.atributos.length
+    ? entrada.data.atributos.slice(0, 3).map((titulo) => ({ titulo }))
+    : PILARES.slice(0, 3).map((pilar) => ({ titulo: pilar.titulo, bajada: pilar.texto }));
 
   return {
     id: entrada.id,
@@ -195,6 +197,7 @@ const modelos = entradas.map((entrada) => {
     tableroExtra: (() => {
       const cifras = new Map<string, string>([
         ...datos.map((dato) => [dato.clave, dato.valor] as const),
+        ...entrada.data.cotas.map((cota) => [cota.etiqueta, [cota.valor, cota.unidad].filter(Boolean).join(" ")] as const),
         ...(entrada.data.especificaciones ?? []).flatMap((grupo) =>
           grupo.items.map((item) => [item.clave, item.valor] as const),
         ),
@@ -205,12 +208,12 @@ const modelos = entradas.map((entrada) => {
           .find((f) => f.imagen);
         if (!foto?.imagen) return [];
         const base = { imagen: foto.imagen, alt: foto.alt, generada: foto.generada };
-        if ('destacado' in columna) {
-          const destacado = entrada.data.destacados[columna.destacado];
-          return destacado ? [{ ...base, titulo: destacado.titulo }] : [];
+        if ('atributo' in columna) {
+          const atributo = entrada.data.atributos[columna.atributo];
+          return atributo ? [{ ...base, titulo: atributo }] : [];
         }
         const valor = cifras.get(columna.dato);
-        return valor ? [{ ...base, cifra: valor, etiqueta: columna.dato }] : [];
+        return valor ? [{ ...base, cifra: valor, etiqueta: columna.etiqueta ?? columna.dato }] : [];
       });
     })(),
   };
@@ -237,7 +240,7 @@ const schema = grafo(
       alt: heroPorId[modelo.id]?.alt ?? modelo.nombre,
     }))}
     generada={false}
-    siguiente={{ href: '#escenario', etiqueta: 'El auto' }}
+    siguiente={{ href: '#escenario', etiqueta: 'Explora el modelo' }}
   />
 
   <EscenarioModelo {modelos} />
@@ -282,12 +285,12 @@ const schema = grafo(
       >
         <span class="text-eyebrow uppercase tracking-[0.18em]">Sobre ARCFOX</span>
         <span class="sobre-titular mt-3 font-display text-subtitulo font-semibold uppercase">
-          Conoce la marca
+          Conoce nuestra esencia
         </span>
         {/* El subrayado del enlace, no un indicador: con un tercio lleno se leía
             como una barra de scroll a medias. En reposo la pista entera y tenue;
             al pasar o con el foco del teclado se llena de izquierda a derecha. */}
-        <span class="relative mt-8 block h-px w-full max-w-[14ch] bg-marca-clara/55" aria-hidden="true">
+        <span class="relative mt-8 block h-px w-full max-w-[18ch] bg-marca-clara/55" aria-hidden="true">
           <span class="absolute inset-0 origin-left scale-x-0 bg-marca-clara transition-transform duration-500 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none"></span>
         </span>
       </a>
@@ -308,9 +311,10 @@ const schema = grafo(
     {/* La isla pinta el select al cambiar de modelo. `/cotizalo` sigue
         siendo la URL del menú; aquí el visitante no tiene que salir. */}
     <Formulario
-      titulo="Cotízalo"
-      bajada="Elige tu ARCFOX. Te contactamos desde el concesionario."
+      titulo="Tu próximo ARCFOX"
+      bajada="Elige tu modelo y déjanos tus datos. Te ayudamos a conocer sus características, disponibilidad y precio en Ecuador."
       origen="/"
+      boton="Solicitar cotización"
       compacto
     />
   </Cierre>

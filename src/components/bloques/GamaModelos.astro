@@ -1,0 +1,38 @@
+---
+/* LAS TARJETAS DE LA GAMA. El cliente pidió las mismas descripciones del
+   catálogo en Sobre ARCFOX, Test drive y Cotízalo: salen del markdown de cada
+   modelo, así que corregir una bajada la corrige en las cuatro páginas. */
+import Rejilla from './Rejilla.astro';
+import Tarjeta from './Tarjeta.astro';
+import { coleccion } from '../../lib/contenido';
+
+interface Props {
+  class?: string;
+}
+
+const { class: extra } = Astro.props;
+
+const modelos = (await coleccion('modelos', ({ data }) => data.publico)).sort(
+  (a, b) => a.data.orden - b.data.orden,
+);
+---
+
+{
+  modelos.length > 0 ? (
+    <Rejilla navegable class={extra}>
+      {modelos.map((s) => (
+        <Tarjeta
+          titulo={s.data.nombre}
+          bajada={s.data.bajada}
+          href={`/modelos/${s.id}`}
+          etiqueta={s.data.categoria}
+          enlace={`Descubre el ${s.data.nombre.replace(/^ARCFOX\s+/, '')}`}
+        />
+      ))}
+    </Rejilla>
+  ) : (
+    <p class="text-lead text-tinta/70">
+      Estamos preparando el catálogo. Escríbenos y te avisamos cuando cada modelo esté disponible.
+    </p>
+  )
+}

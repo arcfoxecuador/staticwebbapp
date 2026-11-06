@@ -1,237 +1,196 @@
 ---
-/* La marca, no el catálogo. En Global esto es /about/aboutArcfox; en
-   Argentina, /nosotros. Los hechos de nombre, de’Silva, BAIC y BluePark
-   salen de esas fichas; la garantía, los 800 V de Colombia y el árbol
-   por compra de Argentina no. El recorrido T5/T1/S5 se queda en `/` y
-   en `/modelos`. */
+/* La marca, no el catálogo. El texto es el aprobado por el cliente (nov. 2026):
+   once bloques que cuentan quién es ARCFOX sin introducir otros modelos ni
+   fechas de lanzamiento local sin confirmar. Por eso la cronología se sustituyó
+   por cinco pilares de marca. */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
 import Encabezado from '../components/bloques/Encabezado.astro';
 import Rejilla from '../components/bloques/Rejilla.astro';
+import Tarjeta from '../components/bloques/Tarjeta.astro';
 import Metricas from '../components/bloques/Metricas.astro';
 import Escena from '../components/bloques/Escena.astro';
-import ListaIndice from '../components/bloques/ListaIndice.astro';
+import GamaModelos from '../components/bloques/GamaModelos.astro';
 import Faq from '../components/bloques/Faq.astro';
 import Cierre from '../components/bloques/Cierre.astro';
-import Figura from '../components/ui/Figura.astro';
 
 import sobre from '../assets/sobre.webp';
 
-import { coleccion } from '../lib/contenido';
-import { imagenDeEntrada } from '../lib/imagenes';
-import { FAQ_MARCA, ORG, PLAN_GLOBAL, SOBRE } from '../lib/site';
-import { faq, grafo, migas, organizacion, pagina, persona, sitioWeb } from '../lib/schema';
-
-const equipo = (await coleccion('equipo')).sort((a, b) => a.data.orden - b.data.orden);
-const modelos = (await coleccion('modelos', ({ data }) => data.publico)).sort(
-  (a, b) => a.data.orden - b.data.orden,
-);
+import { CTA, FAQ, METRICAS, ORG } from '../lib/site';
+import { faq, grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
 
 const titulo = 'Sobre ARCFOX';
-const descripcion = ORG.descripcion;
+const descripcion =
+  'ARCFOX es la marca de vehículos eléctricos premium de BAIC Group. Una propuesta que reúne diseño, innovación y confort para explorar una nueva forma de moverte.';
+
+const NOMBRE = [
+  {
+    titulo: 'ARC',
+    texto: 'Inspirado en el Ártico, expresa exploración y la decisión de avanzar hacia nuevas posibilidades.',
+  },
+  {
+    titulo: 'FOX',
+    texto: 'El zorro representa inteligencia y agilidad: cualidades que inspiran la personalidad de la marca.',
+  },
+];
+
+const FILOSOFIA = [
+  {
+    titulo: 'Diseño con propósito',
+    texto: 'Líneas limpias y espacios funcionales que hacen de cada vehículo un lugar para disfrutar.',
+  },
+  {
+    titulo: 'Innovación para las personas',
+    texto: 'Una visión de la movilidad que conecta tecnología, comodidad y necesidades cotidianas.',
+  },
+  {
+    titulo: 'Espíritu libre',
+    texto: 'La invitación a moverte a tu manera y descubrir nuevas posibilidades.',
+  },
+];
+
+const ORIGEN = [
+  {
+    titulo: 'BAIC',
+    texto: 'Fundado en 1958, BAIC Group aporta una trayectoria en la industria automotriz que acompaña la evolución de ARCFOX.',
+  },
+  {
+    titulo: 'BAIC y Magna',
+    texto: 'La colaboración entre BAIC y Magna forma parte de la historia industrial de ARCFOX y del desarrollo de su propuesta eléctrica.',
+  },
+];
+
+const PROPUESTA = [
+  { titulo: 'Diseño', texto: 'Una identidad reconocible, con líneas que expresan personalidad.' },
+  { titulo: 'Espacio', texto: 'Interiores pensados para las personas y sus planes.' },
+  { titulo: 'Confort', texto: 'Detalles que invitan a disfrutar cada trayecto.' },
+  { titulo: 'Movilidad eléctrica', texto: 'Una nueva forma de vivir la conducción.' },
+  { titulo: 'Elección', texto: 'T1, T5 y S5: encuentra el ARCFOX que va contigo.' },
+];
 
 const schema = grafo(
   organizacion(),
   sitioWeb(),
   pagina({ path: '/nosotros', titulo, descripcion, tipo: 'AboutPage' }),
   migas([{ nombre: titulo, path: '/nosotros' }]),
-  faq(FAQ_MARCA),
-  ...equipo
-    .filter((p) => p.data.bio)
-    .map((p) => persona({ nombre: p.data.nombre, cargo: p.data.cargo, bio: p.data.bio! })),
+  faq(FAQ),
 );
 ---
 
 <Base {titulo} {descripcion} path="/nosotros" {schema}>
   <Hero
-    rotulo={SOBRE.rotulo}
-    titulo={SOBRE.titular}
-    bajada={SOBRE.bajada}
-    accion={{ texto: 'Ver modelos', href: '/modelos' }}
-    secundaria={{ texto: 'Cotízalo', href: '/cotizalo' }}
+    rotulo="La marca"
+    titulo="Inspirados en la libertad"
+    bajada={descripcion}
+    accion={{ texto: 'Explora los modelos', href: '/modelos' }}
+    secundaria={{ texto: 'Cotiza tu ARCFOX', href: CTA.href }}
   />
 
   <Escena
     imagen={sobre}
     alt="ARCFOX en un paisaje nocturno junto al zorro, emblema de la marca."
-    rotulo="BAIC"
-    titulo="Distintos por naturaleza"
-    bajada="Diseño, autonomía y recarga para el uso diario. Las cifras de producto son las que confirma ARCFOX Ecuador; la versión para Ecuador se confirma en el concesionario."
+    rotulo="Nuestra esencia"
+    titulo={ORG.tagline}
+    bajada="Creemos en una movilidad que refleje tu personalidad. En el valor de los detalles, la libertad de elegir y la emoción de descubrir nuevos caminos."
     altura="media"
     anclaje="centro"
   />
 
-  <Seccion campo="superficie">
+  <Seccion>
     <Encabezado
-      rotulo="El nombre"
-      titulo="Ártico y zorro"
-      bajada="Dos mitades, una marca. Lo cuenta la ficha de identidad que publica ARCFOX Argentina, sobre el mismo origen global."
+      rotulo="Nuestro nombre"
+      titulo="Una identidad que mira más allá"
+      bajada="ARCFOX reúne la inspiración del Ártico con la inteligencia y agilidad del zorro."
     />
-    <Rejilla columnas={2} class="mt-14">
-      {
-        SOBRE.nombre.map((pieza) => (
-          <article class="border-t border-linea pt-6">
-            <h3 class="text-h3 font-bold text-marca">{pieza.titulo}</h3>
-            <p class="mt-3 max-w-[46ch] text-small text-tinta/75">{pieza.texto}</p>
-          </article>
-        ))
-      }
+    <Rejilla columnas={2} class="mt-12">
+      {NOMBRE.map((item) => <Tarjeta titulo={item.titulo} bajada={item.texto} brillo={false} />)}
     </Rejilla>
   </Seccion>
 
   <Seccion campo="tinte">
-    <Encabezado rotulo="Filosofía" titulo="Cómo se nombra la marca" />
-    <Rejilla columnas={3} class="mt-14">
-      {
-        SOBRE.filosofia.map((pieza) => (
-          <article class="border-t border-linea pt-6">
-            <h3 class="text-h3 font-bold text-marca">{pieza.titulo}</h3>
-            <p class="mt-3 max-w-[46ch] text-small text-tinta/75">{pieza.texto}</p>
-          </article>
-        ))
-      }
+    <Encabezado rotulo="Nuestra filosofía" titulo="Lo que nos mueve" />
+    <Rejilla columnas={3} class="mt-12">
+      {FILOSOFIA.map((item) => <Tarjeta titulo={item.titulo} bajada={item.texto} brillo={false} />)}
     </Rejilla>
   </Seccion>
 
-  <Seccion campo="superficie">
+  <Seccion>
     <Encabezado
-      rotulo={SOBRE.diseno.rotulo}
-      titulo={SOBRE.diseno.titulo}
-      bajada={SOBRE.diseno.cargo}
+      rotulo="Identidad"
+      titulo="Diseño que encuentra lo esencial"
+      bajada="Walter de’Silva participó junto con EDAG en el desarrollo del concepto y la identidad de ARCFOX. Su enfoque minimalista busca reducir lo innecesario para crear una experiencia visual limpia y armoniosa."
     />
-    <p class="revela mt-10 max-w-[62ch] text-lead text-tinta/80">{SOBRE.diseno.texto}</p>
-    <blockquote class="revela mt-10 max-w-[46ch] border-l border-linea pl-6 text-lead text-tinta/80">
-      <p>{SOBRE.diseno.cita}</p>
-      <footer class="mt-4 text-small text-tinta/55">{SOBRE.diseno.fuente}</footer>
+    <blockquote class="revela mt-12 max-w-[30ch] border-l-2 border-marca-clara pl-6 font-display text-subtitulo font-semibold text-marca">
+      Cada línea tiene una intención. Cada espacio, una posibilidad.
     </blockquote>
   </Seccion>
 
   <Seccion campo="tinte">
     <Encabezado
-      rotulo="Origen"
-      titulo="BAIC, BluePark y Magna"
-      bajada="La fábrica y el grupo. No es un dato de Ecuador: es de dónde sale el auto."
+      rotulo="Nuestro origen"
+      titulo="Experiencia que impulsa una nueva movilidad"
+      bajada="ARCFOX forma parte del desarrollo de la movilidad eléctrica de BAIC Group."
     />
-    <Rejilla columnas={2} class="mt-14">
+    <Rejilla columnas={2} class="mt-12">
+      {ORIGEN.map((item) => <Tarjeta titulo={item.titulo} bajada={item.texto} brillo={false} />)}
+    </Rejilla>
+  </Seccion>
+
+  <Seccion>
+    <Encabezado
+      rotulo="Nuestra propuesta"
+      titulo="Una experiencia que empieza contigo"
+      bajada="Cinco ideas que dan forma a nuestra manera de entender la movilidad."
+    />
+    <Rejilla columnas={3} class="mt-12">
       {
-        SOBRE.origen.map((pieza) => (
-          <article class="border-t border-linea pt-6">
-            <h3 class="text-h3 font-bold text-marca">{pieza.titulo}</h3>
-            <p class="mt-3 max-w-[46ch] text-small text-tinta/75">{pieza.texto}</p>
-          </article>
+        PROPUESTA.map((item, i) => (
+          <Tarjeta
+            etiqueta={String(i + 1).padStart(2, '0')}
+            titulo={item.titulo}
+            bajada={item.texto}
+            brillo={false}
+          />
         ))
       }
     </Rejilla>
   </Seccion>
 
-  <Seccion campo="superficie">
-    <Encabezado
-      rotulo="Historia"
-      titulo="De la alianza al catálogo de Ecuador"
-      bajada="Alpha T y Alpha S son el origen de la marca. Aquí se venden T5, T1 y S5."
-    />
-    <ol class="revela-grupo mt-14 flex flex-col">
-      {
-        SOBRE.cronologia.map((hito) => (
-          <li class="grid gap-4 border-t border-linea py-6 last:border-b md:grid-cols-[6rem_1fr] md:gap-10">
-            <p class="text-small font-semibold tabular-nums text-marca-clara">{hito.cuando}</p>
-            <div>
-              <h3 class="text-h3 font-bold text-marca">{hito.titulo}</h3>
-              <p class="mt-2 max-w-[62ch] text-small text-tinta/75">{hito.texto}</p>
-            </div>
-          </li>
-        ))
-      }
-    </ol>
-  </Seccion>
-
   {
-    PLAN_GLOBAL.length > 0 && (
-      <Seccion campo="tinte" aire="apretado">
+    METRICAS.length > 0 && (
+      <Seccion campo="tinte">
         <Encabezado
-          rotulo="Plan global"
-          titulo="Seis regiones, más de cuarenta países"
-          bajada="Lo publica ARCFOX Global. Ecuador entra en esa red; la venta y el servicio locales se confirman en el concesionario."
+          rotulo="ARCFOX en Ecuador"
+          titulo="Una nueva energía para tus caminos"
+          bajada="Conoce una propuesta que une la experiencia automotriz de BAIC con tres formas de vivir la movilidad eléctrica."
         />
-        <div class="mt-10">
-          <Metricas items={PLAN_GLOBAL} />
+        <div class="mt-12">
+          <Metricas items={METRICAS} />
         </div>
       </Seccion>
     )
   }
 
-  {
-    modelos.length > 0 && (
-      <Seccion campo="superficie">
-        <Encabezado
-          rotulo="En Ecuador"
-          titulo="Tres modelos, todos eléctricos"
-          bajada="El catálogo local. Kaola S y los Alpha no se venden aquí."
-        />
-        <ListaIndice
-          numerada
-          class="mt-14"
-          items={modelos.map((m) => ({
-            titulo: m.data.nombre,
-            bajada: m.data.bajada,
-            href: `/modelos/${m.id}`,
-            meta: m.data.rotulo,
-          }))}
-        />
-      </Seccion>
-    )
-  }
+  <Seccion>
+    <Encabezado
+      rotulo="Elige tu ARCFOX"
+      titulo="Tres modelos. Tu propia forma de avanzar."
+      bajada="Descubre la versatilidad del T1, la amplitud del T5 y el carácter deportivo del S5."
+    />
+    <GamaModelos class="mt-12" />
+  </Seccion>
 
   <Seccion campo="tinte">
-    <Encabezado rotulo="Preguntas" titulo="La marca, sin el catálogo de otro país" />
+    <Encabezado titulo="Conoce más sobre ARCFOX" />
     <div class="mt-10">
-      <Faq items={FAQ_MARCA} grupo="faq-marca" />
+      <Faq items={FAQ} />
     </div>
   </Seccion>
 
-  {
-    equipo.length > 0 && (
-      <Seccion campo="superficie">
-        <Encabezado rotulo="Equipo" titulo="Quién hace el trabajo" />
-
-        <Rejilla columnas={3} navegable={equipo.length > 8} class="mt-14">
-          {equipo.map((p) => {
-            const retrato = imagenDeEntrada('equipo', p.id, {
-              asset: p.data.retrato,
-              alt: p.data.retratoAlt,
-              generada: p.data.retratoGenerado,
-            });
-            return (
-              <article class="flex flex-col">
-                {retrato && (
-                  <Figura
-                    imagen={retrato}
-                    proporcion="retrato"
-                    candidatos={[320, 640, 960]}
-                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  />
-                )}
-                <h3 class="mt-5 text-h3 font-bold text-marca">{p.data.nombre}</h3>
-                <p class="mt-1 text-small text-tinta/60">{p.data.cargo}</p>
-                {p.data.bio && <p class="mt-3 max-w-[46ch] text-small text-tinta/75">{p.data.bio}</p>}
-                {p.data.linkedin && (
-                  <a
-                    href={p.data.linkedin}
-                    class="enlace-subrayado mt-4 text-small text-marca"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    LinkedIn
-                  </a>
-                )}
-              </article>
-            );
-          })}
-        </Rejilla>
-      </Seccion>
-    )
-  }
-
-  <Cierre titulo="¿Hablamos?" bajada="Ciudad y modelo. Te contactamos con el concesionario." />
+  <Cierre
+    titulo="Tu siguiente camino empieza aquí"
+    bajada="Conoce nuestros modelos y encuentra una nueva forma de moverte."
+    accion={{ texto: 'Encuentra tu ARCFOX', href: '/modelos' }}
+  />
 </Base>
