@@ -20,7 +20,7 @@ export const ORG = {
   tagline: 'Distintos por naturaleza',
   /** Una frase. Es la que va a `description` del JSON-LD y a llms.txt: escríbela
       como la escribiría alguien citando a esta empresa, no como un eslogan. */
-  descripcion: 'ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV y un sedán de diseño, autonomía y recarga para uso diario.',
+  descripcion: 'ARCFOX es la marca de vehículos eléctricos premium de BAIC Group. Una propuesta que reúne diseño, innovación y confort para explorar una nueva forma de moverte.',
   fundacion: '',
 
   email: 'contacto@arcfox.com.ec',
@@ -60,6 +60,8 @@ export type Sede = {
   horario?: string;
   /** Enlace a mapas. Opcional: sin él la ficha no pinta el enlace. */
   mapa?: string;
+  /** Teléfono de la sede, como se lee. Opcional. */
+  telefono?: string;
 };
 
 export const SEDES: Sede[] = [
@@ -117,11 +119,11 @@ export const CTA = {
 export const NAV: NavZona[] = [
   {
     texto: 'Modelos',
-    href: '/',
+    href: '/modelos',
     hijos: [
-      { texto: 'ARCFOX T5', href: '/#t5', bajada: 'SUV familiar 100% eléctrico' },
-      { texto: 'ARCFOX T1', href: '/#t1', bajada: 'SUV crossover 100% eléctrico' },
-      { texto: 'ARCFOX S5', href: '/#s5', bajada: 'Sedán 100% eléctrico' },
+      { texto: 'ARCFOX T1', href: '/#t1', bajada: 'Compacto eléctrico' },
+      { texto: 'ARCFOX T5', href: '/#t5', bajada: 'SUV eléctrico' },
+      { texto: 'ARCFOX S5', href: '/#s5', bajada: 'Sedán eléctrico' },
     ],
   },
   { texto: 'Concesionarios', href: '/concesionarios' },
@@ -161,17 +163,25 @@ export const PORTADA = {
 export type Metrica = { valor: string; etiqueta: string; unidad?: string; fuente?: string };
 
 export const METRICAS: Metrica[] = [
-  { valor: '3', etiqueta: 'Modelos en Ecuador', fuente: 'Catálogo inicial ARCFOX Ecuador' },
-  { valor: '100%', etiqueta: 'Eléctricos', fuente: 'Ficha de cada modelo' },
-  { valor: 'BAIC', etiqueta: 'Grupo', fuente: 'Identidad de marca ARCFOX' },
+  /* Las tres cifras, tal como vienen en el contenido aprobado por el cliente. */
+  { valor: '1958', etiqueta: 'Fundación de BAIC' },
+  { valor: '3', etiqueta: 'Modelos para descubrir' },
+  { valor: '100%', etiqueta: 'Propulsión eléctrica' },
 ];
 
 /** Los pasos del servicio, de contacto a resultado. La numeración la pone el
     componente: no la escribas en el texto. */
 export const PASOS: { titulo: string; texto: string }[] = [
-  { titulo: 'Elige modelo y ciudad', texto: 'T5, T1 o S5, y la ciudad donde quieres verlo o recogerlo.' },
-  { titulo: 'Te contactamos', texto: 'Un asesor del concesionario más cercano te escribe para coordinar fecha.' },
-  { titulo: 'Prueba o cotiza', texto: 'Test drive, ficha local y siguiente paso, sin cifras de otro país.' },
+  { titulo: 'Elige tu modelo', texto: 'Selecciona el ARCFOX que te interesa e indícanos tu ciudad.' },
+  { titulo: 'Coordina tu visita', texto: 'Un asesor te contactará para confirmar disponibilidad, lugar y horario.' },
+  { titulo: 'Vive la conducción eléctrica', texto: 'Conoce el vehículo al volante y resuelve tus dudas durante la visita.' },
+];
+
+/** Los pasos de Cotízalo. Mismo bloque que PASOS, otro recorrido. */
+export const PASOS_COTIZACION: { titulo: string; texto: string }[] = [
+  { titulo: 'Cuéntanos qué buscas', texto: 'Elige tu modelo e indícanos tu ciudad.' },
+  { titulo: 'Recibe asesoría', texto: 'Un asesor se pondrá en contacto contigo para conocer tus necesidades.' },
+  { titulo: 'Conoce tu cotización', texto: 'Revisa la propuesta y consulta los detalles para continuar.' },
 ];
 
 /** Por qué esta empresa y no otra. Tres o cuatro; con seis no se lee ninguno. */
@@ -196,20 +206,84 @@ export const PILARES: { titulo: string; texto: string }[] = [
     frases autosuficientes: es lo que se cita. */
 export const FAQ: readonly { p: string; r: string }[] = [
   {
-    p: '¿ARCFOX ya está en Ecuador?',
-    r: 'Sí. ARCFOX llega a Ecuador como la marca de vehículos 100% eléctricos de BAIC. El catálogo inicial son el T5, el T1 y el S5.',
+    p: '¿Qué significa ARCFOX?',
+    r: 'El nombre combina la inspiración del Ártico con el zorro, símbolo de inteligencia y agilidad.',
   },
   {
-    p: '¿Los modelos son 100% eléctricos?',
-    r: 'Sí. T5, T1 y S5 son vehículos a batería: no llevan motor de combustión ni híbrido.',
+    p: '¿Qué relación tiene ARCFOX con BAIC?',
+    r: 'ARCFOX es la marca de vehículos eléctricos premium de BAIC Group.',
   },
   {
-    p: '¿Dónde puedo ver un ARCFOX o pedir un test drive?',
-    r: 'En la red de concesionarios. Correo, teléfono y sedes están en Concesionarios. Completa la página Cotízalo o pide un test drive y te contactamos con el punto más cercano.',
+    p: '¿Qué modelos puedo conocer en Ecuador?',
+    r: 'Explora el T1, T5 y S5 y consulta la disponibilidad de cada versión con un asesor.',
   },
   {
-    p: '¿Puedo copiar precios o autonomías de la web de Argentina?',
-    r: 'No. Equipo, cifras y condiciones comerciales de Ecuador se confirman aquí. Un dato de otro país no se publica como si fuera local.',
+    p: '¿Los tres modelos son eléctricos?',
+    r: 'Sí. T1, T5 y S5 cuentan con propulsión 100% eléctrica.',
+  },
+  {
+    p: '¿Dónde puedo consultar el equipamiento y la garantía?',
+    r: 'Solicita información sobre la versión de tu interés. Un asesor te indicará su equipamiento y las condiciones de garantía aplicables en Ecuador.',
+  },
+];
+
+/** Preguntas de Concesionarios. */
+export const FAQ_CONCESIONARIOS: readonly { p: string; r: string }[] = [
+  {
+    p: '¿Dónde puedo conocer los vehículos?',
+    r: 'Consulta los puntos de atención publicados o envíanos tu ciudad para solicitar información.',
+  },
+  {
+    p: '¿Necesito coordinar mi visita?',
+    r: 'Te recomendamos contactarnos antes de acudir para confirmar horarios y disponibilidad del modelo.',
+  },
+  {
+    p: '¿Dónde consulto sobre mantenimiento y posventa?',
+    r: 'Envíanos tu consulta e indica tu ciudad y modelo para recibir orientación sobre la atención disponible.',
+  },
+  {
+    p: '¿Cómo puedo contactar a un asesor?',
+    r: 'Completa el formulario de esta página con tus datos y el motivo de tu consulta.',
+  },
+];
+
+/** Preguntas de Test drive. */
+export const FAQ_TEST_DRIVE: readonly { p: string; r: string }[] = [
+  {
+    p: '¿Cómo solicito un test drive?',
+    r: 'Completa el formulario con tus datos, ciudad y modelo de interés.',
+  },
+  {
+    p: '¿Qué modelos puedo probar?',
+    r: 'Puedes solicitar información para probar el T1, T5 o S5. Un asesor confirmará cuáles están disponibles.',
+  },
+  {
+    p: '¿Dónde se realiza la prueba?',
+    r: 'El lugar se coordinará contigo según tu ciudad y las opciones disponibles.',
+  },
+  {
+    p: '¿Qué debo llevar y cuánto dura?',
+    r: 'El asesor te informará los requisitos y la duración al confirmar la cita.',
+  },
+];
+
+/** Preguntas de Cotízalo. */
+export const FAQ_COTIZACION: readonly { p: string; r: string }[] = [
+  {
+    p: '¿Cómo conozco el precio de un modelo?',
+    r: 'Solicita una cotización para recibir el precio y las condiciones vigentes de la versión que te interesa.',
+  },
+  {
+    p: '¿Qué sucede después de enviar el formulario?',
+    r: 'Un asesor se pondrá en contacto contigo para atender tu solicitud.',
+  },
+  {
+    p: '¿Qué hago si todavía no sé qué modelo elegir?',
+    r: 'Selecciona el que más te llame la atención e indícanos en el mensaje que deseas comparar opciones.',
+  },
+  {
+    p: '¿Puedo solicitar información desde mi ciudad?',
+    r: 'Sí. Indica tu ciudad en el formulario para que podamos orientarte sobre las opciones de atención disponibles.',
   },
 ];
 
@@ -638,6 +712,12 @@ export const FORMULARIO = {
   /** El nombre del campo trampa. No se rellena nunca por un humano —está oculto
       y sin foco—, así que si llega con contenido es un bot. */
   trampa: '_ref',
+  /** Acuse tras un envío correcto. Test drive pasa el suyo. */
+  confirmacion:
+    '¡Gracias por tu interés en ARCFOX Ecuador! Recibimos tu solicitud. Un asesor se pondrá en contacto contigo.',
+  confirmacionPrueba:
+    'Recibimos tu solicitud. Un asesor te contactará para confirmar disponibilidad, fecha y lugar de la prueba.',
+  error: 'No pudimos enviar tu solicitud. Inténtalo nuevamente.',
 } as const;
 
 // ── Protocolo de la puerta de lanzamiento ───────────────────────────────────
@@ -686,7 +766,7 @@ export const ANALITICA = {
 /** El aviso del pie. Vacío = no se pinta. Si el sector está regulado, esto no
     es opcional y no lo redacta quien programa. */
 export const AVISO_LEGAL =
-  'Las imágenes son ilustrativas. Las cifras que se publican son las que confirma ARCFOX Ecuador sobre la ficha global de la marca; la versión, el equipamiento y las condiciones comerciales se confirman en el concesionario oficial.';
+  'Las imágenes son referenciales. Los colores, acabados y equipamiento pueden variar según la versión disponible en Ecuador. Consulta las especificaciones y condiciones comerciales del modelo de tu interés.';
 
 /** Nota corta junto a cada bloque de cifras. Misma idea que AVISO_LEGAL. */
 export const AVISO_CIFRAS =

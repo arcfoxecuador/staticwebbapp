@@ -1,145 +1,105 @@
 ---
-/* Cotízalo es la página de conversión, como Contact Us en Global
-   (`/contactUs`) y Cotiza Ya en Colombia. El menú abre una URL propia.
-   `barraAccion={false}` porque el CTA ya es el contenido. Precios de
-   otro país no entran. */
+/* COTÍZALO. La página del CTA primario: el botón de la cabecera, la barra
+   móvil y los cierres llevan aquí (`CTA.href`). La portada conserva su propio
+   formulario al final del recorrido; esta página es para quien llega decidido
+   a pedir precio y quiere saber qué pasa después de enviar.
+
+   Sin barra de acción: repetiría el CTA que ya es el contenido de la página. */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
 import Encabezado from '../components/bloques/Encabezado.astro';
 import Rejilla from '../components/bloques/Rejilla.astro';
+import Tarjeta from '../components/bloques/Tarjeta.astro';
 import Pasos from '../components/bloques/Pasos.astro';
+import GamaModelos from '../components/bloques/GamaModelos.astro';
 import Formulario from '../components/bloques/Formulario.astro';
-import ListaIndice from '../components/bloques/ListaIndice.astro';
 import Faq from '../components/bloques/Faq.astro';
-import { coleccion } from '../lib/contenido';
-import { COTIZA, FAQ_COTIZA, ORG, PASOS, SEDES } from '../lib/site';
+import Boton from '../components/ui/Boton.astro';
+import { FAQ_COTIZACION, PASOS_COTIZACION } from '../lib/site';
 import { faq, grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
 
-const modelos = (await coleccion('modelos', ({ data }) => data.publico)).sort(
-  (a, b) => a.data.orden - b.data.orden,
-);
-
 const titulo = 'Cotízalo';
-const descripcion = COTIZA.bajada;
+const descripcion =
+  'Solicita una cotización del T1, T5 o S5 y conoce las versiones, disponibilidad y condiciones comerciales en Ecuador.';
 
 const schema = grafo(
   organizacion(),
   sitioWeb(),
-  pagina({ path: '/cotizalo', titulo, descripcion, tipo: 'ContactPage' }),
+  pagina({ path: '/cotizalo', titulo, descripcion }),
   migas([{ nombre: titulo, path: '/cotizalo' }]),
-  faq(FAQ_COTIZA),
+  faq(FAQ_COTIZACION),
 );
+
+const BENEFICIOS = [
+  { titulo: 'Precio y condiciones', texto: 'Recibe información sobre el precio y las condiciones comerciales vigentes.' },
+  { titulo: 'Versión y equipamiento', texto: 'Conoce las características incluidas en la versión cotizada.' },
+  { titulo: 'Tu siguiente paso', texto: 'Consulta disponibilidad, opciones de visita y prueba de manejo.' },
+];
 ---
 
 <Base {titulo} {descripcion} path="/cotizalo" {schema} barraAccion={false}>
   <Hero
-    rotulo={COTIZA.rotulo}
-    titulo={COTIZA.titular}
+    rotulo="Tu próximo ARCFOX"
+    titulo="Elige cómo quieres moverte"
     bajada={descripcion}
-    accion={{ texto: 'Pedir cotización', href: '#formulario' }}
-    secundaria={{ texto: 'Ver modelos', href: '/modelos' }}
+    accion={{ texto: 'Solicitar cotización', href: '#formulario' }}
+    secundaria={{ texto: 'Explorar modelos', href: '/modelos' }}
   />
 
-  <Seccion campo="tinte">
+  <Seccion>
     <Encabezado
-      rotulo="Qué incluye"
-      titulo="Una cotización de Ecuador"
-      bajada={`También puedes escribir a ${ORG.email}.`}
+      rotulo="Asesoría personalizada"
+      titulo="La información que necesitas para elegir"
+      bajada="Conoce las opciones del modelo que te interesa y resuelve tus dudas con un asesor."
     />
-    <Rejilla columnas={3} class="mt-14">
-      {
-        COTIZA.incluye.map((pieza) => (
-          <article class="border-t border-linea pt-6">
-            <h3 class="text-h3 font-bold text-marca">{pieza.titulo}</h3>
-            <p class="mt-3 max-w-[46ch] text-small text-tinta/75">{pieza.texto}</p>
-          </article>
-        ))
-      }
+    <Rejilla columnas={3} class="mt-12">
+      {BENEFICIOS.map((item) => <Tarjeta titulo={item.titulo} bajada={item.texto} brillo={false} />)}
     </Rejilla>
   </Seccion>
 
-  {
-    PASOS.length > 0 && (
-      <Seccion campo="superficie" aire="apretado">
-        <Encabezado rotulo="Cómo funciona" titulo="De la solicitud a la respuesta" />
-        <div class="mt-10">
-          <Pasos />
-        </div>
-      </Seccion>
-    )
-  }
-
-  <Seccion id="formulario">
-    <Formulario
-      titulo="Cotízalo"
-      bajada="Nombre, teléfono, ciudad y modelo. Te respondemos desde el concesionario más cercano."
-      origen="/cotizalo"
-    />
+  <Seccion campo="tinte" aire="apretado">
+    <Encabezado rotulo="Cómo funciona" titulo="Cotiza en tres pasos" />
+    <div class="mt-10">
+      <Pasos items={PASOS_COTIZACION} />
+    </div>
   </Seccion>
 
-  {
-    modelos.length > 0 && (
-      <Seccion campo="superficie">
-        <Encabezado
-          rotulo="Modelos"
-          titulo="Elige antes, o en el formulario"
-          bajada="Dos SUV y un sedán, 100% eléctricos. La ficha cuenta el auto; la cotización, el precio de este país."
-        />
-        <ListaIndice
-          numerada
-          class="mt-14"
-          items={modelos.map((m) => ({
-            titulo: m.data.nombre,
-            bajada: m.data.bajada,
-            href: `/modelos/${m.id}`,
-            meta: m.data.rotulo,
-          }))}
-        />
-      </Seccion>
-    )
-  }
+  <Seccion>
+    <div id="formulario" class="scroll-mt-24">
+      <Formulario
+        titulo="Cotiza tu ARCFOX"
+        bajada="Completa tus datos y selecciona el modelo que te interesa."
+        origen="/cotizalo"
+        boton="Solicitar cotización"
+      />
+    </div>
+  </Seccion>
 
-  {
-    SEDES.length > 0 && (
-      <Seccion campo="tinte">
-        <Encabezado rotulo="Red" titulo="Dónde estamos" />
-        <div class="tira mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {SEDES.map((sede) => (
-            <address class="campo-claro not-italic rounded-[var(--radius-lg)] border border-linea bg-superficie p-6">
-              <p class="text-h3 font-bold text-marca">{sede.nombre}</p>
-              <p class="mt-3 text-small text-tinta/75">
-                {sede.calle && (
-                  <>
-                    {sede.calle}
-                    <br />
-                  </>
-                )}
-                {[sede.ciudad, sede.region].filter(Boolean).join(', ')}
-                <br />
-                {sede.pais}
-              </p>
-              {sede.mapa && (
-                <a
-                  href={sede.mapa}
-                  class="enlace-subrayado mt-4 inline-block text-small text-marca"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Ver en el mapa
-                </a>
-              )}
-            </address>
-          ))}
-        </div>
-      </Seccion>
-    )
-  }
+  <Seccion campo="tinte">
+    <Encabezado
+      rotulo="Descubre la gama"
+      titulo="Encuentra el que va contigo"
+      bajada="Versatilidad, amplitud o estilo deportivo. Explora lo que hace especial a cada ARCFOX."
+    />
+    <GamaModelos class="mt-12" />
+  </Seccion>
 
-  <Seccion campo="superficie">
-    <Encabezado rotulo="Preguntas" titulo="Antes de enviar" />
+  <Seccion>
+    <Encabezado
+      rotulo="Puntos de atención"
+      titulo="Conoce dónde visitarnos"
+      bajada="Consulta los puntos de atención y coordina tu visita."
+    />
+    <div class="mt-8">
+      <Boton href="/concesionarios" variante="secundario">Ver concesionarios</Boton>
+    </div>
+  </Seccion>
+
+  <Seccion campo="tinte">
+    <Encabezado titulo="Resolvemos tus dudas" />
     <div class="mt-10">
-      <Faq items={FAQ_COTIZA} grupo="faq-cotiza" />
+      <Faq items={FAQ_COTIZACION} grupo="faq-cotizacion" />
     </div>
   </Seccion>
 </Base>

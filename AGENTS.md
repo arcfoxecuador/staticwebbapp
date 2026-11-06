@@ -83,6 +83,7 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
 | `/cotizalo` | `pages/cotizalo.astro` — cotización (como Contact Us en Global) |
 | `/concesionarios` | `pages/concesionarios.astro` |
 | `/test-drive` | `pages/test-drive.astro` |
+| `/cotizalo` | `pages/cotizalo.astro` — destino del CTA primario (`CTA.href`) |
 | `/postventa` | `pages/postventa.astro` — `noindex`, fuera del menú; URL viva para revisar |
 | `/bitacora` | `pages/bitacora/index.astro` |
 | `/bitacora/{slug}` | `pages/bitacora/[slug].astro` |
@@ -131,14 +132,16 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   recorrido hero cinematográfico → escenario claro T5/T1/S5 → mosaico de rasgos
   → Sobre ARCFOX → Cotízalo. El escenario gira fotografías 2D ordenadas desde el
   markdown y sincroniza el modelo activo con el formulario; no hay malla 3D.
-- **Marca y conversión**: `/nosotros` cuenta nombre (ARC + FOX), Born free,
-  de’Silva, BAIC 1958, BluePark × Magna y la cronología hasta Ecuador — hechos
-  de Global y Argentina. No publica garantía en km, 800 V ni programas de
-  sustentabilidad de otro país. `/cotizalo`, `/test-drive` y `/concesionarios`
-  explican el proceso local (pasos, qué incluye, FAQ) sin precios ni sedes
-  extranjeras. Calle y horario de sede siguen pendientes en `SEDES`.
-- **Contenido**: `METRICAS`, `PASOS`, `PILARES` y `FAQ` de `site.ts` — *pendiente*.
-  Sus bloques no se pintan mientras estén vacíos.
+- **Contenido**: los textos son los aprobados por el cliente (documento de
+  nov. 2026, «Contenido web adaptado a la estructura del sitio»): `/nosotros`,
+  `/cotizalo`, `/test-drive`, `/concesionarios`, `/modelos` y cada ficha. El
+  orden de la gama es T1, T5, S5 (`orden` en cada markdown). Las cifras son las
+  que revisó Foton (oct. 2026); no se cambian por las de Argentina. Los colores
+  del selector son sólo los que tienen fotos. `/politicas` es la versión vigente
+  («LEGALES WEB ARCFOX», Foton): la nota del documento sobre FOTON no aplica.
+  Pendientes del cliente: dirección, horario y teléfono de las sedes (sin `calle`
+  la ficha no se publica) y la dirección de Quito del Aviso de Privacidad, que
+  legal dejó como «(nueva dirección Quito)».
 - **Colecciones**: los tres `ejemplo.md` de `src/content/` vienen **despublicados**
   (`publico: false` / `borrador: true`). Bórralos al entrar contenido real.
 - **Logo**: `public/marca/logo.svg` es un placeholder tipográfico. `schema.ts` lo

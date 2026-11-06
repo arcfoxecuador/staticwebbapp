@@ -57,6 +57,23 @@ const modelos = defineCollection({
     orden: z.number().default(0),
     /** Una línea. Es lo que se lee en la tarjeta antes de decidir entrar. */
     bajada: z.string(),
+    /** La presentación de la ficha, debajo del nombre. Más larga que `bajada`. */
+    descripcion: z.string().optional(),
+    /** Los cuatro rasgos del tablero de portada, en el orden en que se leen. */
+    atributos: z.array(z.string()).default([]),
+    /** Los textos de cada escena de la ficha. Viven con el modelo porque el
+        cliente los escribió por modelo; la página sólo los coloca. */
+    textos: z
+      .object({
+        colores: z.string().optional(),
+        interior: z.string().optional(),
+        interiorTexto: z.string().optional(),
+        tecnologia: z.string().optional(),
+        tecnologiaIntro: z.string().optional(),
+        cotizacion: z.string().optional(),
+        cotizacionTexto: z.string().optional(),
+      })
+      .default({}),
     categoria: z.string().optional(),
     rotulo: z.string().optional(),
     /** Los datos duros de la ficha: pares clave/valor. Es lo que hace que dos
