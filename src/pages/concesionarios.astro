@@ -26,7 +26,6 @@ const schema = grafo(
   faq(FAQ_CONCESIONARIOS),
 );
 
-const mapa = SEDES.find((sede) => sede.mapa)?.mapa;
 const confirmadas = SEDES.filter((sede) => sede.calle);
 const SIN_SEDES =
   'Cuéntanos en qué ciudad estás y te orientaremos sobre las opciones de atención disponibles.';
@@ -51,13 +50,10 @@ const SERVICIOS = [
     <div class="medida">
       <h2 class="mb-6 text-h3 font-bold text-marca">Encuentra tu punto de atención</h2>
       {
-        mapa ? (
-          <a
-            href={mapa}
-            class="mapa-red block overflow-clip border border-linea"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+        confirmadas.length > 0 ? (
+          /* Hay un enlace a Maps por punto; el bloque lleva a la lista y cada
+             ficha abre el suyo con «Cómo llegar». */
+          <a href="#puntos-de-atencion" class="mapa-red block overflow-clip border border-linea">
             <span class="mapa-red-lienzo" aria-hidden="true"></span>
             <span class="mapa-red-pin">
               <svg width="28" height="36" viewBox="0 0 28 36" fill="none" aria-hidden="true">
@@ -67,7 +63,7 @@ const SERVICIOS = [
                 />
                 <circle cx="14" cy="14" r="4.5" fill="var(--color-fondo)" />
               </svg>
-              <span class="mt-3 text-small font-medium uppercase tracking-[0.14em]">Ver en el mapa</span>
+              <span class="mt-3 text-small font-medium uppercase tracking-[0.14em]">Ver puntos de atención</span>
             </span>
           </a>
         ) : (
@@ -100,7 +96,7 @@ const SERVICIOS = [
     </Rejilla>
   </Seccion>
 
-  <Seccion campo="tinte">
+  <Seccion campo="tinte" id="puntos-de-atencion">
     <Encabezado rotulo="Contacto" titulo="Encuentra dónde visitarnos" />
 
     {
@@ -112,7 +108,7 @@ const SERVICIOS = [
                 <h3 class="text-h3 font-bold text-marca">{sede.nombre}</h3>
                 <p class="mt-2 text-small text-tinta/70">{[sede.ciudad, sede.region].filter(Boolean).join(', ')}</p>
                 <p class="mt-3 text-small text-tinta/70">{sede.calle}</p>
-                {sede.horario && <p class="mt-3 text-small text-tinta/70">{sede.horario}</p>}
+                {sede.horario && <p class="mt-3 text-small text-tinta/70">Horario: {sede.horario}</p>}
                 {sede.telefono && <p class="mt-3 text-small text-tinta/70">{sede.telefono}</p>}
                 <p class="mt-auto flex gap-6 pt-5 text-small">
                   {sede.mapa && (

@@ -24,7 +24,7 @@
    descripción, y secciones H2 con listas de enlaces `- [título](url): nota`. */
 import type { APIRoute } from 'astro';
 import { coleccion } from '../lib/contenido';
-import { FAQ, ORG, SEDES, SITE, direccionLegible } from '../lib/site';
+import { CIUDADES, FAQ, ORG, SEDES, SITE, direccionLegible } from '../lib/site';
 
 const url = (path: string) => new URL(path, SITE).toString();
 
@@ -43,7 +43,7 @@ export const GET: APIRoute = async () => {
     '',
     `> ${ORG.descripcion}`,
     '',
-    `${ORG.nombreLegal} ${ORG.fundacion ? `opera desde ${ORG.fundacion} y ` : ''}atiende desde ${SEDES.map((s) => s.ciudad).join(', ')}.`,
+    `${ORG.nombreLegal} ${ORG.fundacion ? `opera desde ${ORG.fundacion} y ` : ''}atiende desde ${CIUDADES.join(', ')}.`,
     '',
   ];
 

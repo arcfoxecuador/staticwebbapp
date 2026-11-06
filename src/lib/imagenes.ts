@@ -80,7 +80,7 @@ const buscarLocal = (familia: Familia, slug: string) => {
 const ALT_LOCAL: Partial<Record<Familia, Record<string, string>>> = {
   modelos: {
     t5: 'ARCFOX T5, SUV 100% eléctrico, vista de tres cuartos.',
-    t1: 'ARCFOX T1, compacto 100% eléctrico.',
+    t1: 'ARCFOX T1, SUV 100% eléctrico.',
     s5: 'ARCFOX S5, sedán 100% eléctrico.',
   },
 };

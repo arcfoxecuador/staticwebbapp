@@ -139,9 +139,11 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   que revisó Foton (oct. 2026); no se cambian por las de Argentina. Los colores
   del selector son sólo los que tienen fotos. `/politicas` es la versión vigente
   («LEGALES WEB ARCFOX», Foton): la nota del documento sobre FOTON no aplica.
-  Pendientes del cliente: dirección, horario y teléfono de las sedes (sin `calle`
-  la ficha no se publica) y la dirección de Quito del Aviso de Privacidad, que
-  legal dejó como «(nueva dirección Quito)».
+  Contacto oficial: info@arcfox.com.ec y 096 429 2000. Las 15 sedes vienen de
+  «Puntos de venta current Arcfox.xlsx»; `/cookies` es el «Uso de Cookies» del
+  cliente, literal. El T1 se presenta como SUV (pedido del cliente, 6-nov-2026).
+  Pendientes del cliente: horario y teléfono de cada sede y la dirección de Quito
+  del Aviso de Privacidad, que legal dejó como «(nueva dirección Quito)».
 - **Colecciones**: los tres `ejemplo.md` de `src/content/` vienen **despublicados**
   (`publico: false` / `borrador: true`). Bórralos al entrar contenido real.
 - **Logo**: `public/marca/logo.svg` es un placeholder tipográfico. `schema.ts` lo
