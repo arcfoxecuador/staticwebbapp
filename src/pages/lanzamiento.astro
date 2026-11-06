@@ -29,13 +29,10 @@ const schema = grafo(
 );
 
 /* Las líneas son una decisión de composición, no tres copias del titular.
-   Partir la única cadena conserva `site.ts` como fuente cuando cambie el copy. */
-const palabras = LANZAMIENTO.titular.split(' ');
-const lineasTitular = [
-  palabras.slice(0, 3).join(' '),
-  palabras.slice(3, 7).join(' '),
-  palabras.slice(7).join(' '),
-];
+   Partir la única cadena conserva `site.ts` como fuente cuando cambie el copy.
+   El corte va tras cada coma o punto y no por número de palabras: con el
+   titular de frases cortas, contar palabras partía «encontró» de su sujeto. */
+const lineasTitular = LANZAMIENTO.titular.split(/(?<=[,.])\s+/);
 
 ---
 
@@ -45,6 +42,110 @@ const lineasTitular = [
   path={pathPagina}
   {schema}
 >
+  {/* LA INTRO. Nace `hidden` y sólo el script la enciende: sin JavaScript, o
+      con movimiento reducido, la puerta se ve directamente en vez de quedar
+      detrás de un velo negro que nadie va a retirar. El `src` también lo pone
+      el script, para que esos visitantes no descarguen 3,6 MB que no verán. */}
+  <div
+    class="intro"
+    data-video={LANZAMIENTO.intro.video}
+    data-activar={LANZAMIENTO.intro.sonidoActivar}
+    data-quitar={LANZAMIENTO.intro.sonidoQuitar}
+    hidden
+  >
+    <video class="intro-video" playsinline preload="auto" aria-hidden="true"></video>
+
+    {/* LA ENTRADA. Tapa el video, que mientras tanto ya se va descargando, y su
+        botón es el toque que permite reproducirlo con sonido. */}
+    <div class="intro-entrada">
+      <div class="entra">
+        <Marca tono="blanco" soloSello enlace={false} class="sello-intro" />
+      </div>
+      <button type="button" class="intro-entrar entra entra-2">
+        {LANZAMIENTO.intro.entrar}
+      </button>
+    </div>
+
+    <button type="button" class="intro-boton intro-sonido" aria-pressed="true">
+      {LANZAMIENTO.intro.sonidoQuitar}
+    </button>
+    <button type="button" class="intro-boton intro-saltar">{LANZAMIENTO.intro.saltar}</button>
+  </div>
+
+  {/* Va justo después de la intro y ANTES de la puerta: un script en línea
+      detiene el análisis, así que la clase `intro-activa` existe antes de que
+      la puerta se pinte y no hay un destello de la página antes del video. */}
+  <script is:inline>
+    (() => {
+      const intro = document.currentScript.previousElementSibling;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return intro.remove();
+
+      const video = intro.querySelector('video');
+      const raiz = document.documentElement;
+      let cerrada = false;
+      let espera;
+
+      /* Al quitar la clase, la puerta se hace visible y sus animaciones de
+         entrada —en pausa desde el fotograma cero— arrancan mientras el video
+         se desvanece encima: la entrada se ve entera, no terminada a medias. */
+      const cerrar = () => {
+        if (cerrada) return;
+        cerrada = true;
+        clearTimeout(espera);
+        video.pause();
+        raiz.classList.remove('intro-activa');
+        intro.classList.add('intro-saliendo');
+        setTimeout(() => intro.remove(), 700);
+      };
+
+      /* El botón dice lo que HARÁ, no lo que pasa: «Activar sonido» mientras
+         está en silencio. `aria-pressed` da el estado al lector de pantalla. */
+      const sonido = intro.querySelector('.intro-sonido');
+      const pintarSonido = () => {
+        sonido.textContent = video.muted ? intro.dataset.activar : intro.dataset.quitar;
+        sonido.setAttribute('aria-pressed', String(!video.muted));
+      };
+      sonido.addEventListener('click', () => {
+        video.muted = !video.muted;
+        pintarSonido();
+      });
+
+      raiz.classList.add('intro-activa');
+      intro.hidden = false;
+      video.src = intro.dataset.video;
+      video.addEventListener('playing', () => clearTimeout(espera), { once: true });
+      video.addEventListener('ended', cerrar);
+      video.addEventListener('error', cerrar);
+      intro.querySelector('.intro-saltar').addEventListener('click', cerrar);
+
+      /* `play()` va DENTRO del clic y sin nada asíncrono delante: el navegador
+         sólo permite el sonido si la reproducción nace del gesto. Si aun así
+         lo rechaza, se reintenta en silencio y el botón deja activarlo. */
+      intro.querySelector('.intro-entrar').addEventListener(
+        'click',
+        () => {
+          intro.classList.add('intro-reproduciendo');
+          video.muted = false;
+          video
+            .play()
+            .catch((error) => {
+              /* Si la intro ya se cerró, el rechazo es la pausa de `cerrar`:
+                 volver a reproducir sonaría con el velo ya retirado. */
+              if (cerrada) throw error;
+              video.muted = true;
+              return video.play();
+            })
+            .then(pintarSonido, cerrar);
+
+          /* Si en 4 s no ha empezado (red muy lenta), la intro se retira: el
+             video es la bienvenida, no un peaje para llegar a la puerta. */
+          espera = setTimeout(cerrar, 4000);
+        },
+        { once: true },
+      );
+    })();
+  </script>
+
   <section
     data-slot="puerta-lanzamiento"
     class="puerta campo-oscuro relative isolate flex min-h-svh items-center justify-center overflow-clip bg-marca px-5 py-10 text-white"
@@ -267,6 +368,158 @@ const lineasTitular = [
     }
   }
 
+  /* ── LA INTRO ───────────────────────────────────────────────────────────────
+     `black` y no un token: el fondo del video es negro puro, y cualquier otro
+     tono —`marca` incluido— dibujaría el borde del video en los márgenes del
+     celular. Es el color del archivo, no uno de la paleta. */
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    overflow: clip;
+    background: black;
+    transition: opacity 700ms var(--ease-out);
+  }
+
+  .intro[hidden] {
+    display: none;
+  }
+
+  .intro-saliendo {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* CUBRE LA PANTALLA SIN PERDER EL LOGO. `cover` puro llena cualquier
+     pantalla, pero en un celular vertical deja ver sólo la cuarta parte central
+     del cuadro y el logo final, que ocupa 420 de sus 1390 px, perdería las
+     orejas. Así que el video cubre (el `max`) hasta el punto en que la franja
+     visible baja de 450 px del original (el `min`): en escritorio llena todo;
+     en vertical llena el ancho con el logo entero y deja negro arriba y abajo,
+     que se funde con el negro del propio video. 1390/720 y 1390/450 son esas
+     dos proporciones.
+
+     Centrado con `translate` y no con `place-items`: un video más ancho que la
+     pantalla estira su pista de grid y queda pegado a la izquierda. */
+  .intro-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    width: min(max(100vw, 100svh * 1390 / 720), 100vw * 1390 / 450);
+    max-width: none;
+    height: auto;
+    aspect-ratio: 1280 / 664;
+  }
+
+  /* LA ENTRADA: el sello arriba y una sola acción, grande. Fondo negro opaco
+     para tapar el primer fotograma del video, que ya está cargado detrás. */
+  .intro-entrada {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(2.5rem, 7svh, 4.5rem);
+    padding: 1.5rem;
+    background: black;
+    transition: opacity 600ms var(--ease-out), visibility 600ms;
+  }
+
+  .sello-intro img {
+    width: clamp(6rem, 22vw, 9rem);
+    height: auto;
+  }
+
+  .intro-entrar {
+    min-height: 64px;
+    min-width: min(18rem, 100%);
+    padding: 1.25rem 3.5rem;
+    border: 1px solid var(--color-superficie);
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 0.85rem + 0.6vw, 1.375rem);
+    font-weight: 600;
+    letter-spacing: 0.4em;
+    /* El tracking también se pinta tras la última letra: sin compensarlo, la
+       palabra queda corrida a la izquierda dentro del botón. */
+    text-indent: 0.4em;
+    text-transform: uppercase;
+    color: var(--color-superficie);
+    transition: background-color 250ms var(--ease-out), color 250ms var(--ease-out);
+  }
+
+  .intro-entrar:hover,
+  .intro-entrar:focus-visible {
+    background: var(--color-superficie);
+    color: black;
+  }
+
+  .intro-reproduciendo .intro-entrada {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Los dos controles en las esquinas inferiores, lejos del logo: sonido a la
+     izquierda y salida a la derecha, donde el pulgar los encuentra. Sólo
+     existen mientras corre el video; en la entrada, la única acción es entrar. */
+  .intro-boton {
+    position: absolute;
+    visibility: hidden;
+    opacity: 0;
+    bottom: max(1.25rem, env(safe-area-inset-bottom));
+    min-height: 44px;
+    padding-inline: 1.25rem;
+    border: 1px solid color-mix(in oklab, var(--color-superficie) 35%, transparent);
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--color-superficie) 78%, transparent);
+    transition:
+      opacity 400ms 300ms,
+      visibility 0s 300ms,
+      color 200ms,
+      border-color 200ms;
+  }
+
+  .intro-reproduciendo .intro-boton {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .intro-sonido {
+    left: max(1.25rem, env(safe-area-inset-left));
+  }
+
+  .intro-saltar {
+    right: max(1.25rem, env(safe-area-inset-right));
+  }
+
+  .intro-boton:hover,
+  .intro-boton:focus-visible {
+    border-color: var(--color-superficie);
+    color: var(--color-superficie);
+  }
+
+  /* Mientras corre el video la puerta está oculta —fuera del orden de
+     tabulación y del lector de pantalla— y con TODAS sus animaciones en pausa,
+     retardos incluidos: un retardo en pausa no corre, así que al retirar la
+     clase la coreografía de entrada arranca desde su primer fotograma. */
+  .intro-activa .puerta {
+    visibility: hidden;
+  }
+
+  .intro-activa .puerta,
+  .intro-activa .puerta::before,
+  .intro-activa .puerta *,
+  .intro-activa .puerta *::before,
+  .intro-activa .puerta *::after {
+    animation-play-state: paused !important;
+  }
+
   /* ── EL MARCO Y SUS CUATRO CRUCES ───────────────────────────────────────── */
 
   .marco {
@@ -466,9 +719,13 @@ const lineasTitular = [
     color: var(--color-superficie);
   }
 
+  /* Cada frase arranca en su línea, pero la que no cabe se parte en dos
+     equilibradas en vez de salirse del encuadre. Con `nowrap`, «Déjanos
+     hacerte unas preguntas.» —31 caracteres en una tipografía extendida— se
+     cortaba por los dos lados en cualquier portátil. */
   .titulo-puerta span {
     display: block;
-    white-space: nowrap;
+    text-wrap: balance;
   }
 
   /* El reloj respira menos que en el teaser: allí cierra la página, aquí es el
@@ -489,8 +746,8 @@ const lineasTitular = [
     text-transform: uppercase;
   }
 
-  /* El salto empieza donde la línea más larga conserva su corte editorial:
-     antes de 64rem, agrandar el tracking rompería el `nowrap` central. */
+  /* El salto empieza donde la línea más larga cabe con holgura: antes de
+     64rem, agrandar el tracking partiría todas las frases. */
   @media (width >= 64rem) {
     .sello-puerta img {
       width: 6.25rem;

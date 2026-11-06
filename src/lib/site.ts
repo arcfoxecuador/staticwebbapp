@@ -216,11 +216,28 @@ export const ASISTENTE = {
 const CAMPAÑA = {
   titulo: 'Antes de abrir la puerta',
   ceja: 'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad eléctrica.',
-  titular: 'Antes de abrir la puerta déjanos hacerte unas preguntas.',
+  titular: 'Si esto te encontró, es para ti. Déjanos hacerte unas preguntas.',
   bajada:
     'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad eléctrica, con ARCFOX en Ecuador.',
   cta: 'Continuar',
   chatEtiqueta: 'Abrir las preguntas y el chat de ARCFOX',
+
+  /* LA INTRO: el video del zorro a pantalla completa ANTES de la puerta
+     (pedido del cliente, 2026-11-06). Al terminar se retira y la puerta hace
+     su entrada de siempre. Antes del video, una pantalla con el sello y
+     «Entrar»: ese toque es lo que permite que el video suene. Sin él, todo
+     navegador bloquea el audio en la primera visita, y en celular siempre. El
+     botón de sonido queda para quien prefiera verlo en silencio. El archivo es el original
+     recomprimido a 1280 px: 3,6 MB en vez de 6,2, sin diferencia visible a
+     pantalla completa, y en un celular con datos eso es lo que decide si el
+     video llega a verse o si la espera lo descarta. */
+  intro: {
+    video: '/video/intro-arcfox.mp4',
+    entrar: 'Entrar',
+    saltar: 'Saltar',
+    sonidoActivar: 'Activar sonido',
+    sonidoQuitar: 'Quitar sonido',
+  },
 
   /* LA FECHA, y vive en CAMPAÑA y no en TEASER desde que el contador se pinta en
      las DOS superficies. Escrita en cada página, la primera corrección —un
@@ -339,6 +356,7 @@ export const LANZAMIENTO = {
   titular: CAMPAÑA.titular,
   bajada: CAMPAÑA.bajada,
   cta: CAMPAÑA.cta,
+  intro: CAMPAÑA.intro,
 
   /* EL MISMO CONTADOR QUE EL TEASER, y por eso sale de `CAMPAÑA` y no se
      escribe otra vez. Las dos superficies cuentan hacia el mismo instante: si
