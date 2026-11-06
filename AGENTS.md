@@ -136,10 +136,12 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   nov. 2026, «Contenido web adaptado a la estructura del sitio»): `/nosotros`,
   `/cotizalo`, `/test-drive`, `/concesionarios`, `/modelos` y cada ficha. El
   orden de la gama es T1, T5, S5 (`orden` en cada markdown). Las cifras son las
-  que ya publicaba la web hasta que llegue la ficha validada para Ecuador; no se
-  cambian por las de Argentina. Pendientes del cliente: direcciones de sedes (sin
-  `calle` la ficha no se publica), los documentos correctos de «Políticas SIG» y
-  del Aviso de Privacidad, y verificar correo comercial y redes.
+  que revisó Foton (oct. 2026); no se cambian por las de Argentina. Los colores
+  del selector son sólo los que tienen fotos. `/politicas` es la versión vigente
+  («LEGALES WEB ARCFOX», Foton): la nota del documento sobre FOTON no aplica.
+  Pendientes del cliente: dirección, horario y teléfono de las sedes (sin `calle`
+  la ficha no se publica) y la dirección de Quito del Aviso de Privacidad, que
+  legal dejó como «(nueva dirección Quito)».
 - **Colecciones**: los tres `ejemplo.md` de `src/content/` vienen **despublicados**
   (`publico: false` / `borrador: true`). Bórralos al entrar contenido real.
 - **Logo**: `public/marca/logo.svg` es un placeholder tipográfico. `schema.ts` lo
