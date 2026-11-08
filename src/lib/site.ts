@@ -62,6 +62,9 @@ export type Sede = {
   mapa?: string;
   /** Teléfono de la sede, como se lee. Opcional. */
   telefono?: string;
+  /** Coordenadas del pin, sacadas del propio enlace de Maps. Las usa el mapa de agencias. */
+  lat?: number;
+  lng?: number;
 };
 
 /* Los puntos de venta de «Puntos de venta current Arcfox.xlsx» (Maria Elisa,
@@ -77,6 +80,8 @@ export const SEDES: Sede[] = [
     calle: 'Panamericana Norte km 6 1/2, a 100 metros del ingreso al Parque Industrial.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/haDf6ym3Q4WTigEY8',
+    lat: -1.1962144,
+    lng: -78.5937243,
   },
   {
     nombre: 'Auto Total Arcfox',
@@ -87,6 +92,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. De las Américas y Venezuela, frenta a gasolinera Ingahurco.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/L6n6K8gJiPnwhfMf8',
+    lat: -1.2371769,
+    lng: -78.6125248,
   },
   {
     nombre: 'Arcfox Cuenca',
@@ -97,6 +104,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. España y Granada, esquina.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/8dP5KYBgtwznnBi16',
+    lat: -2.886824,
+    lng: -78.984383,
   },
   {
     nombre: 'Arcfox Juan Tanca Marengo',
@@ -107,6 +116,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. Juan Tanca Marengo km 2 ½ .',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/CX98nz6REx5SxRgw5',
+    lat: -2.1490702,
+    lng: -79.9027249,
   },
   {
     nombre: 'Arcfox Las Cámaras',
@@ -117,6 +128,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. Francisco de Orellana y Víctor Hugo Sicouret',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/ZK6iVgjoZdNjZLVY8',
+    lat: -2.1578483,
+    lng: -79.8985338,
   },
   {
     nombre: 'Arcfox El Dorado',
@@ -127,6 +140,8 @@ export const SEDES: Sede[] = [
     calle: 'Ciudad Comercial El Dorado, Av. León Febres Cordero km 10 ½, vía a La Aurora.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/Dcx4L1CGZrdaGdzv9',
+    lat: -2.0543302,
+    lng: -79.8737327,
   },
   {
     nombre: 'Soficar Arcfox',
@@ -137,6 +152,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. Carlos Julio Arosemena km 2 ½, frente al C.C. Albán Borja.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/EKXM199QGuUa26jZ8',
+    lat: -2.1717298,
+    lng: -79.9175019,
   },
   {
     nombre: 'Comercial Hidrobo Arcfox',
@@ -147,6 +164,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. Mariano Acosta y Manuelita Sáenz.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/dGkueHfoYMEge5Zw8',
+    lat: 0.341875,
+    lng: -78.143377,
   },
   {
     nombre: 'Arcfox Loja',
@@ -157,6 +176,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. Cuxibamba y Tulcán, esquina.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/Byhs9zHzct3Xdjv19',
+    lat: -3.986303,
+    lng: -79.205469,
   },
   {
     nombre: 'Arcfox Machala',
@@ -167,6 +188,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. 25 de Junio km 1 ½ y Av. Uruguay, esquina.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/ZiZWbcScSKmJCREY8',
+    lat: -3.2753078,
+    lng: -79.9391575,
   },
   {
     nombre: 'Arcfox Manta',
@@ -177,6 +200,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. 4 de Noviembre y calle 304.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/dGfqm67PK316nJ3G8',
+    lat: -0.9655419,
+    lng: -80.7076645,
   },
   {
     nombre: 'Arcfox Eloy Alfaro',
@@ -187,6 +212,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. Eloy Alfaro entre José Queri y Av. Gaspar de Villarroel.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/cupiTtnKAUBnJyGP6',
+    lat: -0.1690056,
+    lng: -78.4698678,
   },
   {
     nombre: 'Arcfox Orellana',
@@ -197,6 +224,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. Orellana y Av. 10 de Agosto.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/VQn74wdBdqNwnnuR6',
+    lat: -0.1961906,
+    lng: -78.4948069,
   },
   {
     nombre: 'Arcfox Labrador',
@@ -207,6 +236,8 @@ export const SEDES: Sede[] = [
     calle: 'Av. 10 de Agosto y El Inca.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/DPBABuL5oUCxKt838',
+    lat: -0.1592363,
+    lng: -78.4855479,
   },
   {
     nombre: 'Automotores Antonio Larrea Arcfox',
@@ -217,11 +248,25 @@ export const SEDES: Sede[] = [
     calle: 'Av. Lizarzaburu y Leopoldo Cabezas.',
     horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/LVpL3t72PD6Fmoz88',
+    lat: -1.6591221,
+    lng: -78.6623564,
   },
 ];
 
 /** Las ciudades de la red, una vez cada una y en el orden de SEDES. */
 export const CIUDADES = [...new Set(SEDES.map((s) => s.ciudad))];
+
+/** Ancla de las fichas de una ciudad en /concesionarios; la usa el mapa. */
+export function anclaCiudad(ciudad: string): string {
+  return (
+    'sede-' +
+    ciudad
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+  );
+}
 
 /** La dirección en una línea, saltándose lo que falte. Existe para que los
     cuatro sitios que la pintan —pie, contacto, llms.txt y el JSON-LD— no
