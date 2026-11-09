@@ -559,7 +559,7 @@ export const FAQ_COTIZA: readonly { p: string; r: string }[] = [
   },
   {
     p: '¿Puedo cotizar sin elegir modelo?',
-    r: 'El formulario pide un modelo. Si aún no decides, elige el que más se acerque: T5 familiar, T1 crossover o S5 sedán deportivo. El asesor te ayuda a comparar.',
+    r: 'El formulario pide un modelo. Si aún no decides, elige el que más se acerque: T5 familiar, T1 SUV o S5 sedán deportivo. El asesor te ayuda a comparar.',
   },
   {
     p: '¿En qué ciudades cotizan?',
