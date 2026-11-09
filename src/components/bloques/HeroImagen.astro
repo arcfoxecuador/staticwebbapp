@@ -117,8 +117,9 @@ const cola = palabras.slice(1).join(' ');
     {
       insignia && (
         <p class="hero-insignia entra text-eyebrow uppercase tracking-[0.22em] text-white/80">
-          <span data-modelo-rotulo></span>
-          {insignia}
+          {/* Un solo hijo del flex en columna: separados, el rótulo y la insignia
+              caían en dos líneas y la etiqueta aprobada se partía en el «·». */}
+          <span><span data-modelo-rotulo></span>{insignia}</span>
         </p>
       )
     }

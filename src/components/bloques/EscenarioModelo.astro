@@ -155,7 +155,7 @@ const { modelos } = Astro.props;
             )}
 
             <dl class="barra-datos revela-grupo">
-              {modelo.datos.slice(0, 4).map((dato) => (
+              {modelo.datos.map((dato) => (
                 <div>
                   <dt>{dato.clave}</dt>
                   <dd>{dato.valor}</dd>
@@ -411,7 +411,10 @@ const { modelos } = Astro.props;
   }
   .barra-datos {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* Una columna por dato: T5 lleva tres y S5 cinco, y la fila tiene que
+       llenarse igual en los dos. */
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
     gap: 1px;
     margin-top: 3rem;
     background: color-mix(in srgb, var(--color-marca-clara) 45%, transparent);
@@ -440,12 +443,13 @@ const { modelos } = Astro.props;
     font-weight: 600;
     color: white;
   }
-  /* Las cuatro losas caben a la vez: si el último dato cierra a
+  /* Todas las losas caben a la vez: si el último dato cierra a
      `cover 58%`, hay que bajar —y perder potencia— para leerlo. */
   .barra-datos > *:nth-child(1),
   .barra-datos > *:nth-child(2),
   .barra-datos > *:nth-child(3),
-  .barra-datos > *:nth-child(4) {
+  .barra-datos > *:nth-child(4),
+  .barra-datos > *:nth-child(5) {
     animation-range: cover 4% cover 20%;
   }
   @media (width < 48rem) {
@@ -474,7 +478,13 @@ const { modelos } = Astro.props;
       letter-spacing: 0.06em;
     }
     .barra-datos {
+      grid-auto-flow: row;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    /* Con un número impar de datos, la última losa ocupa la fila: si no, el
+       hueco enseña el fondo claro de la barra. */
+    .barra-datos > div:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
     }
     .barra-datos > div {
       min-height: 7rem;

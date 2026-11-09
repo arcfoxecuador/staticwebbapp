@@ -67,34 +67,11 @@ export type Sede = {
   lng?: number;
 };
 
-/* Los puntos de venta de «Puntos de venta current Arcfox.xlsx» (Maria Elisa,
-   6-nov-2026): nombre de agencia, dirección y enlace a Maps tal como vienen en
-   la hoja. Horario y teléfono de cada punto aún no llegan. */
+/* Sólo las diez agencias del cuadro que el cliente confirmó el 9-nov-2026:
+   nombre, dirección y enlace a Maps tal como vienen en él. El xlsx anterior
+   traía cinco filas más que el cliente dice que no constan; no las recuperes
+   de ahí. Horario y teléfono de cada punto aún no llegan. */
 export const SEDES: Sede[] = [
-  {
-    nombre: 'Parque Industrial Arcfox',
-    ciudad: 'Ambato',
-    pais: 'Ecuador',
-    codigoPais: 'EC',
-    region: 'Tungurahua',
-    calle: 'Panamericana Norte km 6 1/2, a 100 metros del ingreso al Parque Industrial.',
-    horario: '[pendiente]',
-    mapa: 'https://maps.app.goo.gl/haDf6ym3Q4WTigEY8',
-    lat: -1.1962144,
-    lng: -78.5937243,
-  },
-  {
-    nombre: 'Auto Total Arcfox',
-    ciudad: 'Ambato',
-    pais: 'Ecuador',
-    codigoPais: 'EC',
-    region: 'Tungurahua',
-    calle: 'Av. De las Américas y Venezuela, frenta a gasolinera Ingahurco.',
-    horario: '[pendiente]',
-    mapa: 'https://maps.app.goo.gl/L6n6K8gJiPnwhfMf8',
-    lat: -1.2371769,
-    lng: -78.6125248,
-  },
   {
     nombre: 'Arcfox Cuenca',
     ciudad: 'Cuenca',
@@ -142,30 +119,6 @@ export const SEDES: Sede[] = [
     mapa: 'https://maps.app.goo.gl/Dcx4L1CGZrdaGdzv9',
     lat: -2.0543302,
     lng: -79.8737327,
-  },
-  {
-    nombre: 'Soficar Arcfox',
-    ciudad: 'Guayaquil',
-    pais: 'Ecuador',
-    codigoPais: 'EC',
-    region: 'Guayas',
-    calle: 'Av. Carlos Julio Arosemena km 2 ½, frente al C.C. Albán Borja.',
-    horario: '[pendiente]',
-    mapa: 'https://maps.app.goo.gl/EKXM199QGuUa26jZ8',
-    lat: -2.1717298,
-    lng: -79.9175019,
-  },
-  {
-    nombre: 'Comercial Hidrobo Arcfox',
-    ciudad: 'Ibarra',
-    pais: 'Ecuador',
-    codigoPais: 'EC',
-    region: 'Imbabura',
-    calle: 'Av. Mariano Acosta y Manuelita Sáenz.',
-    horario: '[pendiente]',
-    mapa: 'https://maps.app.goo.gl/dGkueHfoYMEge5Zw8',
-    lat: 0.341875,
-    lng: -78.143377,
   },
   {
     nombre: 'Arcfox Loja',
@@ -239,18 +192,6 @@ export const SEDES: Sede[] = [
     lat: -0.1592363,
     lng: -78.4855479,
   },
-  {
-    nombre: 'Automotores Antonio Larrea Arcfox',
-    ciudad: 'Riobamba',
-    pais: 'Ecuador',
-    codigoPais: 'EC',
-    region: 'Chimborazo',
-    calle: 'Av. Lizarzaburu y Leopoldo Cabezas.',
-    horario: '[pendiente]',
-    mapa: 'https://maps.app.goo.gl/LVpL3t72PD6Fmoz88',
-    lat: -1.6591221,
-    lng: -78.6623564,
-  },
 ];
 
 /** Las ciudades de la red, una vez cada una y en el orden de SEDES. */
@@ -300,7 +241,7 @@ export const NAV: NavZona[] = [
     hijos: [
       { texto: 'ARCFOX T1', href: '/#t1', bajada: 'SUV eléctrico' },
       { texto: 'ARCFOX T5', href: '/#t5', bajada: 'SUV eléctrico' },
-      { texto: 'ARCFOX S5', href: '/#s5', bajada: 'Sedán eléctrico' },
+      { texto: 'ARCFOX S5', href: '/#s5', bajada: 'Sedán deportivo · 100% eléctrico' },
     ],
   },
   { texto: 'Concesionarios', href: '/concesionarios' },
@@ -618,7 +559,7 @@ export const FAQ_COTIZA: readonly { p: string; r: string }[] = [
   },
   {
     p: '¿Puedo cotizar sin elegir modelo?',
-    r: 'El formulario pide un modelo. Si aún no decides, elige el que más se acerque: T5 familiar, T1 crossover o S5 sedán. El asesor te ayuda a comparar.',
+    r: 'El formulario pide un modelo. Si aún no decides, elige el que más se acerque: T5 familiar, T1 crossover o S5 sedán deportivo. El asesor te ayuda a comparar.',
   },
   {
     p: '¿En qué ciudades cotizan?',
