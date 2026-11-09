@@ -35,6 +35,7 @@ const pintarNombres = (panel: HTMLElement) => {
   });
   document.querySelectorAll('[data-modelo-rotulo]:not([data-modelo-panel])').forEach((nodo) => {
     nodo.textContent = rotulo;
+    nodo.setAttribute('data-separador', panel.dataset.separador ?? ' · ');
   });
 };
 

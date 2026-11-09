@@ -294,7 +294,7 @@ const cola = palabras.slice(1).join(' ');
   }
 
   .hero-insignia [data-modelo-rotulo]:not(:empty)::after {
-    content: ' · ';
+    content: attr(data-separador);
   }
 
   .hero-insignia {
