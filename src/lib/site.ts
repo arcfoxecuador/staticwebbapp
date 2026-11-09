@@ -23,13 +23,13 @@ export const ORG = {
   descripcion: 'ARCFOX es la marca de vehículos eléctricos premium de BAIC Group. Una propuesta que reúne diseño, innovación y confort para explorar una nueva forma de moverte.',
   fundacion: '',
 
-  email: 'contacto@arcfox.com.ec',
+  email: 'info@arcfox.com.ec',
   /** En E.164, sin espacios: es el formato que exigen `tel:` y schema.org.
       Vacío mientras el número no esté cerrado: el `tel:` y el JSON-LD no
       pueden llevar un placeholder. La página pinta `telefonoLegible`. */
-  telefono: '',
-  /** Como se escribe para un humano. `[pendiente]` se ve a propósito. */
-  telefonoLegible: '[pendiente]',
+  telefono: '+593964292000',
+  /** Como se escribe para un humano. Información oficial, 6-nov-2026. */
+  telefonoLegible: '096 429 2000',
   /** Sólo dígitos, como los quiere wa.me. Vacío = sin botón de WhatsApp. */
   whatsapp: '',
 
@@ -62,34 +62,211 @@ export type Sede = {
   mapa?: string;
   /** Teléfono de la sede, como se lee. Opcional. */
   telefono?: string;
+  /** Coordenadas del pin, sacadas del propio enlace de Maps. Las usa el mapa de agencias. */
+  lat?: number;
+  lng?: number;
 };
 
+/* Los puntos de venta de «Puntos de venta current Arcfox.xlsx» (Maria Elisa,
+   6-nov-2026): nombre de agencia, dirección y enlace a Maps tal como vienen en
+   la hoja. Horario y teléfono de cada punto aún no llegan. */
 export const SEDES: Sede[] = [
   {
-    nombre: 'Quito',
-    ciudad: 'Quito',
+    nombre: 'Parque Industrial Arcfox',
+    ciudad: 'Ambato',
     pais: 'Ecuador',
     codigoPais: 'EC',
-    region: 'Pichincha',
+    region: 'Tungurahua',
+    calle: 'Panamericana Norte km 6 1/2, a 100 metros del ingreso al Parque Industrial.',
     horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/haDf6ym3Q4WTigEY8',
+    lat: -1.1962144,
+    lng: -78.5937243,
   },
   {
-    nombre: 'Guayaquil',
-    ciudad: 'Guayaquil',
+    nombre: 'Auto Total Arcfox',
+    ciudad: 'Ambato',
     pais: 'Ecuador',
     codigoPais: 'EC',
-    region: 'Guayas',
+    region: 'Tungurahua',
+    calle: 'Av. De las Américas y Venezuela, frenta a gasolinera Ingahurco.',
     horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/L6n6K8gJiPnwhfMf8',
+    lat: -1.2371769,
+    lng: -78.6125248,
   },
   {
-    nombre: 'Cuenca',
+    nombre: 'Arcfox Cuenca',
     ciudad: 'Cuenca',
     pais: 'Ecuador',
     codigoPais: 'EC',
     region: 'Azuay',
+    calle: 'Av. España y Granada, esquina.',
     horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/8dP5KYBgtwznnBi16',
+    lat: -2.886824,
+    lng: -78.984383,
+  },
+  {
+    nombre: 'Arcfox Juan Tanca Marengo',
+    ciudad: 'Guayaquil',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Guayas',
+    calle: 'Av. Juan Tanca Marengo km 2 ½ .',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/CX98nz6REx5SxRgw5',
+    lat: -2.1490702,
+    lng: -79.9027249,
+  },
+  {
+    nombre: 'Arcfox Las Cámaras',
+    ciudad: 'Guayaquil',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Guayas',
+    calle: 'Av. Francisco de Orellana y Víctor Hugo Sicouret',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/ZK6iVgjoZdNjZLVY8',
+    lat: -2.1578483,
+    lng: -79.8985338,
+  },
+  {
+    nombre: 'Arcfox El Dorado',
+    ciudad: 'Guayaquil',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Guayas',
+    calle: 'Ciudad Comercial El Dorado, Av. León Febres Cordero km 10 ½, vía a La Aurora.',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/Dcx4L1CGZrdaGdzv9',
+    lat: -2.0543302,
+    lng: -79.8737327,
+  },
+  {
+    nombre: 'Soficar Arcfox',
+    ciudad: 'Guayaquil',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Guayas',
+    calle: 'Av. Carlos Julio Arosemena km 2 ½, frente al C.C. Albán Borja.',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/EKXM199QGuUa26jZ8',
+    lat: -2.1717298,
+    lng: -79.9175019,
+  },
+  {
+    nombre: 'Comercial Hidrobo Arcfox',
+    ciudad: 'Ibarra',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Imbabura',
+    calle: 'Av. Mariano Acosta y Manuelita Sáenz.',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/dGkueHfoYMEge5Zw8',
+    lat: 0.341875,
+    lng: -78.143377,
+  },
+  {
+    nombre: 'Arcfox Loja',
+    ciudad: 'Loja',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Loja',
+    calle: 'Av. Cuxibamba y Tulcán, esquina.',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/Byhs9zHzct3Xdjv19',
+    lat: -3.986303,
+    lng: -79.205469,
+  },
+  {
+    nombre: 'Arcfox Machala',
+    ciudad: 'Machala',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'El Oro',
+    calle: 'Av. 25 de Junio km 1 ½ y Av. Uruguay, esquina.',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/ZiZWbcScSKmJCREY8',
+    lat: -3.2753078,
+    lng: -79.9391575,
+  },
+  {
+    nombre: 'Arcfox Manta',
+    ciudad: 'Manta',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Manabí',
+    calle: 'Av. 4 de Noviembre y calle 304.',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/dGfqm67PK316nJ3G8',
+    lat: -0.9655419,
+    lng: -80.7076645,
+  },
+  {
+    nombre: 'Arcfox Eloy Alfaro',
+    ciudad: 'Quito',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Pichincha',
+    calle: 'Av. Eloy Alfaro entre José Queri y Av. Gaspar de Villarroel.',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/cupiTtnKAUBnJyGP6',
+    lat: -0.1690056,
+    lng: -78.4698678,
+  },
+  {
+    nombre: 'Arcfox Orellana',
+    ciudad: 'Quito',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Pichincha',
+    calle: 'Av. Orellana y Av. 10 de Agosto.',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/VQn74wdBdqNwnnuR6',
+    lat: -0.1961906,
+    lng: -78.4948069,
+  },
+  {
+    nombre: 'Arcfox Labrador',
+    ciudad: 'Quito',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Pichincha',
+    calle: 'Av. 10 de Agosto y El Inca.',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/DPBABuL5oUCxKt838',
+    lat: -0.1592363,
+    lng: -78.4855479,
+  },
+  {
+    nombre: 'Automotores Antonio Larrea Arcfox',
+    ciudad: 'Riobamba',
+    pais: 'Ecuador',
+    codigoPais: 'EC',
+    region: 'Chimborazo',
+    calle: 'Av. Lizarzaburu y Leopoldo Cabezas.',
+    horario: '[pendiente]',
+    mapa: 'https://maps.app.goo.gl/LVpL3t72PD6Fmoz88',
+    lat: -1.6591221,
+    lng: -78.6623564,
   },
 ];
+
+/** Las ciudades de la red, una vez cada una y en el orden de SEDES. */
+export const CIUDADES = [...new Set(SEDES.map((s) => s.ciudad))];
+
+/** Ancla de las fichas de una ciudad en /concesionarios; la usa el mapa. */
+export function anclaCiudad(ciudad: string): string {
+  return (
+    'sede-' +
+    ciudad
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+  );
+}
 
 /** La dirección en una línea, saltándose lo que falte. Existe para que los
     cuatro sitios que la pintan —pie, contacto, llms.txt y el JSON-LD— no
@@ -121,7 +298,7 @@ export const NAV: NavZona[] = [
     texto: 'Modelos',
     href: '/modelos',
     hijos: [
-      { texto: 'ARCFOX T1', href: '/#t1', bajada: 'Compacto eléctrico' },
+      { texto: 'ARCFOX T1', href: '/#t1', bajada: 'SUV eléctrico' },
       { texto: 'ARCFOX T5', href: '/#t5', bajada: 'SUV eléctrico' },
       { texto: 'ARCFOX S5', href: '/#s5', bajada: 'Sedán eléctrico' },
     ],
@@ -445,7 +622,7 @@ export const FAQ_COTIZA: readonly { p: string; r: string }[] = [
   },
   {
     p: '¿En qué ciudades cotizan?',
-    r: `En la red de Ecuador: ${SEDES.map((s) => s.ciudad).join(', ')}. Indica tu ciudad y te contacta el punto más cercano.`,
+    r: `En la red de Ecuador: ${CIUDADES.join(', ')}. Indica tu ciudad y te contacta el punto más cercano.`,
   },
 ];
 
@@ -482,7 +659,7 @@ export const FAQ_PRUEBA: readonly { p: string; r: string }[] = [
   },
   {
     p: '¿En qué ciudades hay prueba?',
-    r: `En ${SEDES.map((s) => s.ciudad).join(', ')}. Elige ciudad en el formulario y te contactamos desde el punto más cercano.`,
+    r: `En ${CIUDADES.join(', ')}. Elige ciudad en el formulario y te contactamos desde el punto más cercano.`,
   },
   {
     p: '¿Cuánto dura y qué documento llevo?',
@@ -514,7 +691,7 @@ export const RED = {
 export const FAQ_RED: readonly { p: string; r: string }[] = [
   {
     p: '¿Dónde están las sedes?',
-    r: `En ${SEDES.map((s) => s.ciudad).join(', ')}. La calle exacta y el horario se publican cuando cada concesionario los cierre. Escríbenos y te contactamos desde el punto de tu ciudad.`,
+    r: `En ${CIUDADES.join(', ')}. La calle exacta y el horario se publican cuando cada concesionario los cierre. Escríbenos y te contactamos desde el punto de tu ciudad.`,
   },
   {
     p: '¿Puedo ir sin cita?',
@@ -796,7 +973,7 @@ export const AVISO_CIFRAS =
    cliente. */
 export const LEGAL = {
   /** La política de cookies. Foton la llama «Legal» en su barra. */
-  cookies: '',
+  cookies: '/cookies',
   /* Calidad, Ambiental y Seguridad y Salud Ocupacional, en una página propia. Ésta sí
      tiene texto: lo envió Foton y vive literal en `lib/politicas.ts`. */
   politicas: '/politicas',

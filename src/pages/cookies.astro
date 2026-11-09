@@ -1,0 +1,37 @@
+---
+/* El documento de cookies que envió el cliente. El texto vive literal en
+   `lib/cookies.ts`; aquí sólo se compone, con la misma forma de /politicas. */
+import Base from '../layouts/Base.astro';
+import Seccion from '../components/bloques/Seccion.astro';
+import Encabezado from '../components/bloques/Encabezado.astro';
+import OtrosLegales from '../components/ui/OtrosLegales.astro';
+import { COOKIES } from '../lib/cookies';
+---
+
+<Base
+  titulo="Uso de Cookies"
+  descripcion="Qué son las cookies, cómo aceptarlas o rechazarlas y qué tipos de cookies utiliza el sitio de ARCFOX Ecuador."
+  path="/cookies"
+>
+  <Seccion aire="amplio">
+    <Encabezado rotulo="Legales" titulo="Uso de Cookies" nivel="h1" tamano="h1" />
+
+    <article class="mt-10 max-w-[68ch] text-tinta/80">
+      {
+        COOKIES.map((bloque) =>
+          bloque.t === 'h2' ? (
+            <h2 class="mt-12 text-h3 font-bold text-marca first:mt-0">{bloque.texto}</h2>
+          ) : bloque.t === 'h3' ? (
+            <h3 class="mt-8 font-semibold text-tinta">{bloque.texto}</h3>
+          ) : (
+            <p class="mt-4">{bloque.texto}</p>
+          ),
+        )
+      }
+    </article>
+  </Seccion>
+
+  <Seccion>
+    <OtrosLegales actual="/cookies" class="max-w-[68ch]" />
+  </Seccion>
+</Base>

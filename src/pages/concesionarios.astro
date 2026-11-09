@@ -11,7 +11,8 @@ import Rejilla from '../components/bloques/Rejilla.astro';
 import Tarjeta from '../components/bloques/Tarjeta.astro';
 import Formulario from '../components/bloques/Formulario.astro';
 import Faq from '../components/bloques/Faq.astro';
-import { FAQ_CONCESIONARIOS, SEDES } from '../lib/site';
+import MapaAgencias from '../components/bloques/MapaAgencias.astro';
+import { FAQ_CONCESIONARIOS, SEDES, anclaCiudad } from '../lib/site';
 import { faq, grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
 
 const titulo = 'Concesionarios';
@@ -26,7 +27,6 @@ const schema = grafo(
   faq(FAQ_CONCESIONARIOS),
 );
 
-const mapa = SEDES.find((sede) => sede.mapa)?.mapa;
 const confirmadas = SEDES.filter((sede) => sede.calle);
 const SIN_SEDES =
   'Cuéntanos en qué ciudad estás y te orientaremos sobre las opciones de atención disponibles.';
@@ -51,25 +51,8 @@ const SERVICIOS = [
     <div class="medida">
       <h2 class="mb-6 text-h3 font-bold text-marca">Encuentra tu punto de atención</h2>
       {
-        mapa ? (
-          <a
-            href={mapa}
-            class="mapa-red block overflow-clip border border-linea"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span class="mapa-red-lienzo" aria-hidden="true"></span>
-            <span class="mapa-red-pin">
-              <svg width="28" height="36" viewBox="0 0 28 36" fill="none" aria-hidden="true">
-                <path
-                  d="M14 34s12-12.4 12-20A12 12 0 1 0 2 14c0 7.6 12 20 12 20Z"
-                  fill="currentColor"
-                />
-                <circle cx="14" cy="14" r="4.5" fill="var(--color-fondo)" />
-              </svg>
-              <span class="mt-3 text-small font-medium uppercase tracking-[0.14em]">Ver en el mapa</span>
-            </span>
-          </a>
+        confirmadas.length > 0 ? (
+          <MapaAgencias sedes={confirmadas} />
         ) : (
           <div class="mapa-red overflow-clip border border-linea">
             <span class="mapa-red-lienzo" aria-hidden="true"></span>
@@ -100,19 +83,22 @@ const SERVICIOS = [
     </Rejilla>
   </Seccion>
 
-  <Seccion campo="tinte">
+  <Seccion campo="tinte" id="puntos-de-atencion">
     <Encabezado rotulo="Contacto" titulo="Encuentra dónde visitarnos" />
 
     {
       confirmadas.length > 0 ? (
         <ul class="revela-grupo mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {confirmadas.map((sede) => (
-            <li>
+          {confirmadas.map((sede, i) => (
+            <li
+              id={confirmadas.findIndex((s) => s.ciudad === sede.ciudad) === i ? anclaCiudad(sede.ciudad) : undefined}
+              class="scroll-mt-28"
+            >
               <address class="flex h-full flex-col border border-linea bg-superficie p-7 not-italic">
                 <h3 class="text-h3 font-bold text-marca">{sede.nombre}</h3>
                 <p class="mt-2 text-small text-tinta/70">{[sede.ciudad, sede.region].filter(Boolean).join(', ')}</p>
                 <p class="mt-3 text-small text-tinta/70">{sede.calle}</p>
-                {sede.horario && <p class="mt-3 text-small text-tinta/70">{sede.horario}</p>}
+                {sede.horario && <p class="mt-3 text-small text-tinta/70">Horario: {sede.horario}</p>}
                 {sede.telefono && <p class="mt-3 text-small text-tinta/70">{sede.telefono}</p>}
                 <p class="mt-auto flex gap-6 pt-5 text-small">
                   {sede.mapa && (
