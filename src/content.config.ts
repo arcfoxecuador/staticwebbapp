@@ -76,6 +76,9 @@ const modelos = defineCollection({
       .default({}),
     categoria: z.string().optional(),
     rotulo: z.string().optional(),
+    /* El cliente aprobó la etiqueta de cada ficha con su propia puntuación: el
+       S5 lleva «·» y el T1 no. Sin este campo se arma con `rotulo`. */
+    rotuloFicha: z.string().optional(),
     /** Los datos duros de la ficha: pares clave/valor. Es lo que hace que dos
         modelos se puedan comparar de un vistazo. */
     datos: z.array(z.object({ clave: z.string(), valor: z.string() })).default([]),

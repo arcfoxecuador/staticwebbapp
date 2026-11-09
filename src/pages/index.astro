@@ -45,7 +45,7 @@ const heroPorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
   /* t1-kv es la misma escena de pabellón que hero.webp: a sangre se leen
      como el mismo auto. kv2 es la toma de dos T1 frente a la ciudad. */
   t1: { imagen: t1Kv2, alt: 'Dos ARCFOX T1 en el escenario de marca junto al agua.' },
-  s5: { imagen: s5Cuarto, alt: 'ARCFOX S5, sedán 100% eléctrico.' },
+  s5: { imagen: s5Cuarto, alt: 'ARCFOX S5, sedán deportivo 100% eléctrico.' },
 };
 
 const cierrePorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
@@ -148,13 +148,9 @@ const modelos = entradas.map((entrada) => {
     .filter((color): color is NonNullable<typeof color> => Boolean(color));
   const sinVariante = colorDesdeFotos('Disponible', undefined, angulos);
   const colores = variantes.length ? variantes : sinVariante ? [sinVariante] : [];
-  const datos = [
-    ...entrada.data.datos,
-    ...entrada.data.cotas.map((cota) => ({
-      clave: cota.etiqueta,
-      valor: `${cota.valor}${cota.unidad ? ` ${cota.unidad}` : ''}`,
-    })),
-  ];
+  /* Sólo los indicadores aprobados para cada modelo, que no son los mismos en
+     número: si las cotas viajaran aquí, el T5 enseñaría «Largo» como indicador. */
+  const datos = entrada.data.datos;
 
   /* Habitáculo + un detalle de galería (rueda, faro) + otra toma de
      interior. Tres interiores seguidos leen como catálogo de asientos

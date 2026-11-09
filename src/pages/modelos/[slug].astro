@@ -131,7 +131,7 @@ const schema = grafo(
       <Escena
         imagen={heroSrc}
         alt={data.alt ?? data.nombre}
-        rotulo={data.rotulo ? `${data.rotulo} 100% eléctrico` : data.categoria}
+        rotulo={data.rotuloFicha ?? (data.rotulo ? `${data.rotulo} 100% eléctrico` : data.categoria)}
         titulo={data.nombre}
         bajada={data.descripcion ?? data.bajada}
         transicion={`modelo-${entrada.id}`}
@@ -140,7 +140,7 @@ const schema = grafo(
       />
     ) : (
       <Hero
-        rotulo={data.rotulo ?? data.categoria}
+        rotulo={data.rotuloFicha ?? data.rotulo ?? data.categoria}
         titulo={data.nombre}
         bajada={data.bajada}
       />
