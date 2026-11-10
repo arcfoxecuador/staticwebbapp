@@ -17,6 +17,7 @@ export type ModeloEscenario = {
   id: string;
   nombre: string;
   rotulo?: string;
+  separadorBanner?: string;
   colores: ColorModelo[];
   datos: { clave: string; valor: string }[];
 };
@@ -54,6 +55,7 @@ const { modelos } = Astro.props;
             data-modelo-panel={modelo.id}
             data-modelo-corto={modelo.nombre.replace(/^ARCFOX\s+/i, '')}
             data-rotulo={modelo.rotulo}
+            data-separador={modelo.separadorBanner}
             hidden={indiceModelo !== 0}
           >
             <div

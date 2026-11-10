@@ -10,6 +10,13 @@
    - La casilla de aceptación es obligatoria y NUNCA viene premarcada.
    - `/privacidad` publica el Aviso de Privacidad (L-00-GG-09-02) completo.
 
+   Desde el 10-nov-2026 la COTIZACIÓN (portada, /cotizalo, /concesionarios y
+   cada ficha) usa el formulario de AYASA en un iframe, que lleva su propio Aviso
+   de Privacidad y su casilla. Ahí ya no se exige nuestro aviso —sería un segundo
+   consentimiento que nadie registra—; se exige que el iframe sea el de AYASA,
+   que no quede también nuestro formulario y que haya salida si el marco no carga.
+   Test drive sigue con nuestro formulario y con toda la comprobación de arriba.
+
    Va dentro de `npm run verificar`, DESPUÉS de `astro build`. Sin dependencias. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -90,16 +97,34 @@ function comprobarAviso(ruta) {
   );
 }
 
-for (const ruta of ['index.html', 'cotizalo.html', 'test-drive.html', 'concesionarios.html']) {
-  test(`${ruta}: lleva el aviso de datos y la casilla sin marcar`, () => comprobarAviso(ruta));
+test('test-drive.html: lleva el aviso de datos y la casilla sin marcar', () => comprobarAviso('test-drive.html'));
+
+const URL_COTIZACION = 'https://ayas-formweb-prd.powerappsportals.com/tools/arcfox/form-quote-general/';
+
+function comprobarCotizacion(ruta) {
+  const html = leer(ruta);
+  const marcos = html.match(/<iframe\b[^>]*>/gi) ?? [];
+  const marco = marcos.find((tag) => tag.includes(`src="${URL_COTIZACION}"`));
+  assert.ok(marco, `${ruta}: falta el iframe del formulario de cotización de AYASA`);
+  assert.match(marco, /\stitle="[^"]+"/, `${ruta}: el iframe necesita title para los lectores de pantalla`);
+  assert.ok(!/<form\b[^>]*\bdata-gracias\b/i.test(html), `${ruta}: sobra nuestro formulario junto al de AYASA`);
+  assert.match(
+    html,
+    new RegExp(`<a\\b[^>]*href="${URL_COTIZACION.replace(/[.?]/g, '\\$&')}"[^>]*target="_blank"[^>]*rel="noopener"`),
+    `${ruta}: falta el enlace para abrir el formulario aparte si el marco no carga`,
+  );
 }
 
-test('cada página de modelo lleva el aviso de datos', () => {
+for (const ruta of ['index.html', 'cotizalo.html', 'concesionarios.html']) {
+  test(`${ruta}: la cotización es el formulario de AYASA`, () => comprobarCotizacion(ruta));
+}
+
+test('cada página de modelo cotiza con el formulario de AYASA', () => {
   const modelos = existsSync(join(DIST, 'modelos'))
     ? readdirSync(join(DIST, 'modelos')).filter((archivo) => archivo.endsWith('.html'))
     : [];
   assert.ok(modelos.length > 0, 'no hay páginas en dist/modelos/');
-  for (const archivo of modelos) comprobarAviso(join('modelos', archivo));
+  for (const archivo of modelos) comprobarCotizacion(join('modelos', archivo));
 });
 
 /* LA PUERTA TAMBIÉN RECOGE DATOS PERSONALES —nombre, correo, WhatsApp— y los

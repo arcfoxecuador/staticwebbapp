@@ -280,11 +280,47 @@ export const PORTADA = {
     visitante no puede creer. Si no hay fuente, no publiques la cifra. */
 export type Metrica = { valor: string; etiqueta: string; unidad?: string; fuente?: string };
 
-export const METRICAS: Metrica[] = [
-  /* Las tres cifras, tal como vienen en el contenido aprobado por el cliente. */
-  { valor: '1958', etiqueta: 'Fundación de BAIC' },
-  { valor: '3', etiqueta: 'Modelos para descubrir' },
-  { valor: '100%', etiqueta: 'Propulsión eléctrica' },
+/* Vacío a propósito: el cliente pidió ELIMINAR las tres cifras de Nosotros
+   (1958, 3 modelos, 100 %) en los ajustes en naranja del 10-nov-2026, y en su
+   lugar va la cronología con HUAWEI de abajo. Se conserva el tipo para el
+   bloque `Metricas`, que sigue disponible si vuelve a haber cifras con fuente. */
+export const METRICAS: Metrica[] = [];
+
+/** Hitos de ARCFOX con HUAWEI, literales del documento del cliente (ajustes en
+    naranja, 10-nov-2026). `fecha` es la etiqueta que se lee —en mayúsculas, como
+    la escribió el cliente— y `iso` va al `datetime` de `<time>`, que es lo que
+    un buscador o un lector de pantalla puede interpretar como fecha. */
+export const CRONOLOGIA: { fecha: string; iso: string; texto: string }[] = [
+  {
+    fecha: 'SEPTIEMBRE DE 2017',
+    iso: '2017-09',
+    texto:
+      'BAIC BluePark New Energy Technology Co., Ltd. (ARCFOX) y HUAWEI firmaron un acuerdo de cooperación estratégica para desarrollar una colaboración integral en investigación y desarrollo tecnológico, innovación de productos y transformación inteligente.',
+  },
+  {
+    fecha: 'NOVIEMBRE DE 2018',
+    iso: '2018-11',
+    texto:
+      'ARCFOX y HUAWEI firmaron un acuerdo para profundizar su cooperación estratégica. Ambas partes llevarían a cabo investigaciones y colaboraciones en transformación inteligente, integrando tecnologías TIC con vehículos inteligentes.',
+  },
+  {
+    fecha: 'ENERO DE 2019',
+    iso: '2019-01',
+    texto:
+      'ARCFOX y HUAWEI establecieron conjuntamente el «Laboratorio de Innovación 1873», con el objetivo de desarrollar tecnologías de nueva generación para vehículos eléctricos inteligentes y conectados.',
+  },
+  {
+    fecha: 'OCTUBRE DE 2020',
+    iso: '2020-10',
+    texto:
+      'El ARCFOX T fue presentado oficialmente e inició su producción en serie, incorporando las tecnologías de conectividad inteligente y propulsión eléctrica inteligente de HUAWEI.',
+  },
+  {
+    fecha: 'ABRIL DE 2021',
+    iso: '2021-04',
+    texto:
+      'Se presentó oficialmente la nueva versión del ARCFOX S. Desarrollado conjuntamente por ARCFOX y HUAWEI, fue el primer vehículo producido en serie equipado con la solución integral de tecnología inteligente para automóviles de HUAWEI.',
+  },
 ];
 
 /** Los pasos del servicio, de contacto a resultado. La numeración la pone el
@@ -559,7 +595,7 @@ export const FAQ_COTIZA: readonly { p: string; r: string }[] = [
   },
   {
     p: '¿Puedo cotizar sin elegir modelo?',
-    r: 'El formulario pide un modelo. Si aún no decides, elige el que más se acerque: T5 familiar, T1 crossover o S5 sedán deportivo. El asesor te ayuda a comparar.',
+    r: 'El formulario pide un modelo. Si aún no decides, elige el que más se acerque: T5 familiar, T1 SUV o S5 sedán deportivo. El asesor te ayuda a comparar.',
   },
   {
     p: '¿En qué ciudades cotizan?',
@@ -836,6 +872,20 @@ export const FORMULARIO = {
   confirmacionPrueba:
     'Recibimos tu solicitud. Un asesor te contactará para confirmar disponibilidad, fecha y lugar de la prueba.',
   error: 'No pudimos enviar tu solicitud. Inténtalo nuevamente.',
+} as const;
+
+/* EL FORMULARIO DE COTIZACIÓN ES EL DE AYASA, no el nuestro (correo del cliente,
+   10-nov-2026): va en un iframe y los datos llegan directo a su CRM, con su
+   propio Aviso de Privacidad y su propia casilla. Por eso esas páginas no pintan
+   `AVISO_DATOS`: duplicarlo al lado de un formulario ajeno pediría un
+   consentimiento que no es el que se registra.
+
+   OJO: el portal sólo se deja incrustar en los dominios de su cabecera
+   `frame-ancestors`. Si el del sitio no está en esa lista, el navegador pinta
+   el marco vacío; por eso el bloque lleva siempre el enlace para abrirlo aparte. */
+export const FORMULARIO_COTIZACION = {
+  url: 'https://ayas-formweb-prd.powerappsportals.com/tools/arcfox/form-quote-general/',
+  titulo: 'Formulario de cotización de ARCFOX',
 } as const;
 
 // ── Protocolo de la puerta de lanzamiento ───────────────────────────────────

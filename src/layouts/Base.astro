@@ -64,7 +64,7 @@ const hayAnalitica = Boolean(ANALITICA.ga4 || ANALITICA.clarity);
 
     <Header flotante={cabeceraFlotante} ruta={path} />
 
-    <main id="contenido">
+    <main id="contenido" class="overflow-x-clip">
       <slot />
     </main>
 
@@ -86,7 +86,9 @@ const hayAnalitica = Boolean(ANALITICA.ga4 || ANALITICA.clarity);
 
      Hace falta porque las utilidades `.tira` desplazan sus hijos lateralmente
      al entrar, y ese recorrido asoma por el borde derecho en pantallas
-     estrechas. */
+     estrechas. En el <body> no basta: el navegador le pasa ese `overflow` a la
+     ventana y la página sigue dejando desplazarse de lado (10–13 px, medido).
+     Por eso <main> lleva también `overflow-x-clip`, que sí recorta. */
   body {
     overflow-x: clip;
   }
