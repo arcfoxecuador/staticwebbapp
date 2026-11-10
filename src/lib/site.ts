@@ -874,6 +874,20 @@ export const FORMULARIO = {
   error: 'No pudimos enviar tu solicitud. Inténtalo nuevamente.',
 } as const;
 
+/* EL FORMULARIO DE COTIZACIÓN ES EL DE AYASA, no el nuestro (correo del cliente,
+   10-nov-2026): va en un iframe y los datos llegan directo a su CRM, con su
+   propio Aviso de Privacidad y su propia casilla. Por eso esas páginas no pintan
+   `AVISO_DATOS`: duplicarlo al lado de un formulario ajeno pediría un
+   consentimiento que no es el que se registra.
+
+   OJO: el portal sólo se deja incrustar en los dominios de su cabecera
+   `frame-ancestors`. Si el del sitio no está en esa lista, el navegador pinta
+   el marco vacío; por eso el bloque lleva siempre el enlace para abrirlo aparte. */
+export const FORMULARIO_COTIZACION = {
+  url: 'https://ayas-formweb-prd.powerappsportals.com/tools/arcfox/form-quote-general/',
+  titulo: 'Formulario de cotización de ARCFOX',
+} as const;
+
 // ── Protocolo de la puerta de lanzamiento ───────────────────────────────────
 
 /* EL DESTINO DE LOS REGISTROS DE `/lanzamiento` y `/landing`. Misma decisión que

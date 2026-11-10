@@ -22,7 +22,7 @@
    humano no. Ninguna de las dos cosas pide nada al visitante, que es la razón
    por la que no hay un captcha aquí: el captcha lo paga quien sí es humano. */
 import Boton from '../ui/Boton.astro';
-import { AVISO_DATOS, FORMULARIO, LEGAL, ORG } from '../../lib/site';
+import { AVISO_DATOS, FORMULARIO, FORMULARIO_COTIZACION, LEGAL, ORG } from '../../lib/site';
 
 interface Props {
   titulo?: string;
@@ -39,6 +39,9 @@ interface Props {
   boton?: string;
   /** El acuse tras enviar. Test drive tiene el suyo; el resto, el compartido. */
   confirmacion?: string;
+  /** Pinta el formulario de cotización de AYASA en vez del nuestro. Ver
+      `FORMULARIO_COTIZACION` en site.ts. */
+  cotizacion?: boolean;
 }
 
 const {
@@ -49,6 +52,7 @@ const {
   aviso = 'general',
   boton = 'Solicitar cotización',
   confirmacion = FORMULARIO.confirmacion,
+  cotizacion = false,
 } = Astro.props;
 const textoAviso = AVISO_DATOS[aviso];
 
@@ -65,7 +69,7 @@ const modelos = [
 ---
 
 {
-  destino ? (
+  cotizacion || destino ? (
     <div
       data-slot="formulario"
       class:list={[compacto ? 'grid gap-8' : 'grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20']}
@@ -115,6 +119,29 @@ const modelos = [
         }
       </div>
 
+      {cotizacion ? (
+        <div class="revela cotizacion-externa">
+          {/* `loading="lazy"`: el portal pesa y pone sus propias cookies; que
+              no cargue hasta que el visitante llegue al bloque. */}
+          <iframe
+            src={FORMULARIO_COTIZACION.url}
+            title={FORMULARIO_COTIZACION.titulo}
+            loading="lazy"
+            class="block w-full border border-linea bg-superficie"
+          ></iframe>
+          <p class:list={['mt-3 text-small', compacto ? 'text-white/75' : 'text-tinta/70']}>
+            ¿No ves el formulario?{' '}
+            <a
+              href={FORMULARIO_COTIZACION.url}
+              target="_blank"
+              rel="noopener"
+              class:list={['enlace-subrayado', compacto ? 'text-white' : 'text-marca']}
+            >
+              Ábrelo en una pestaña nueva
+            </a>
+          </p>
+        </div>
+      ) : (
       <form
         class="revela campo-claro border border-linea bg-superficie p-6 md:p-9"
         method="post"
@@ -253,6 +280,7 @@ const modelos = [
           <p class="acuse text-small" role="status" aria-live="polite"></p>
         </div>
       </form>
+      )}
     </div>
   ) : null
 }
@@ -306,6 +334,27 @@ const modelos = [
     height: 1.25rem;
     margin-top: 0.1rem;
     accent-color: var(--color-marca);
+  }
+
+  /* Alto medido con el formulario de AYASA desplegado (todas las preguntas
+     condicionales abiertas): 2.050 px en marcos anchos y hasta 2.450 en los
+     intermedios, donde sus columnas se apilan. Si algún día crece, el marco
+     hace scroll por dentro en vez de cortarlo. */
+  .cotizacion-externa {
+    container-type: inline-size;
+  }
+  .cotizacion-externa iframe {
+    height: 2500px;
+  }
+  @container (max-width: 560px) {
+    .cotizacion-externa iframe {
+      height: 2300px;
+    }
+  }
+  @container (min-width: 900px) {
+    .cotizacion-externa iframe {
+      height: 2150px;
+    }
   }
 
   .acuse:empty {

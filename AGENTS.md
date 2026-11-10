@@ -154,8 +154,13 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   material local real. Las órbitas 2D completas (30 frames T5, 36 T1/S5) ya
   están en `src/assets/orbitas/`; el escenario gira esa secuencia, no una malla.
   Siguen pendientes un GLB por modelo/color.
-- **Formulario**: `PUBLIC_FORMULARIO_ENDPOINT` — *pendiente*. Sin él, el bloque no
-  se pinta y `/cotizalo` muestra las vías directas.
+- **Formulario**: la cotización (portada, `/cotizalo`, `/concesionarios` y cada
+  ficha) es el formulario de AYASA en un iframe (`FORMULARIO_COTIZACION` de
+  `site.ts`, 10-nov-2026), con su propio Aviso de Privacidad. **Sólo se ve si el
+  dominio está en su `frame-ancestors`**: hoy la lista no incluye arcfox.com.ec,
+  así que el marco sale vacío y queda el enlace «Ábrelo en una pestaña nueva».
+  Test drive sigue con el formulario propio y `PUBLIC_FORMULARIO_ENDPOINT`
+  (*pendiente*; sin él el POST cae a `mailto:`).
 - **Analítica**: `PUBLIC_GA4_ID` / `PUBLIC_CLARITY_ID` — *pendiente*. Sin ninguno no
   se monta ni el script ni el banner de cookies.
 - **Asistente**: `ASISTENTE.activo` en `false` en el sitio. El chat de la teaser
@@ -201,8 +206,9 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   - `/privacidad`: Aviso de Privacidad L-00-GG-09-02 v2.0, en
     `lib/aviso-privacidad.ts`, generado desde el Word. Versión nueva = se
     regenera entero.
-  - Cada formulario lleva al pie `AVISO_DATOS` (general, o `pruebaManejo` en test
-    drive) y una casilla obligatoria que nunca sale marcada.
+  - El formulario propio (hoy sólo test drive) lleva al pie `AVISO_DATOS`
+    (`pruebaManejo`) y una casilla obligatoria que nunca sale marcada. La
+    cotización de AYASA trae su propio aviso y no se le añade el nuestro.
     `scripts/verificar-avisos-datos.mjs` comprueba el texto literal en `dist/`.
   - *Pendiente*: `LEGAL.cookies` («Legal», Iván Esparza) y `LEGAL.terminos`
     (Darío Pacheco). Vacíos = no se pintan. La puerta de lanzamiento (repo de
