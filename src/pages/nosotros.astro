@@ -1,15 +1,15 @@
 ---
 /* La marca, no el catálogo. El texto es el aprobado por el cliente (nov. 2026):
    once bloques que cuentan quién es ARCFOX sin introducir otros modelos ni
-   fechas de lanzamiento local sin confirmar. Por eso la cronología se sustituyó
-   por cinco pilares de marca. */
+   fechas de lanzamiento local sin confirmar. La única cronología es la que
+   escribió el cliente —los hitos con HUAWEI, 2017-2021—, que sustituye a las
+   tres cifras que pidió eliminar (ajustes en naranja, 10-nov-2026). */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
 import Encabezado from '../components/bloques/Encabezado.astro';
 import Rejilla from '../components/bloques/Rejilla.astro';
 import Tarjeta from '../components/bloques/Tarjeta.astro';
-import Metricas from '../components/bloques/Metricas.astro';
 import Escena from '../components/bloques/Escena.astro';
 import GamaModelos from '../components/bloques/GamaModelos.astro';
 import Faq from '../components/bloques/Faq.astro';
@@ -17,7 +17,7 @@ import Cierre from '../components/bloques/Cierre.astro';
 
 import sobre from '../assets/sobre.webp';
 
-import { CTA, FAQ, METRICAS, ORG } from '../lib/site';
+import { CRONOLOGIA, CTA, FAQ, ORG } from '../lib/site';
 import { faq, grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
 
 const titulo = 'Sobre ARCFOX';
@@ -157,20 +157,29 @@ const schema = grafo(
     </Rejilla>
   </Seccion>
 
-  {
-    METRICAS.length > 0 && (
-      <Seccion campo="tinte">
-        <Encabezado
-          rotulo="ARCFOX en Ecuador"
-          titulo="Una nueva energía para tus caminos"
-          bajada="Conoce una propuesta que une la experiencia automotriz de BAIC con tres formas de vivir la movilidad eléctrica."
-        />
-        <div class="mt-12">
-          <Metricas items={METRICAS} />
-        </div>
-      </Seccion>
-    )
-  }
+  {/* Sección 8 del documento: la cabecera se queda y las tres cifras se
+      cambiaron por la cronología con HUAWEI (ajustes en naranja). Es una
+      `<ol>` porque el orden es el contenido: leída fuera de orden, la historia
+      deja de tener sentido. */}
+  <Seccion campo="tinte">
+    <Encabezado
+      rotulo="ARCFOX en Ecuador"
+      titulo="Una nueva energía para tus caminos"
+      bajada="Conoce una propuesta que une la experiencia automotriz de BAIC con tres formas de vivir la movilidad eléctrica."
+    />
+    <ol class="revela-grupo mt-12 flex flex-col">
+      {
+        CRONOLOGIA.map((hito) => (
+          <li class="grid gap-3 border-t border-linea py-6 last:border-b md:grid-cols-[12rem_1fr] md:gap-10">
+            <time datetime={hito.iso} class="text-small font-semibold tracking-[0.08em] tabular-nums text-marca">
+              {hito.fecha}
+            </time>
+            <p class="max-w-[68ch] text-small text-tinta/75">{hito.texto}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </Seccion>
 
   <Seccion>
     <Encabezado
