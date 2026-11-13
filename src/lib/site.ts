@@ -413,6 +413,18 @@ export const FORMULARIO = {
    Vacío = el protocolo funciona igual pero NO promete registro. Ver
    `ProtocoloComando.astro`: un formulario que dice «registrado» sin que nada se
    haya guardado es la peor de las tres opciones posibles. */
+/* La pantalla de «gracias» que cierra el protocolo (pedido del cliente,
+   11-nov-2026: «un thank you page que cierre la conversación»). Vive DENTRO
+   de la página y no en una URL aparte porque followdafox y la puerta se
+   despliegan podados a una sola página: un `/gracias` no existiría ahí.
+   Sólo se pinta si el envío LLEGÓ; sin endpoint o sin red no se agradece un
+   registro que no ha ocurrido. Texto propuesto, pendiente de visto bueno. */
+export const GRACIAS_PROTOCOLO = {
+  titular: 'Gracias por ser parte',
+  texto: 'Tu perfil ha sido registrado. Revisa tus mensajes: te enviaremos la invitación por WhatsApp.',
+  redes: 'Mientras tanto, síguenos en Instagram',
+} as const;
+
 export const PROTOCOLO = {
   /** URL `…/exec` de la implementación web de Apps Script. */
   endpoint: import.meta.env.PUBLIC_PROTOCOLO_ENDPOINT ?? '',
