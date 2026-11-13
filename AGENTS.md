@@ -142,7 +142,7 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   Contacto oficial: info@arcfox.com.ec y 096 429 2000. Las 10 agencias son las del cuadro
   que confirmó el cliente el 9-nov-2026 (no las 15 del xlsx anterior); `/cookies` es el «Uso de Cookies» del
   cliente, literal. El T1 se presenta como SUV (pedido del cliente, 6-nov-2026).
-  Pendientes del cliente: horario y teléfono de cada sede y la dirección de Quito
+  Horario único de agencias en `HORARIO_AGENCIAS` (11-nov-2026), sin enlace a Maps. Pendientes del cliente: teléfono de cada sede y la dirección de Quito
   del Aviso de Privacidad, que legal dejó como «(nueva dirección Quito)».
 - **Colecciones**: los tres `ejemplo.md` de `src/content/` vienen **despublicados**
   (`publico: false` / `borrador: true`). Bórralos al entrar contenido real.

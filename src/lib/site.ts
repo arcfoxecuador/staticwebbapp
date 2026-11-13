@@ -56,9 +56,8 @@ export type Sede = {
      ni la ficha de contacto ni `llms.txt` los mencionan. */
   calle?: string;
   region?: string;
-  /** Horario de atención. `[pendiente]` se pinta hasta que haya uno real. */
-  horario?: string;
-  /** Enlace a mapas. Opcional: sin él la ficha no pinta el enlace. */
+  /** Enlace a Maps del cuadro del cliente. Ya no se pinta (pidió quitar
+      «Cómo llegar» el 11-nov-2026); se guarda porque de él salen lat/lng. */
   mapa?: string;
   /** Teléfono de la sede, como se lee. Opcional. */
   telefono?: string;
@@ -70,7 +69,14 @@ export type Sede = {
 /* Sólo las diez agencias del cuadro que el cliente confirmó el 9-nov-2026:
    nombre, dirección y enlace a Maps tal como vienen en él. El xlsx anterior
    traía cinco filas más que el cliente dice que no constan; no las recuperes
-   de ahí. Horario y teléfono de cada punto aún no llegan. */
+   de ahí. El teléfono de cada punto aún no llega. */
+/* Horario de atención, el mismo en todas las agencias (cliente, 11-nov-2026).
+   Va aparte y no repetido en cada sede: si cambia, cambia una vez. */
+export const HORARIO_AGENCIAS = [
+  { dias: 'Lunes a Viernes', horas: '9h00 a 18h00' },
+  { dias: 'Sábados', horas: '10h00 a 14h00' },
+] as const;
+
 export const SEDES: Sede[] = [
   {
     nombre: 'Arcfox Cuenca',
@@ -79,7 +85,6 @@ export const SEDES: Sede[] = [
     codigoPais: 'EC',
     region: 'Azuay',
     calle: 'Av. España y Granada, esquina.',
-    horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/8dP5KYBgtwznnBi16',
     lat: -2.886824,
     lng: -78.984383,
@@ -91,7 +96,6 @@ export const SEDES: Sede[] = [
     codigoPais: 'EC',
     region: 'Guayas',
     calle: 'Av. Juan Tanca Marengo km 2 ½ .',
-    horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/CX98nz6REx5SxRgw5',
     lat: -2.1490702,
     lng: -79.9027249,
@@ -103,7 +107,6 @@ export const SEDES: Sede[] = [
     codigoPais: 'EC',
     region: 'Guayas',
     calle: 'Av. Francisco de Orellana y Víctor Hugo Sicouret',
-    horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/ZK6iVgjoZdNjZLVY8',
     lat: -2.1578483,
     lng: -79.8985338,
@@ -115,7 +118,6 @@ export const SEDES: Sede[] = [
     codigoPais: 'EC',
     region: 'Guayas',
     calle: 'Ciudad Comercial El Dorado, Av. León Febres Cordero km 10 ½, vía a La Aurora.',
-    horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/Dcx4L1CGZrdaGdzv9',
     lat: -2.0543302,
     lng: -79.8737327,
@@ -127,7 +129,6 @@ export const SEDES: Sede[] = [
     codigoPais: 'EC',
     region: 'Loja',
     calle: 'Av. Cuxibamba y Tulcán, esquina.',
-    horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/Byhs9zHzct3Xdjv19',
     lat: -3.986303,
     lng: -79.205469,
@@ -139,7 +140,6 @@ export const SEDES: Sede[] = [
     codigoPais: 'EC',
     region: 'El Oro',
     calle: 'Av. 25 de Junio km 1 ½ y Av. Uruguay, esquina.',
-    horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/ZiZWbcScSKmJCREY8',
     lat: -3.2753078,
     lng: -79.9391575,
@@ -151,7 +151,6 @@ export const SEDES: Sede[] = [
     codigoPais: 'EC',
     region: 'Manabí',
     calle: 'Av. 4 de Noviembre y calle 304.',
-    horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/dGfqm67PK316nJ3G8',
     lat: -0.9655419,
     lng: -80.7076645,
@@ -163,7 +162,6 @@ export const SEDES: Sede[] = [
     codigoPais: 'EC',
     region: 'Pichincha',
     calle: 'Av. Eloy Alfaro entre José Queri y Av. Gaspar de Villarroel.',
-    horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/cupiTtnKAUBnJyGP6',
     lat: -0.1690056,
     lng: -78.4698678,
@@ -175,7 +173,6 @@ export const SEDES: Sede[] = [
     codigoPais: 'EC',
     region: 'Pichincha',
     calle: 'Av. Orellana y Av. 10 de Agosto.',
-    horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/VQn74wdBdqNwnnuR6',
     lat: -0.1961906,
     lng: -78.4948069,
@@ -187,7 +184,6 @@ export const SEDES: Sede[] = [
     codigoPais: 'EC',
     region: 'Pichincha',
     calle: 'Av. 10 de Agosto y El Inca.',
-    horario: '[pendiente]',
     mapa: 'https://maps.app.goo.gl/DPBABuL5oUCxKt838',
     lat: -0.1592363,
     lng: -78.4855479,
@@ -909,6 +905,18 @@ export const FORMULARIO_COTIZACION = {
    Vacío = el protocolo funciona igual pero NO promete registro. Ver
    `ProtocoloComando.astro`: un formulario que dice «registrado» sin que nada se
    haya guardado es la peor de las tres opciones posibles. */
+/* La pantalla de «gracias» que cierra el protocolo (pedido del cliente,
+   11-nov-2026: «un thank you page que cierre la conversación»). Vive DENTRO
+   de la página y no en una URL aparte porque followdafox y la puerta se
+   despliegan podados a una sola página: un `/gracias` no existiría ahí.
+   Sólo se pinta si el envío LLEGÓ; sin endpoint o sin red no se agradece un
+   registro que no ha ocurrido. Texto propuesto, pendiente de visto bueno. */
+export const GRACIAS_PROTOCOLO = {
+  titular: 'Gracias por ser parte',
+  texto: 'Tu perfil ha sido registrado. Revisa tus mensajes: te enviaremos la invitación por WhatsApp.',
+  redes: 'Mientras tanto, síguenos en Instagram',
+} as const;
+
 export const PROTOCOLO = {
   /** URL `…/exec` de la implementación web de Apps Script. */
   endpoint: import.meta.env.PUBLIC_PROTOCOLO_ENDPOINT ?? '',
