@@ -8,7 +8,12 @@
 
    `imagen` + `<slot>` es el escenario fotográfico (un formulario sobre una
    foto). Sin slot, pinta los CTAs de siempre. Un bloque local sólo para
-   cambiar el escenario era un bloque de más. */
+   cambiar el escenario era un bloque de más.
+
+   La foto vive en un marco `sticky` del alto de la pantalla, no del bloque:
+   el formulario de AYASA mide ~2.500 px y una foto `object-cover` estirada a
+   ese alto se recorta hasta verse deformada (lo reportó el cliente el
+   11-nov-2026). Así queda a su tamaño y acompaña el scroll del formulario. */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import Boton from '../ui/Boton.astro';
@@ -61,17 +66,19 @@ const conSlot = Astro.slots.has('default');
     tablero ? (
       <div class="tira tira-casilla grid gap-px bg-marca-clara/20 md:grid-cols-2">
         <div class="relative min-h-[28rem] overflow-clip md:min-h-[40rem]">
-          {capas.map((capa, indice) => (
-            <Image
-              src={capa.imagen}
-              alt={capa.alt}
-              widths={[800, 1440, 1920]}
-              sizes="(min-width: 768px) 50vw, 100vw"
-              data-modelo-vista={capa.id}
-              data-activo={indice === 0 ? '' : undefined}
-              class="cierre-fondo absolute inset-0 h-full w-full object-cover"
-            />
-          ))}
+          <div class="cierre-marco relative h-full min-h-[28rem] md:sticky md:top-0 md:h-[100svh] md:min-h-0">
+            {capas.map((capa, indice) => (
+              <Image
+                src={capa.imagen}
+                alt={capa.alt}
+                widths={[800, 1440, 1920]}
+                sizes="(min-width: 768px) 50vw, 100vw"
+                data-modelo-vista={capa.id}
+                data-activo={indice === 0 ? '' : undefined}
+                class="cierre-fondo absolute inset-0 h-full w-full object-cover"
+              />
+            ))}
+          </div>
         </div>
         <div class="flex flex-col justify-end bg-marca px-6 py-10 md:px-10 md:py-16">
           {conSlot && <slot />}
@@ -81,17 +88,21 @@ const conSlot = Astro.slots.has('default');
       <>
         {capas.length > 0 && (
           <>
-            {capas.map((capa, indice) => (
-              <Image
-                src={capa.imagen}
-                alt={capa.alt}
-                widths={[800, 1440, 1920]}
-                sizes="100vw"
-                data-modelo-vista={capa.id}
-                data-activo={indice === 0 ? '' : undefined}
-                class="cierre-fondo absolute inset-0 -z-10 h-full w-full object-cover"
-              />
-            ))}
+            <div class="absolute inset-0 -z-10">
+              <div class="sticky top-0 h-[100svh] max-h-full">
+                {capas.map((capa, indice) => (
+                  <Image
+                    src={capa.imagen}
+                    alt={capa.alt}
+                    widths={[800, 1440, 1920]}
+                    sizes="100vw"
+                    data-modelo-vista={capa.id}
+                    data-activo={indice === 0 ? '' : undefined}
+                    class="cierre-fondo absolute inset-0 h-full w-full object-cover"
+                  />
+                ))}
+              </div>
+            </div>
             <div class="absolute inset-0 -z-10 bg-marca/55" aria-hidden="true"></div>
           </>
         )}

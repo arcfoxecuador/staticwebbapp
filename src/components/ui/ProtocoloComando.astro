@@ -9,7 +9,7 @@
    ver `finalizar()`. Prometer un registro que no ha ocurrido es peor que no
    tener formulario, porque nadie se entera de que se está perdiendo gente. */
 import Boton from './Boton.astro';
-import { AVISO_DATOS, LEGAL, ORG, PROTOCOLO } from '../../lib/site';
+import { AVISO_DATOS, GRACIAS_PROTOCOLO, LEGAL, ORG, PROTOCOLO } from '../../lib/site';
 
 interface Props {
   rotulo?: string;
@@ -142,6 +142,21 @@ const protocolo = [
           <span data-respuesta></span>
           <span class="comando-autor">TÚ</span>
         </p>
+      </div>
+
+      {/* El cierre de la conversación. Sustituye al intercambio cuando el
+          registro llegó; el foco salta a su titular para que el lector de
+          pantalla lo anuncie. */}
+      <div class="comando-gracias" data-gracias hidden>
+        <h2 class="comando-gracias-titular" tabindex="-1" data-gracias-titular>{GRACIAS_PROTOCOLO.titular}</h2>
+        <p class="comando-gracias-texto">{GRACIAS_PROTOCOLO.texto}</p>
+        {
+          ORG.redes[0] && (
+            <a class="comando-gracias-enlace" href={ORG.redes[0]} target="_blank" rel="noopener">
+              {GRACIAS_PROTOCOLO.redes}
+            </a>
+          )
+        }
       </div>
 
       <div class="comando-control">
@@ -342,6 +357,10 @@ const protocolo = [
     const consentimiento = raiz.querySelector<HTMLElement>('[data-consentimiento]');
     const acepto = raiz.querySelector<HTMLInputElement>('[data-acepto]');
     const nuevo = raiz.querySelector<HTMLButtonElement>('[data-nuevo-registro]');
+    const intercambio = raiz.querySelector<HTMLElement>('.comando-intercambio');
+    const gracias = raiz.querySelector<HTMLElement>('[data-gracias]');
+    const graciasTitular = raiz.querySelector<HTMLElement>('[data-gracias-titular]');
+    if (!intercambio || !gracias || !graciasTitular) return;
     if (!superficie || !formulario || !config || !pregunta || !progreso || !opciones || !entrada || !valor || !mensajeUsuario || !respuesta || !ayuda || !error || !consentimiento || !acepto || !nuevo) return;
 
     const pasos = JSON.parse(config.textContent ?? '[]') as PasoComando[];
@@ -476,10 +495,14 @@ const protocolo = [
       if (estaRonda !== ronda) return;
 
       if (llego) {
-        pregunta.textContent = 'Tu perfil ha sido registrado. Revisa tus mensajes para recibir la invitación.';
+        pregunta.textContent = '';
         progreso.textContent = 'ACCESO REGISTRADO';
-        ayuda.textContent = 'Te escribiremos por WhatsApp';
-        ofrecerNuevo();
+        ayuda.textContent = '';
+        ayuda.hidden = true;
+        intercambio.hidden = true;
+        gracias.hidden = false;
+        nuevo.hidden = false;
+        graciasTitular.focus({ preventScroll: true });
         return;
       }
 
@@ -524,6 +547,9 @@ const protocolo = [
       opciones.replaceChildren();
       formulario.dataset.completo = 'false';
       nuevo.hidden = true;
+      gracias.hidden = true;
+      intercambio.hidden = false;
+      ayuda.hidden = false;
 
       if (paso.opciones) {
         entrada.hidden = true;
@@ -707,6 +733,44 @@ const protocolo = [
     font: inherit;
     letter-spacing: inherit;
     cursor: pointer;
+  }
+
+  .comando-gracias[hidden],
+  .comando-intercambio[hidden],
+  .comando-ayuda[hidden] {
+    display: none;
+  }
+
+  .comando-gracias {
+    display: grid;
+    gap: 0.75rem;
+    padding: 2rem 1.5rem 1.75rem;
+    text-align: center;
+    justify-items: center;
+  }
+
+  .comando-gracias-titular {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 1.1rem + 2vw, 2.25rem);
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    outline: 0;
+  }
+
+  .comando-gracias-texto {
+    max-width: 38ch;
+    margin: 0;
+    color: color-mix(in oklab, var(--color-superficie) 85%, transparent);
+  }
+
+  .comando-gracias-enlace {
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--color-superficie);
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
   }
 
   .comando-intercambio {
