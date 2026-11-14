@@ -34,7 +34,7 @@ export const ORG = {
   /** Perfiles oficiales. Alimentan `sameAs` del JSON-LD, que es lo que ata esta
       web a la entidad que ya conocen los motores. Fuera los que no existan. */
   redes: [
-    'https://www.instagram.com/arcfoxecuador',
+    'https://www.instagram.com/arcfox_ecuador',
     'https://www.tiktok.com/@arcfoxecuador',
     'https://www.facebook.com/arcfoxecuador',
   ],
@@ -216,7 +216,10 @@ export const ASISTENTE = {
 const CAMPAÑA = {
   titulo: 'Antes de abrir la puerta',
   ceja: 'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad eléctrica.',
-  titular: 'Si esto te encontró, es para ti. Déjanos hacerte unas preguntas.',
+  titular: 'Si esto te encontró, es para ti.',
+  /* La segunda frase grande, DESPUÉS de la ceja (orden del cliente,
+     12-nov-2026): titular grande → ceja → llamada grande. */
+  llamada: 'Déjanos tus datos para enviarte más información.',
   bajada:
     'Sé parte de un selecto grupo que experimentará antes que nadie una nueva forma de movilidad eléctrica, con ARCFOX en Ecuador.',
   cta: 'Continuar',
@@ -354,6 +357,7 @@ export const LANZAMIENTO = {
   titulo: CAMPAÑA.titulo,
   ceja: CAMPAÑA.ceja,
   titular: CAMPAÑA.titular,
+  llamada: CAMPAÑA.llamada,
   bajada: CAMPAÑA.bajada,
   cta: CAMPAÑA.cta,
   intro: CAMPAÑA.intro,
@@ -418,11 +422,11 @@ export const FORMULARIO = {
    de la página y no en una URL aparte porque followdafox y la puerta se
    despliegan podados a una sola página: un `/gracias` no existiría ahí.
    Sólo se pinta si el envío LLEGÓ; sin endpoint o sin red no se agradece un
-   registro que no ha ocurrido. Texto propuesto, pendiente de visto bueno. */
+   registro que no ha ocurrido. Texto del cliente (12-nov-2026). */
 export const GRACIAS_PROTOCOLO = {
-  titular: 'Gracias por ser parte',
-  texto: 'Tu perfil ha sido registrado. Revisa tus mensajes: te enviaremos la invitación por WhatsApp.',
-  redes: 'Mientras tanto, síguenos en Instagram',
+  titular: 'Gracias por registrarte',
+  texto: 'Te estaremos enviando más información.',
+  redes: 'Síguenos en Instagram',
 } as const;
 
 export const PROTOCOLO = {
