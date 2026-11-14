@@ -28,10 +28,8 @@ const schema = grafo(
   }),
 );
 
-/* Las líneas son una decisión de composición, no tres copias del titular.
-   Partir la única cadena conserva `site.ts` como fuente cuando cambie el copy.
-   El corte va tras cada coma o punto y no por número de palabras: con el
-   titular de frases cortas, contar palabras partía «encontró» de su sujeto. */
+/* Las líneas son una decisión de composición, no copias del titular. El
+   corte va tras cada coma o punto: «Si esto te encontró, / es para ti.» */
 const lineasTitular = LANZAMIENTO.titular.split(/(?<=[,.])\s+/);
 
 ---
@@ -201,8 +199,6 @@ const lineasTitular = LANZAMIENTO.titular.split(/(?<=[,.])\s+/);
         />
       </div>
 
-      <p class="ceja-puerta entra entra-2">{LANZAMIENTO.ceja}</p>
-
       {/* El aria-label conserva la frase continua; los tres spans sólo fijan el
           corte editorial que pide la maqueta. */}
       <h1
@@ -215,6 +211,15 @@ const lineasTitular = LANZAMIENTO.titular.split(/(?<=[,.])\s+/);
           ))
         }
       </h1>
+
+      {/* Orden del cliente: titular grande → ceja (mismo tamaño de siempre) →
+          llamada grande. La llamada usa la misma escala que el titular, pero
+          es un párrafo: la página tiene un solo h1. */}
+      <p class="ceja-puerta entra entra-2">{LANZAMIENTO.ceja}</p>
+
+      <p class="titulo-puerta llamada-puerta entra entra-2">
+        <span>{LANZAMIENTO.llamada}</span>
+      </p>
 
       {/* EL RELOJ. Mismo componente y mismo instante que el teaser: quien llega
           por followdafox y luego por el enlace de campaña tiene que ver la misma
@@ -723,6 +728,16 @@ const lineasTitular = LANZAMIENTO.titular.split(/(?<=[,.])\s+/);
      equilibradas en vez de salirse del encuadre. Con `nowrap`, «Déjanos
      hacerte unas preguntas.» —31 caracteres en una tipografía extendida— se
      cortaba por los dos lados en cualquier portátil. */
+  /* Entre el titular, la ceja y la llamada el aire lo pone la ceja: con el
+     margen propio del titular a cada lado, las tres piezas se separaban. */
+  h1.titulo-puerta {
+    margin-block-end: 0;
+  }
+
+  .llamada-puerta {
+    margin-block-start: clamp(1.25rem, 3.5svh, 2.5rem);
+  }
+
   .titulo-puerta span {
     display: block;
     text-wrap: balance;
