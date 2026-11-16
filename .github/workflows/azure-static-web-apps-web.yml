@@ -1,0 +1,94 @@
+# DESPLIEGUE DE LA WEB COMPLETA EN AZURE STATIC WEB APPS.
+#
+# Gemelo de `azure-static-web-apps-wonderful-rock-04b0a290f.yml` (la landing).
+# Mismo código, otro SWA, otro dominio. La diferencia está en el bloque `env`:
+# aquí no hay poda, se publica el sitio entero (16 páginas).
+#
+# ESTE ARCHIVO NO LO GENERÓ AZURE. El SWA de la web se crea con origen de
+# despliegue «Other», para que Azure no escriba otro workflow con
+# `output_location: ""`. Su token se copia a mano:
+#   Azure › SWA de la web › Overview › Manage deployment token
+#   → GitHub › Settings › Secrets › Actions › AZURE_STATIC_WEB_APPS_API_TOKEN_WEB
+#
+# VARIABLES DE REPOSITORIO:
+#   SITE_URL_WEB                https://arcfox.com.ec (canonical, sitemap, robots, JSON-LD)
+#   PUBLIC_PROTOCOLO_ENDPOINT   } compartidas con la landing
+#   PUBLIC_PROTOCOLO_TOKEN      }
+#   PUBLIC_IOZEN_BOT            }
+
+name: Web · Azure Static Web Apps
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+
+# Vacíos a propósito: la web nunca se poda. `dist-landing.mjs` sale sin tocar
+# nada cuando ninguno vale '1'.
+env:
+  SITE_URL: ${{ vars.SITE_URL_WEB }}
+  SOLO_LANDING: ""
+  SOLO_LANZAMIENTO: ""
+  PUBLIC_PROTOCOLO_ENDPOINT: ${{ vars.PUBLIC_PROTOCOLO_ENDPOINT }}
+  PUBLIC_PROTOCOLO_TOKEN: ${{ vars.PUBLIC_PROTOCOLO_TOKEN }}
+  PUBLIC_IOZEN_BOT: ${{ vars.PUBLIC_IOZEN_BOT }}
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    permissions:
+      contents: read
+    # MIENTRAS EL SWA DE LA WEB NO EXISTA, ESTE JOB NO FALLA: se salta el
+    # despliegue y lo avisa. Así el workflow puede vivir en `main` antes de que
+    # el equipo de Azure entregue el token, sin pintar de rojo cada push.
+    env:
+      HAY_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WEB != '' }}
+    steps:
+      - name: Falta el token del SWA de la web
+        if: env.HAY_TOKEN != 'true'
+        run: echo "::warning::Sin AZURE_STATIC_WEB_APPS_API_TOKEN_WEB todavía. La web no se publica; la landing no se ve afectada."
+
+      - uses: actions/checkout@v4
+        if: env.HAY_TOKEN == 'true'
+        with:
+          submodules: true
+          lfs: false
+
+      - name: Puerta de calidad
+        if: env.HAY_TOKEN == 'true'
+        run: npm ci && npm run check
+
+      # Sin los pasos OIDC del workflow de la landing: este SWA se crea con
+      # origen «Other», cuya política de despliegue es el token, no GitHub.
+      - name: Build And Deploy
+        if: env.HAY_TOKEN == 'true'
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WEB }}
+          action: "upload"
+          app_location: "/"
+          api_location: ""
+          output_location: "dist"
+          app_build_command: "npm run build:azure"
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    env:
+      HAY_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WEB != '' }}
+    steps:
+      - name: Close Pull Request
+        if: env.HAY_TOKEN == 'true'
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WEB }}
+          action: "close"

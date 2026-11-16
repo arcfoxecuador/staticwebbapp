@@ -1,32 +1,33 @@
-# DESPLIEGUE EN AZURE STATIC WEB APPS.
+# DESPLIEGUE DE LA LANDING (puerta de lanzamiento) EN AZURE STATIC WEB APPS.
 #
-# Este archivo lo generó Azure al crear el recurso, y venía con la plantilla por
-# defecto: `output_location: ""`, que publica la RAÍZ DEL REPOSITORIO. Para un
-# sitio Astro eso significa subir los `.astro` sin construir en vez del HTML.
-# Aquí está corregido y parametrizado.
+# UN STATIC WEB APP SIRVE UN SITIO. Este repo publica dos, cada uno en su
+# dominio y con su propio recurso de Azure:
 #
-# LAS VARIABLES SON DE REPOSITORIO, NO SECRETOS. Se cambian en
-# Settings › Secrets and variables › Actions › Variables, sin tocar código.
-# Ninguna es un secreto: `SITE_URL` y los dos flags de poda son decisiones de
-# construcción, y las `PUBLIC_*` acaban dentro del JavaScript que sirve el sitio
-# —por eso llevan ese prefijo—. El único secreto real es el token de despliegue
-# de Azure, que sí vive en Secrets.
+#   este archivo                          landing  → SWA wonderful-rock-04b0a290f (followdafox.ec)
+#   azure-static-web-apps-web.yml         web      → SWA de la web completa
 #
-#   SITE_URL                    dominio canónico (canonical, sitemap, robots, JSON-LD)
-#   SOLO_LANDING=1              poda dist/ al teaser followdafox
-#   SOLO_LANZAMIENTO=1          poda dist/ a la puerta de lanzamiento
-#                               NO combinar las dos: el build falla a propósito
-#   PUBLIC_PROTOCOLO_ENDPOINT   URL /exec de la hoja de cálculo
-#   PUBLIC_PROTOCOLO_TOKEN      la misma cadena que el TOKEN del script de la hoja
+# Un push a `main` dispara los dos; cada uno construye su variante del mismo
+# código. Por eso el modo de poda está FIJO aquí y no en una variable: es lo que
+# hace que este workflow sea el de la landing. Si viviera en una variable de
+# repositorio la leerían los dos workflows y la web saldría podada también.
+#
+# Este archivo lo generó Azure con `output_location: ""`, que publica la RAÍZ
+# DEL REPOSITORIO (los `.astro` sin construir). Está corregido abajo.
+#
+# VARIABLES DE REPOSITORIO (Settings › Secrets and variables › Actions ›
+# Variables). Ninguna es un secreto: las `PUBLIC_*` acaban en el JavaScript
+# del sitio.
+#
+#   SITE_URL_LANDING            https://followdafox.ec (canonical, robots, JSON-LD)
+#   PUBLIC_PROTOCOLO_ENDPOINT   URL /exec de la hoja de cálculo   } compartidas
+#   PUBLIC_PROTOCOLO_TOKEN      el TOKEN del script de la hoja    } con la web
 #   PUBLIC_IOZEN_BOT            id del bot de ioZen. Vacío = sin chat
 #
-# Sin ninguna variable de poda se construye el sitio completo (16 páginas).
+# El único secreto es el token de despliegue de este SWA.
 #
-# La versión de Node NO se fija aquí: Oryx lee `engines` de `package.json`
-# (>=22.12.0). Un `node-version` en el workflow sería un segundo sitio donde
-# cambiarlo, y el que se olvida siempre es el segundo.
+# La versión de Node NO se fija aquí: Oryx lee `engines` de `package.json`.
 
-name: Azure Static Web Apps CI/CD
+name: Landing · Azure Static Web Apps
 
 on:
   push:
@@ -36,6 +37,16 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
+
+# Valen para todos los pasos: la puerta de calidad y el build de Azure tienen
+# que construir exactamente lo mismo, o se comprueba una cosa y se publica otra.
+env:
+  SITE_URL: ${{ vars.SITE_URL_LANDING }}
+  SOLO_LANDING: ""
+  SOLO_LANZAMIENTO: "1"
+  PUBLIC_PROTOCOLO_ENDPOINT: ${{ vars.PUBLIC_PROTOCOLO_ENDPOINT }}
+  PUBLIC_PROTOCOLO_TOKEN: ${{ vars.PUBLIC_PROTOCOLO_TOKEN }}
+  PUBLIC_IOZEN_BOT: ${{ vars.PUBLIC_IOZEN_BOT }}
 
 jobs:
   build_and_deploy_job:
@@ -51,18 +62,10 @@ jobs:
           submodules: true
           lfs: false
 
-      # LA PUERTA DEL REPOSITORIO, ANTES DE DESPLEGAR. Es el mismo comando que
-      # se exige en local: astro check + build + los verificadores de dist/.
-      # Un despliegue que no pasa por aquí publica lo que nadie ha comprobado.
+      # LA PUERTA DEL REPOSITORIO, ANTES DE DESPLEGAR: astro check + build +
+      # los verificadores de dist/. Lo que no pasa aquí no se publica.
       - name: Puerta de calidad
         run: npm ci && npm run check
-        env:
-          SITE_URL: ${{ vars.SITE_URL }}
-          SOLO_LANDING: ${{ vars.SOLO_LANDING }}
-          SOLO_LANZAMIENTO: ${{ vars.SOLO_LANZAMIENTO }}
-          PUBLIC_PROTOCOLO_ENDPOINT: ${{ vars.PUBLIC_PROTOCOLO_ENDPOINT }}
-          PUBLIC_PROTOCOLO_TOKEN: ${{ vars.PUBLIC_PROTOCOLO_TOKEN }}
-          PUBLIC_IOZEN_BOT: ${{ vars.PUBLIC_IOZEN_BOT }}
 
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
@@ -84,20 +87,11 @@ jobs:
           action: "upload"
           app_location: "/"
           api_location: ""
-          # `dist` y no vacío: es la carpeta que genera Astro. Con el valor por
-          # defecto Azure publicaba el código fuente.
+          # `dist`: la carpeta que genera Astro.
           output_location: "dist"
-          # Explícito y no el `npm run build` que Oryx adivina: `build:azure`
-          # añade la poda de dist/ que necesitan el teaser y la puerta.
+          # `build:azure` y no el `npm run build` que Oryx adivina: añade la poda.
           app_build_command: "npm run build:azure"
           github_id_token: ${{ steps.idtoken.outputs.result }}
-        env:
-          SITE_URL: ${{ vars.SITE_URL }}
-          SOLO_LANDING: ${{ vars.SOLO_LANDING }}
-          SOLO_LANZAMIENTO: ${{ vars.SOLO_LANZAMIENTO }}
-          PUBLIC_PROTOCOLO_ENDPOINT: ${{ vars.PUBLIC_PROTOCOLO_ENDPOINT }}
-          PUBLIC_PROTOCOLO_TOKEN: ${{ vars.PUBLIC_PROTOCOLO_TOKEN }}
-          PUBLIC_IOZEN_BOT: ${{ vars.PUBLIC_IOZEN_BOT }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
