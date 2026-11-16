@@ -19,6 +19,9 @@
 name: Web · Azure Static Web Apps
 
 on:
+  # Botón «Run workflow» en Actions: para publicar sin un push, p. ej. al
+  # cargar el token o cambiar SITE_URL_*.
+  workflow_dispatch:
   push:
     branches:
       - main
