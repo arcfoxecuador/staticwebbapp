@@ -52,6 +52,7 @@ src/
 │   ├── schema.ts         constructores de JSON-LD (@graph único por página)
 │   ├── contenido.ts      la capa de datos: interruptor ORIGEN (colecciones | cms)
 │   ├── imagenes.ts       de dónde sale una imagen: CMS → src/assets → nada
+│   ├── orbitas.ts        secuencias 360 (glob propio; imagenes.ts no las traga)
 │   └── ui.ts             variantes() — cva reescrito en 40 líneas, sin dependencia
 ├── content.config.ts     colecciones zod: servicios · articulos · equipo
 ├── content/              los .md que las alimentan
@@ -75,16 +76,17 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
 
 | Ruta | Archivo |
 | --- | --- |
-| `/` | `pages/index.astro` |
+| `/` | `pages/index.astro` — portada de producto: hero, escenario, mosaico, Sobre ARCFOX y formulario de Cotízalo |
 | `/modelos` | `pages/modelos/index.astro` |
 | `/modelos/{slug}` | `pages/modelos/[slug].astro` |
-| `/nosotros` | `pages/nosotros.astro` |
+| `/nosotros` | `pages/nosotros.astro` — Sobre ARCFOX (como About en Global) |
+| `/cotizalo` | `pages/cotizalo.astro` — cotización (como Contact Us en Global) |
 | `/concesionarios` | `pages/concesionarios.astro` |
 | `/test-drive` | `pages/test-drive.astro` |
+| `/cotizalo` | `pages/cotizalo.astro` — destino del CTA primario (`CTA.href`) |
 | `/postventa` | `pages/postventa.astro` — `noindex`, fuera del menú; URL viva para revisar |
 | `/bitacora` | `pages/bitacora/index.astro` |
 | `/bitacora/{slug}` | `pages/bitacora/[slug].astro` |
-| `/contacto` | `pages/contacto.astro` |
 | `/landing` | `pages/landing.astro` — `noindex` en arcfox.com.ec; home de followdafox.com |
 | `/lanzamiento` | `pages/lanzamiento.astro` — `noindex` en arcfox.com.ec; home del proyecto `arcfox-lanzamiento` |
 | `/gracias` | `pages/gracias.astro` — `noindex` |
@@ -126,21 +128,39 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
 
 ## Estado del proyecto
 
-- **Titular de portada**: `PORTADA.titular` arranca con el tagline. Construye, pero
-  es lo primero que hay que reescribir — un `<h1>` es una idea de seis a diez
-  palabras, no la frase citable (esa es `PORTADA.bajada`).
-- **Contenido**: `METRICAS`, `PASOS`, `PILARES` y `FAQ` de `site.ts` — *pendiente*.
-  Sus bloques no se pintan mientras estén vacíos.
+- **Portada**: `/` es la experiencia de producto, no otro catálogo. Sigue el
+  recorrido hero cinematográfico → escenario claro T5/T1/S5 → mosaico de rasgos
+  → Sobre ARCFOX → Cotízalo. El escenario gira fotografías 2D ordenadas desde el
+  markdown y sincroniza el modelo activo con el formulario; no hay malla 3D.
+- **Contenido**: los textos son los aprobados por el cliente (documento de
+  nov. 2026, «Contenido web adaptado a la estructura del sitio»): `/nosotros`,
+  `/cotizalo`, `/test-drive`, `/concesionarios`, `/modelos` y cada ficha. El
+  orden de la gama es T1, T5, S5 (`orden` en cada markdown). Las cifras son las
+  que revisó Foton (oct. 2026); no se cambian por las de Argentina. Los colores
+  del selector son sólo los que tienen fotos. `/politicas` es la versión vigente
+  («LEGALES WEB ARCFOX», Foton): la nota del documento sobre FOTON no aplica.
+  Contacto oficial: info@arcfox.com.ec y 096 429 2000. Las 10 agencias son las del cuadro
+  que confirmó el cliente el 9-nov-2026 (no las 15 del xlsx anterior); `/cookies` es el «Uso de Cookies» del
+  cliente, literal. El T1 se presenta como SUV (pedido del cliente, 6-nov-2026).
+  Horario único de agencias en `HORARIO_AGENCIAS` (11-nov-2026), sin enlace a Maps. Pendientes del cliente: teléfono de cada sede y la dirección de Quito
+  del Aviso de Privacidad, que legal dejó como «(nueva dirección Quito)».
 - **Colecciones**: los tres `ejemplo.md` de `src/content/` vienen **despublicados**
   (`publico: false` / `borrador: true`). Bórralos al entrar contenido real.
 - **Logo**: `public/marca/logo.svg` es un placeholder tipográfico. `schema.ts` lo
   referencia, así que el archivo tiene que existir — *pendiente el real*.
 - **Imagen de compartición**: `npm run og` genera un provisional. *Pendiente el
   diseño real* (1200×630, mismo nombre de archivo).
-- **Fotografía**: *pendiente*. Todo lo que entre generado se queda declarado como
-  tal (`portadaGenerada: true`) hasta que llegue una fotografía real.
-- **Formulario**: `PUBLIC_FORMULARIO_ENDPOINT` — *pendiente*. Sin él, el bloque no
-  se pinta y `/contacto` muestra las vías directas.
+- **Fotografía**: hero, interiores, modelos, `sobre.webp` y `cotizar.webp` son
+  material local real. Las órbitas 2D completas (30 frames T5, 36 T1/S5) ya
+  están en `src/assets/orbitas/`; el escenario gira esa secuencia, no una malla.
+  Siguen pendientes un GLB por modelo/color.
+- **Formulario**: la cotización (portada, `/cotizalo`, `/concesionarios` y cada
+  ficha) es el formulario de AYASA en un iframe (`FORMULARIO_COTIZACION` de
+  `site.ts`, 10-nov-2026), con su propio Aviso de Privacidad. **Sólo se ve si el
+  dominio está en su `frame-ancestors`**: hoy la lista no incluye arcfox.com.ec,
+  así que el marco sale vacío y queda el enlace «Ábrelo en una pestaña nueva».
+  Test drive sigue con el formulario propio y `PUBLIC_FORMULARIO_ENDPOINT`
+  (*pendiente*; sin él el POST cae a `mailto:`).
 - **Analítica**: `PUBLIC_GA4_ID` / `PUBLIC_CLARITY_ID` — *pendiente*. Sin ninguno no
   se monta ni el script ni el banner de cookies.
 - **Asistente**: `ASISTENTE.activo` en `false` en el sitio. El chat de la teaser
@@ -177,11 +197,24 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   cabecera, pie, 404, sitemap ni robots.
 - **CMS**: el panel está en `cms-panel/`. `ORIGEN` en `'colecciones'`. No es
   Storyblok. Quién publica lo deciden las variables de `cms-panel/.env`.
-- **Textos legales**: *pendiente*. `AVISO_LEGAL` y las dos rutas de `LEGAL`
-  (privacidad, términos) están vacíos, así que ni el aviso ni los enlaces del pie
-  se pintan. No los redacta quien programa. **`LEGAL.privacidad` es requisito para
-  encender la analítica**: sin ella el banner de cookies pide un consentimiento que
-  el visitante no puede informar.
+- **Textos legales**: todos literales de lo que envió Foton/AYASA (hilo
+  «LEGALES ARCFOX»); no los redacta quien programa y no se corrigen aquí, ni las
+  erratas. El pie sigue la barra de Foton —«Legal | Políticas SIG | Términos y
+  Condiciones | Aviso de Privacidad»— desde `DOCUMENTOS_LEGALES` de `site.ts`.
+  - `/politicas` (Políticas SIG): Calidad, Ambiental y Seguridad, en
+    `lib/politicas.ts`.
+  - `/privacidad`: Aviso de Privacidad L-00-GG-09-02 v2.0, en
+    `lib/aviso-privacidad.ts`, generado desde el Word. Versión nueva = se
+    regenera entero.
+  - El formulario propio (hoy sólo test drive) lleva al pie `AVISO_DATOS`
+    (`pruebaManejo`) y una casilla obligatoria que nunca sale marcada. La
+    cotización de AYASA trae su propio aviso y no se le añade el nuestro.
+    `scripts/verificar-avisos-datos.mjs` comprueba el texto literal en `dist/`.
+  - *Pendiente*: `LEGAL.cookies` («Legal», Iván Esparza) y `LEGAL.terminos`
+    (Darío Pacheco). Vacíos = no se pintan. La puerta de lanzamiento (repo de
+    Azure) todavía no usa el aviso de legal.
+  - **`LEGAL.privacidad` es requisito para encender la analítica**: sin ella el
+    banner de cookies pide un consentimiento que el visitante no puede informar.
 - **`overrides.satteri` en `package.json` es un parche, no una decisión.** El
   procesador de markdown que trae Astro depende de `satteri`, cuya versión 0.10.4
   se publicó **sin el binario nativo de macOS ARM** (`@bruits/satteri-darwin-arm64`
@@ -246,7 +279,7 @@ llegar al sitio.
   viven en Environment de ESE proyecto. Un push a `main` reconstruye los tres
   si están ligados al mismo repo.
 - **Descripción oficial** (la que va al JSON-LD y a `llms.txt`):
-  «ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV de diseño, autonomía y recarga para uso diario.»
+  «ARCFOX es la marca de vehículos 100% eléctricos de BAIC que llega a Ecuador con SUV y un sedán de diseño, autonomía y recarga para uso diario.»
 - **El primer commit es el andamiaje del kit, no trabajo de este proyecto.** Por eso
   existe: `git diff <ese commit>` responde «¿esto lo escribimos nosotros o venía de
   la plantilla?», que es justo la pregunta que aparece al revisar el sitio antes de

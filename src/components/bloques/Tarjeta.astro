@@ -19,10 +19,12 @@ interface Props {
   datos?: { clave: string; valor: string }[];
   /** El barrido de luz. Sólo en tarjetas con cuerpo, no en filas. */
   brillo?: boolean;
+  /** El texto del enlace al pie. Con `href` dice adónde lleva. */
+  enlace?: string;
   class?: string;
 }
 
-const { titulo, bajada, href, etiqueta, datos = [], brillo = true, class: extra } = Astro.props;
+const { titulo, bajada, href, etiqueta, datos = [], brillo = true, enlace = 'Ver más', class: extra } = Astro.props;
 const Etiqueta = href ? 'a' : 'div';
 ---
 
@@ -62,7 +64,7 @@ const Etiqueta = href ? 'a' : 'div';
          distinta altura, las flechas alineadas son lo que hace que la fila se lea
          como una fila. `aria-hidden` porque el destino ya lo dice el titular. */
       <span class="mt-auto flex items-center gap-2 pt-6 text-small font-medium text-marca">
-        Ver más
+        {enlace}
         <svg class="flecha" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path
             d="M3 8h10M9 4l4 4-4 4"

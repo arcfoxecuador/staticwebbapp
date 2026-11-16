@@ -2,6 +2,7 @@
 /* Ficha de modelo: ocho escenas. Los datos salen del markdown; las fotos, de
    `imagenPorArchivo`. Si falta una, esa escena no se pinta — no hay placeholder. */
 import Base from '../../layouts/Base.astro';
+import Hero from '../../components/bloques/Hero.astro';
 import Escena from '../../components/bloques/Escena.astro';
 import Seccion from '../../components/bloques/Seccion.astro';
 import Encabezado from '../../components/bloques/Encabezado.astro';
@@ -28,10 +29,12 @@ const { entrada } = Astro.props;
 const { data } = entrada;
 const { Content } = await renderizar(entrada);
 
-const heroLocal = imagenPorArchivo(
-  entrada.id === 't5' ? 't5-45-gris' : entrada.id === 's5' ? 's5-45' : 't1-kv',
-  data.alt ?? data.nombre,
-);
+/* La foto es de ESTE slug. Un fallback a otro modelo enseñaría el auto
+   equivocado si este no tiene archivo local. */
+const archivoHero = data.angulos[0]?.archivo ?? data.variantes[0]?.archivo;
+const heroLocal = archivoHero
+  ? imagenPorArchivo(archivoHero, data.alt ?? data.nombre)
+  : undefined;
 const heroCms = heroLocal
   ? undefined
   : imagenDeEntrada('modelos', entrada.id, { asset: data.imagen, alt: data.alt, generada: data.portadaGenerada });
@@ -45,6 +48,20 @@ const variantes = data.variantes
     return imagen ? { etiqueta: v.etiqueta, imagen, alt: v.alt, muestra: v.muestra } : null;
   })
   .filter((v) => v !== null);
+
+/* El texto aprobado da sección «Colores» a los tres modelos. Mientras no lleguen
+   las fotos por color de la versión local, la sección enseña la primera vista
+   del modelo sola: el Conmutador no dibuja selector con un único ítem. */
+const colores =
+  variantes.length > 0
+    ? variantes
+    : data.angulos
+        .map((a) => {
+          const imagen = imagenPorArchivo(a.archivo, a.alt);
+          return imagen ? { etiqueta: data.nombre, imagen, alt: a.alt } : null;
+        })
+        .filter((v) => v !== null)
+        .slice(0, 1);
 
 const interiores = data.interior
   .map((v) => {
@@ -76,6 +93,12 @@ const destacados = data.destacados
 
 const cotas = data.cotas.map((c) => ({ valor: c.valor, unidad: c.unidad, etiqueta: c.etiqueta }));
 
+/* La ficha técnica pinta SIEMPRE sus cuatro grupos, aunque alguno esté vacío:
+   el cliente pidió conservar el espacio hasta cargar la ficha validada para
+   Ecuador. Un grupo vacío lo dice en vez de desaparecer. */
+const textos = data.textos;
+const corto = data.nombre.replace(/^ARCFOX\s+/, '');
+
 const path = `/modelos/${entrada.id}`;
 
 const schema = grafo(
@@ -104,28 +127,34 @@ const schema = grafo(
   cabeceraFlotante={Boolean(heroSrc)}
 >
   {
-    heroSrc && (
+    heroSrc ? (
       <Escena
         imagen={heroSrc}
         alt={data.alt ?? data.nombre}
-        rotulo={data.rotulo ?? data.categoria}
+        rotulo={data.rotuloFicha ?? (data.rotulo ? `${data.rotulo} 100% eléctrico` : data.categoria)}
         titulo={data.nombre}
-        bajada={data.bajada}
+        bajada={data.descripcion ?? data.bajada}
         transicion={`modelo-${entrada.id}`}
         primera
         altura="completa"
+      />
+    ) : (
+      <Hero
+        rotulo={data.rotuloFicha ?? data.rotulo ?? data.categoria}
+        titulo={data.nombre}
+        bajada={data.bajada}
       />
     )
   }
 
   {
-    variantes.length > 0 && (
+    colores.length > 0 && (
       <Seccion campo="tinte">
         <Conmutador
           rotulo="Colores"
-          titulo="Elige el que te representa"
+          titulo={textos.colores ?? 'Elige el que te representa'}
           marca={entrada.id.toUpperCase()}
-          items={variantes}
+          items={colores}
           forma="circulo"
           nombre={`color-${entrada.id}`}
         />
@@ -146,12 +175,8 @@ const schema = grafo(
       <Escena
         imagen={escenaInterior.imagen}
         alt={escenaInterior.alt}
-        titulo="Dentro"
-        bajada={
-          entrada.id === 't1'
-            ? 'El familiar se entiende por lo que cabe, no por la ficha.'
-            : 'El auto se entiende desde el asiento, no desde la ficha.'
-        }
+        titulo={textos.interior ?? 'Dentro'}
+        bajada={textos.interiorTexto}
         altura="completa"
         anclaje="pie"
       />
@@ -162,7 +187,7 @@ const schema = grafo(
     conmutadorInterior.length > 0 && (
       <Seccion campo="tinte" aire="apretado" contenido={false}>
         <Conmutador
-          titulo="Míralo desde dentro"
+          titulo={textos.interior ?? 'Míralo desde dentro'}
           items={conmutadorInterior}
           forma="texto"
           nombre={`interior-${entrada.id}`}
@@ -183,8 +208,11 @@ const schema = grafo(
   {
     destacados.length > 0 && (
       <Seccion>
-        <Encabezado rotulo="Tecnología" titulo="Lo que hace distinto a este modelo" />
-        <p class="mt-4 max-w-[68ch] text-small text-tinta/50">{AVISO_CIFRAS}</p>
+        <Encabezado
+          rotulo="Diseño y tecnología"
+          titulo={textos.tecnologia ?? 'Lo que hace distinto a este modelo'}
+          bajada={textos.tecnologiaIntro}
+        />
         <Destacados items={destacados} etiqueta={`Tecnología del ${data.nombre}`} class="mt-10" />
         <div class="prosa mt-16">
           <Content />
@@ -203,15 +231,45 @@ const schema = grafo(
     )
   }
 
+  {
+    data.especificaciones.length > 0 && (
+      <Seccion campo="tinte">
+        <Encabezado rotulo="Especificaciones" titulo={`Conoce el ${corto} en detalle`} />
+        <div class="mt-12 grid gap-10 md:grid-cols-2 lg:gap-14">
+          {data.especificaciones.map((grupo) => (
+            <section class="revela">
+              <h3 class="border-b border-linea pb-3 text-h3 font-bold text-marca">{grupo.grupo}</h3>
+              {grupo.items.length > 0 ? (
+                <dl class="mt-2">
+                  {grupo.items.map((item) => (
+                    <div class="flex items-baseline justify-between gap-6 border-b border-linea/60 py-3 text-small">
+                      <dt class="text-tinta/65">{item.clave}</dt>
+                      <dd class="text-right font-medium text-marca">{item.valor}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p class="mt-4 text-small text-tinta/55">[pendiente]</p>
+              )}
+            </section>
+          ))}
+        </div>
+        <p class="mt-10 max-w-[68ch] text-small text-tinta/50">{AVISO_CIFRAS}</p>
+      </Seccion>
+    )
+  }
+
   <Cierre
     id="cotizalo"
     imagen={cotizar}
     alt="ARCFOX, fondo de la ficha de cotización."
   >
     <Formulario
-      titulo={`Cotiza el ${data.nombre}`}
-      bajada="Ciudad y datos de contacto. Te respondemos desde el concesionario más cercano."
+      titulo={textos.cotizacion ?? `Cotiza tu ${data.nombre}`}
+      bajada={textos.cotizacionTexto}
       origen={path}
+      cotizacion
+      boton={`Cotizar ${corto}`}
       compacto
     />
   </Cierre>

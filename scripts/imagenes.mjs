@@ -25,6 +25,7 @@
        articulos   portada    1600 × 1000   cabecera de artículo
        equipo      retrato    1080 × 1350   fotografía de persona
        paginas     ancha      1920 × 1080   hero y fondos → src/assets/
+       orbitas     orbita     1280 × libre  secuencias 360 → src/assets/orbitas/
 
    Se puede forzar otro preset con `--preset=cuadrada`, y añadir AVIF con
    `--avif` (pesa ~20% menos que WebP, y Astro sirve el que el navegador acepte).
@@ -54,6 +55,9 @@ const PRESETS = {
   /* Sin recorte: sólo limita el ancho máximo. Para ilustraciones, diagramas y
      cualquier imagen donde recortar destruye la información. */
   libre: { ancho: 1920, alto: null },
+  /* Órbitas 360: los originales son 1920×1280. `ancha` (1920×1080) les cortaría
+     el auto; 1280 cubre el plato (~70vw) y recorta peso. */
+  orbita: { ancho: 1280, alto: null },
 };
 
 const FAMILIAS = {
@@ -61,6 +65,7 @@ const FAMILIAS = {
   articulos: { carpeta: 'articulos', preset: 'portada' },
   equipo: { carpeta: 'equipo', preset: 'retrato' },
   paginas: { carpeta: '', preset: 'ancha' },
+  orbitas: { carpeta: 'orbitas', preset: 'orbita' },
 };
 
 /* `.jfif` es JPEG con otra extensión: es lo que sale de muchas cámaras y

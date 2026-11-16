@@ -78,9 +78,12 @@
   --color-campana-fria: #0867d8;
   --color-campana-calida: #32105f;
 
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-pill: 999px;
+  /* El tablero de losas es la geometría del sitio: un radio pastilla
+     al lado de una casilla cuadrada es otro idioma. Cero, no «casi
+     cuadrado» — 4px ya se lee como pastilla a esta escala. */
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-pill: 0;
 
   /* Dos familias. La de display carga sólo los titulares, así que puede
      permitirse carácter; la de texto se lee en párrafos largos y tiene que
@@ -865,6 +868,12 @@
     html:has(.barra-accion) {
       scroll-padding-bottom: calc(85px + env(safe-area-inset-bottom));
     }
+  }
+
+  /* Cabecera fija de la portada: un salto a #escenario, #sobre o #cotizalo
+     no puede quedar debajo del menú. */
+  html:has(header.fixed) {
+    scroll-padding-top: 5.5rem;
   }
 
   /* ── EL AIRE ANTES DEL PIE ──────────────────────────────────────────────────

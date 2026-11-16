@@ -1,0 +1,108 @@
+---
+/* Mapa de agencias: el contorno del Ecuador con un pin por ciudad, sacado de las
+   coordenadas de cada enlace de Maps de «Puntos de venta current Arcfox.xlsx».
+   Es un SVG propio y no un iframe de Google: no carga terceros ni cookies, y no
+   necesita consentimiento. El pin lleva a las fichas de esa ciudad, que tienen
+   la dirección y el horario.
+
+   La lista de ciudades es la versión accesible del mapa: el SVG se esconde a los
+   lectores de pantalla y sus enlaces salen del orden del teclado para no repetir
+   cada ciudad dos veces. */
+import { ECUADOR, proyectar } from '../../lib/mapa-ecuador';
+import { anclaCiudad, type Sede } from '../../lib/site';
+
+interface Props {
+  sedes: Sede[];
+}
+
+const { sedes } = Astro.props;
+
+const ciudades = [...new Set(sedes.map((s) => s.ciudad))]
+  .map((ciudad) => {
+    const deLaCiudad = sedes.filter((s) => s.ciudad === ciudad);
+    const conPin = deLaCiudad.filter((s) => s.lat !== undefined && s.lng !== undefined);
+    if (conPin.length === 0) return null;
+    const lat = conPin.reduce((t, s) => t + (s.lat as number), 0) / conPin.length;
+    const lng = conPin.reduce((t, s) => t + (s.lng as number), 0) / conPin.length;
+    return { ciudad, total: deLaCiudad.length, ancla: anclaCiudad(ciudad), ...proyectar(lat, lng) };
+  })
+  .filter((c) => c !== null)
+  .sort((a, b) => a.y - b.y);
+
+const margen = 40;
+const viewBox = `${-margen} ${-margen} ${ECUADOR.ancho + margen * 2 + 120} ${ECUADOR.alto + margen * 2}`;
+const agencias = (n: number) => `${n} ${n === 1 ? 'agencia' : 'agencias'}`;
+---
+
+<div class="mapa-agencias grid items-center gap-10 border border-linea bg-superficie p-6 sm:p-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+  <svg viewBox={viewBox} class="mx-auto block h-auto w-full max-w-[34rem]" aria-hidden="true" focusable="false">
+    <path d={ECUADOR.trazo} class="mapa-pais" />
+    {
+      ciudades.map((c) => (
+        <a href={`#${c.ancla}`} tabindex="-1" class="mapa-pin">
+          <circle cx={c.x} cy={c.y} r="22" class="mapa-pin-halo" />
+          <circle cx={c.x} cy={c.y} r="11" class="mapa-pin-punto" />
+          <text x={c.x + 20} y={c.y + 10} class="mapa-pin-texto">
+            {c.ciudad}
+          </text>
+        </a>
+      ))
+    }
+  </svg>
+
+  <div>
+    <p class="text-small text-tinta/75">
+      {agencias(sedes.length)} en {ciudades.length} ciudades. Elige la tuya para ver la dirección.
+    </p>
+    <ul class="mt-6 grid grid-cols-2 gap-x-6 border-t border-linea">
+      {
+        ciudades.map((c) => (
+          <li class="border-b border-linea">
+            <a href={`#${c.ancla}`} class="flex items-baseline justify-between gap-3 py-3 text-marca hover:underline">
+              <span class="font-semibold">{c.ciudad}</span>
+              <span class="text-small text-tinta/70">{c.total}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</div>
+
+<style>
+  .mapa-pais {
+    fill: color-mix(in srgb, var(--color-marca) 7%, var(--color-superficie));
+    stroke: color-mix(in srgb, var(--color-marca) 35%, transparent);
+    stroke-width: 2;
+    stroke-linejoin: round;
+  }
+  .mapa-pin {
+    cursor: pointer;
+  }
+  .mapa-pin-halo {
+    fill: color-mix(in srgb, var(--color-marca) 16%, transparent);
+    transition: r 200ms ease;
+  }
+  .mapa-pin-punto {
+    fill: var(--color-marca);
+    stroke: var(--color-superficie);
+    stroke-width: 3;
+  }
+  .mapa-pin-texto {
+    fill: var(--color-marca);
+    font-size: 30px;
+    font-weight: 700;
+    paint-order: stroke;
+    stroke: var(--color-superficie);
+    stroke-width: 6px;
+    stroke-linejoin: round;
+  }
+  .mapa-pin:hover .mapa-pin-halo {
+    r: 30;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mapa-pin-halo {
+      transition: none;
+    }
+  }
+</style>

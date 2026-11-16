@@ -37,9 +37,21 @@ const LOCALES = {
   }),
 } as const;
 
-const ARCHIVOS = import.meta.glob<{ default: ImageMetadata }>('../assets/**/*.{webp,avif,png,jpg}', {
-  eager: true,
-});
+/* Dos globs, no `assets/**`. Las órbitas son 240 archivos: si entran aquí,
+   cada página que importe este módulo las arrastra al grafo de Vite. El
+   primer fotograma (`*-00`) sí: la ficha lo usa como `archivo` de variante. */
+const ARCHIVOS = {
+  ...import.meta.glob<{ default: ImageMetadata }>('../assets/*.{webp,avif,png,jpg}', {
+    eager: true,
+  }),
+  ...import.meta.glob<{ default: ImageMetadata }>(
+    '../assets/{modelos,articulos,equipo,servicios}/*.{webp,avif,png,jpg}',
+    { eager: true },
+  ),
+  ...import.meta.glob<{ default: ImageMetadata }>('../assets/orbitas/*-00.{webp,avif}', {
+    eager: true,
+  }),
+};
 
 export type Familia = keyof typeof LOCALES;
 
@@ -67,9 +79,9 @@ const buscarLocal = (familia: Familia, slug: string) => {
    concretos y no caduca mientras esos archivos existan. */
 const ALT_LOCAL: Partial<Record<Familia, Record<string, string>>> = {
   modelos: {
-    t5: 'ARCFOX T5, SUV crossover 100% eléctrico, vista de tres cuartos.',
-    t1: 'ARCFOX T1, SUV familiar 100% eléctrico.',
-    s5: 'ARCFOX S5, SUV fastback 100% eléctrico.',
+    t5: 'ARCFOX T5, SUV 100% eléctrico, vista de tres cuartos.',
+    t1: 'ARCFOX T1, SUV 100% eléctrico.',
+    s5: 'ARCFOX S5, sedán deportivo 100% eléctrico.',
   },
 };
 

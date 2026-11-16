@@ -1,22 +1,26 @@
-/* ── EL VERIFICADOR DEL AVISO DE DATOS DE LA PUERTA ────────────────────────
+/* ── EL VERIFICADOR DE LOS AVISOS DE DATOS ─────────────────────────────────
    Lee `dist/` y comprueba lo que pidió el área legal de AYASA (hilo «LEGALES
-   ARCFOX», 30-sep y 20-oct-2026) en el único formulario de este despliegue, el
-   protocolo de la puerta:
-   - El paso de consentimiento lleva el AVISO DE TRATAMIENTO DE DATOS literal.
+   ARCFOX», 30-sep y 20-oct-2026):
+
+   - Cada formulario lleva al pie el AVISO DE TRATAMIENTO DE DATOS literal.
      «Su contenido no puede ser modificado»: por eso se comprueban frases
-     exactas y no sólo que exista un bloque. Es el general: la puerta no pide
-     cédula ni licencia.
-   - La casilla dice el literal de legal, NUNCA viene premarcada y enlaza al
-     Aviso de Privacidad, que publica el sitio completo en Vercel: este
-     repositorio sólo sirve la puerta. Que esa página siga viva no se comprueba
-     aquí, porque obligaría a salir a la red en cada construcción.
-   Es la misma regla que `verificar-avisos-datos.mjs` del sitio completo
-   (Retr1to/ARCFOX), recortada a lo que existe aquí.
+     exactas y no sólo que exista un bloque.
+   - Test drive lleva el aviso propio, porque pide datos sensibles (copia de
+     cédula y licencia). El resto, el general.
+   - La casilla de aceptación es obligatoria y NUNCA viene premarcada.
+   - `/privacidad` publica el Aviso de Privacidad (L-00-GG-09-02) completo.
+
+   Desde el 10-nov-2026 la COTIZACIÓN (portada, /cotizalo, /concesionarios y
+   cada ficha) usa el formulario de AYASA en un iframe, que lleva su propio Aviso
+   de Privacidad y su casilla. Ahí ya no se exige nuestro aviso —sería un segundo
+   consentimiento que nadie registra—; se exige que el iframe sea el de AYASA,
+   que no quede también nuestro formulario y que haya salida si el marco no carga.
+   Test drive sigue con nuestro formulario y con toda la comprobación de arriba.
 
    Va dentro de `npm run verificar`, DESPUÉS de `astro build`. Sin dependencias. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const DIST = 'dist';
@@ -27,42 +31,165 @@ function leer(ruta) {
   return readFileSync(completa, 'utf8');
 }
 
+/** El formulario de contacto es el que lleva `data-gracias`; así no se confunde
+    con el del protocolo de lanzamiento, que no lo lleva. */
+function formulario(html, ruta) {
+  const form = html.match(/<form\b[^>]*\bdata-gracias\b[^>]*>[\s\S]*?<\/form>/i);
+  assert.ok(form, `${ruta} no tiene formulario de contacto`);
+  return form[0];
+}
+
+const obligatorio = (tag) => /\srequired(?=[\s>=\/])/.test(tag);
 const textoPlano = (html) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 
-const FRASES = [
+const FRASES_COMUNES = [
   'AUTOMOTORES Y ANEXOS S.A. (A.Y.A.S.A.), FOTON DEL ECUADOR SOCIEDAD CIVIL Y COMERCIAL, TELEMÁTICA EQUINOCCIAL TELEQUINOX S.A., ALMACENERA AUTOMOTRIZ ALMOTRIZ S.A., ENAERENTACAR S.A.',
   'atender sus requerimientos comerciales, contacto directo y proactivo, actividades de marketing y sondeo de mercado',
-  'La base legal para la ejecución de estas actividades es su consentimiento expreso e inequívoco.',
   'datos@ayasa.com.ec',
   'Declaración de consentimiento informado.',
-  'tratar sus datos personales: identificativos y de contacto para que LAS EMPRESAS puedan',
   'LAS EMPRESAS no serán responsables de los resultados derivados del procesamiento de datos personales inexactos, erróneos o falaces.',
 ];
+const FRASE_SENSIBLES = 'Los datos personales sensibles (copia de cédula y licencia) serán utilizados para validar la identidad del cliente';
 const CASILLA = 'Declaro que he leído y acepto el tratamiento de mis datos personales, así como el Aviso de Privacidad';
 
-test('lanzamiento.html: el paso de consentimiento lleva el aviso literal de legal', () => {
-  const html = leer('lanzamiento.html');
-  const bloque = html.match(/<div\b[^>]*\bdata-consentimiento\b[^>]*>[\s\S]*?<\/label>/i)?.[0];
-  assert.ok(bloque, 'lanzamiento.html: el protocolo no tiene paso de consentimiento');
-  const texto = textoPlano(bloque);
-
-  for (const frase of FRASES) {
-    assert.ok(texto.includes(frase), `lanzamiento.html: el aviso no dice literalmente «${frase.slice(0, 60)}…»`);
+function comprobarAviso(ruta) {
+  const form = formulario(leer(ruta), ruta);
+  const texto = textoPlano(form);
+  for (const frase of FRASES_COMUNES) {
+    assert.ok(texto.includes(frase), `${ruta}: el aviso de datos no dice literalmente «${frase.slice(0, 60)}…»`);
   }
-  assert.ok(!texto.includes('copia de cédula y licencia'), 'lanzamiento.html: el aviso de datos sensibles es sólo para test drive');
+
+  const esPrueba = ruta === 'test-drive.html';
+  assert.equal(
+    texto.includes(FRASE_SENSIBLES),
+    esPrueba,
+    esPrueba ? `${ruta}: test drive necesita el aviso de datos sensibles` : `${ruta}: el aviso de datos sensibles es sólo para test drive`,
+  );
+  assert.equal(
+    texto.includes('identificativos, de contacto y sensibles'),
+    esPrueba,
+    `${ruta}: la declaración de consentimiento no corresponde al formulario`,
+  );
+
+  /* Como en la imagen que adjuntó legal: el aviso entero a la vista, sin caja
+     con scroll que lo esconda, y la remisión al Aviso de Privacidad en negrita
+     como en su correo. */
+  assert.match(
+    form,
+    /<strong\b[^>]*>\s*Más información en nuestro Aviso de Privacidad colocado en la Página Web\.\s*<\/strong>/,
+    `${ruta}: «Más información en nuestro Aviso de Privacidad…» va en negrita, como en el correo de legal`,
+  );
+  const css = readdirSync(join(DIST, '_astro'))
+    .filter((archivo) => archivo.endsWith('.css'))
+    .map((archivo) => readFileSync(join(DIST, '_astro', archivo), 'utf8'))
+    .join('\n');
+  assert.ok(!/\.aviso-datos[^{]*\{[^}]*overflow/.test(css), `${ruta}: el aviso no puede ir en una caja con scroll`);
+
+  const casilla = form.match(/<input\b[^>]*\btype="checkbox"[^>]*>/i)?.[0];
+  assert.ok(casilla, `${ruta}: falta la casilla de aceptación`);
+  assert.ok(obligatorio(casilla), `${ruta}: la casilla de aceptación debería ser obligatoria`);
+  assert.ok(!/\schecked(?=[\s>=\/])/.test(casilla), `${ruta}: la casilla no puede venir premarcada`);
+  assert.ok(texto.includes(CASILLA), `${ruta}: el texto de la casilla no es el literal de legal`);
+  assert.match(
+    form,
+    /<a\b[^>]*href="\/privacidad"[^>]*>\s*Aviso de Privacidad\s*<\/a>/,
+    `${ruta}: «Aviso de Privacidad» de la casilla debería enlazar a /privacidad`,
+  );
+}
+
+test('test-drive.html: lleva el aviso de datos y la casilla sin marcar', () => comprobarAviso('test-drive.html'));
+
+const URL_COTIZACION = 'https://ayas-formweb-prd.powerappsportals.com/tools/arcfox/form-quote-general/';
+
+function comprobarCotizacion(ruta) {
+  const html = leer(ruta);
+  const marcos = html.match(/<iframe\b[^>]*>/gi) ?? [];
+  const marco = marcos.find((tag) => tag.includes(`src="${URL_COTIZACION}"`));
+  assert.ok(marco, `${ruta}: falta el iframe del formulario de cotización de AYASA`);
+  assert.match(marco, /\stitle="[^"]+"/, `${ruta}: el iframe necesita title para los lectores de pantalla`);
+  assert.ok(!/<form\b[^>]*\bdata-gracias\b/i.test(html), `${ruta}: sobra nuestro formulario junto al de AYASA`);
+  assert.match(
+    html,
+    new RegExp(`<a\\b[^>]*href="${URL_COTIZACION.replace(/[.?]/g, '\\$&')}"[^>]*target="_blank"[^>]*rel="noopener"`),
+    `${ruta}: falta el enlace para abrir el formulario aparte si el marco no carga`,
+  );
+}
+
+for (const ruta of ['index.html', 'cotizalo.html', 'concesionarios.html']) {
+  test(`${ruta}: la cotización es el formulario de AYASA`, () => comprobarCotizacion(ruta));
+}
+
+test('cada página de modelo cotiza con el formulario de AYASA', () => {
+  const modelos = existsSync(join(DIST, 'modelos'))
+    ? readdirSync(join(DIST, 'modelos')).filter((archivo) => archivo.endsWith('.html'))
+    : [];
+  assert.ok(modelos.length > 0, 'no hay páginas en dist/modelos/');
+  for (const archivo of modelos) comprobarCotizacion(join('modelos', archivo));
+});
+
+/* LA PUERTA TAMBIÉN RECOGE DATOS PERSONALES —nombre, correo, WhatsApp— y los
+   manda a la hoja de cálculo, así que lleva el mismo aviso que un formulario:
+   el general, porque no pide cédula ni licencia. No es un `<form data-gracias>`
+   ni su casilla lleva `required`: el protocolo valida paso a paso en JS, y un
+   control obligatorio oculto bloquearía el Enter de cada pregunta anterior.
+   `/landing` pinta la misma puerta, así que se comprueba también allí. */
+function comprobarPuerta(ruta) {
+  const bloque = leer(ruta).match(/<div\b[^>]*\bdata-consentimiento\b[^>]*>[\s\S]*?<\/label>/i)?.[0];
+  assert.ok(bloque, `${ruta}: el protocolo no tiene paso de consentimiento`);
+  const texto = textoPlano(bloque);
+  for (const frase of FRASES_COMUNES) {
+    assert.ok(texto.includes(frase), `${ruta}: el aviso no dice literalmente «${frase.slice(0, 60)}…»`);
+  }
+  assert.ok(!texto.includes(FRASE_SENSIBLES), `${ruta}: el aviso de datos sensibles es sólo para test drive`);
+  assert.ok(texto.includes('identificativos y de contacto para que LAS EMPRESAS puedan'), `${ruta}: la declaración debería ser la general`);
   assert.match(
     bloque,
     /<strong\b[^>]*>\s*Más información en nuestro Aviso de Privacidad colocado en la Página Web\.\s*<\/strong>/,
-    'lanzamiento.html: «Más información en nuestro Aviso de Privacidad…» va en negrita, como en el correo de legal',
+    `${ruta}: «Más información en nuestro Aviso de Privacidad…» va en negrita, como en el correo de legal`,
   );
-
   const casilla = bloque.match(/<input\b[^>]*\btype="checkbox"[^>]*>/i)?.[0];
-  assert.ok(casilla, 'lanzamiento.html: falta la casilla de aceptación');
-  assert.ok(!/\schecked(?=[\s>=\/])/.test(casilla), 'lanzamiento.html: la casilla no puede venir premarcada');
-  assert.ok(texto.includes(CASILLA), 'lanzamiento.html: el texto de la casilla no es el literal de legal');
+  assert.ok(casilla, `${ruta}: falta la casilla de aceptación`);
+  assert.ok(!/\schecked(?=[\s>=\/])/.test(casilla), `${ruta}: la casilla no puede venir premarcada`);
+  assert.ok(texto.includes(CASILLA), `${ruta}: el texto de la casilla no es el literal de legal`);
+  /* Absoluta: la landing de Azure se poda a esta sola página y un
+     `/privacidad` relativo daría 404 allí (LEGAL.privacidadPuerta). */
   assert.match(
     bloque,
     /<a\b[^>]*href="https:\/\/arcfox-ruddy\.vercel\.app\/privacidad"[^>]*>\s*Aviso de Privacidad\s*<\/a>/,
-    'lanzamiento.html: «Aviso de Privacidad» de la casilla debería enlazar al aviso publicado en el sitio completo',
+    `${ruta}: «Aviso de Privacidad» de la puerta debería enlazar al aviso publicado en el sitio completo`,
   );
+}
+
+for (const ruta of ['lanzamiento.html', 'landing.html']) {
+  test(`${ruta}: la puerta lleva el aviso de datos y la casilla sin marcar`, () => comprobarPuerta(ruta));
+}
+
+/* Se comprueban el principio, el final y el código del documento, para notar
+   si la conversión desde el Word dejó algo fuera. */
+test('privacidad.html publica el Aviso de Privacidad completo', () => {
+  const texto = textoPlano(leer('privacidad.html'));
+  for (const frase of [
+    'L-00-GG-09-02',
+    'LAS EMPRESAS; expresan su compromiso con la protección de los datos personales',
+    'RUC: 1792364477001',
+    'Ley Orgánica de Protección de Datos Personales de 26 de mayo de 2021 Registro Oficial Suplemento 459.',
+    'Este aviso de privacidad podrá ser modificado en cualquier momento por LAS EMPRESAS sin previo consentimiento del titular.',
+    'Actualización de contenidos, estructura y procedimientos internos conforme nueva normativa / práctica interna.',
+  ]) {
+    assert.ok(texto.includes(frase), `privacidad.html no dice «${frase.slice(0, 60)}…»`);
+  }
+});
+
+/* El pie sigue la barra que pidió Foton («Legal | Políticas SIG | Términos y
+   Condiciones | Aviso de Privacidad») con los documentos que ya existen, y cada
+   página legal enlaza a las demás: quien lee una busca casi siempre otra. */
+test('el pie y las páginas legales enlazan los documentos publicados', () => {
+  const pie = leer('index.html').match(/<footer\b[\s\S]*?<\/footer>/i)?.[0] ?? '';
+  assert.match(pie, /<a\b[^>]*href="\/politicas"[^>]*>\s*Políticas SIG\s*<\/a>/, 'el pie debería enlazar «Políticas SIG»');
+  assert.match(pie, /<a\b[^>]*href="\/privacidad"[^>]*>\s*Aviso de Privacidad\s*<\/a>/, 'el pie debería enlazar «Aviso de Privacidad»');
+  assert.ok(pie.indexOf('href="/politicas"') < pie.indexOf('href="/privacidad"'), 'el orden del pie es el de la barra de Foton');
+
+  const main = (ruta) => leer(ruta).match(/<main\b[\s\S]*?<\/main>/i)?.[0] ?? '';
+  assert.match(main('privacidad.html'), /href="\/politicas"/, '/privacidad debería enlazar a /politicas');
+  assert.match(main('politicas.html'), /href="\/privacidad"/, '/politicas debería enlazar a /privacidad');
 });

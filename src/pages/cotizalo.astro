@@ -1,0 +1,106 @@
+---
+/* COTÍZALO. La página del CTA primario: el botón de la cabecera, la barra
+   móvil y los cierres llevan aquí (`CTA.href`). La portada conserva su propio
+   formulario al final del recorrido; esta página es para quien llega decidido
+   a pedir precio y quiere saber qué pasa después de enviar.
+
+   Sin barra de acción: repetiría el CTA que ya es el contenido de la página. */
+import Base from '../layouts/Base.astro';
+import Hero from '../components/bloques/Hero.astro';
+import Seccion from '../components/bloques/Seccion.astro';
+import Encabezado from '../components/bloques/Encabezado.astro';
+import Rejilla from '../components/bloques/Rejilla.astro';
+import Tarjeta from '../components/bloques/Tarjeta.astro';
+import Pasos from '../components/bloques/Pasos.astro';
+import GamaModelos from '../components/bloques/GamaModelos.astro';
+import Formulario from '../components/bloques/Formulario.astro';
+import Faq from '../components/bloques/Faq.astro';
+import Boton from '../components/ui/Boton.astro';
+import { FAQ_COTIZACION, PASOS_COTIZACION } from '../lib/site';
+import { faq, grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
+
+const titulo = 'Cotízalo';
+const descripcion =
+  'Solicita una cotización del T1, T5 o S5 y conoce las versiones, disponibilidad y condiciones comerciales en Ecuador.';
+
+const schema = grafo(
+  organizacion(),
+  sitioWeb(),
+  pagina({ path: '/cotizalo', titulo, descripcion }),
+  migas([{ nombre: titulo, path: '/cotizalo' }]),
+  faq(FAQ_COTIZACION),
+);
+
+const BENEFICIOS = [
+  { titulo: 'Precio y condiciones', texto: 'Recibe información sobre el precio y las condiciones comerciales vigentes.' },
+  { titulo: 'Versión y equipamiento', texto: 'Conoce las características incluidas en la versión cotizada.' },
+  { titulo: 'Tu siguiente paso', texto: 'Consulta disponibilidad, opciones de visita y prueba de manejo.' },
+];
+---
+
+<Base {titulo} {descripcion} path="/cotizalo" {schema} barraAccion={false}>
+  <Hero
+    rotulo="Tu próximo ARCFOX"
+    titulo="Elige cómo quieres moverte"
+    bajada={descripcion}
+    accion={{ texto: 'Solicitar cotización', href: '#formulario' }}
+    secundaria={{ texto: 'Explorar modelos', href: '/modelos' }}
+  />
+
+  <Seccion>
+    <Encabezado
+      rotulo="Asesoría personalizada"
+      titulo="La información que necesitas para elegir"
+      bajada="Conoce las opciones del modelo que te interesa y resuelve tus dudas con un asesor."
+    />
+    <Rejilla columnas={3} class="mt-12">
+      {BENEFICIOS.map((item) => <Tarjeta titulo={item.titulo} bajada={item.texto} brillo={false} />)}
+    </Rejilla>
+  </Seccion>
+
+  <Seccion campo="tinte" aire="apretado">
+    <Encabezado rotulo="Cómo funciona" titulo="Cotiza en tres pasos" />
+    <div class="mt-10">
+      <Pasos items={PASOS_COTIZACION} />
+    </div>
+  </Seccion>
+
+  <Seccion>
+    <div id="formulario" class="scroll-mt-24">
+      <Formulario
+        titulo="Cotiza tu ARCFOX"
+        bajada="Completa tus datos y selecciona el modelo que te interesa."
+        origen="/cotizalo"
+        cotizacion
+        boton="Solicitar cotización"
+      />
+    </div>
+  </Seccion>
+
+  <Seccion campo="tinte">
+    <Encabezado
+      rotulo="Descubre la gama"
+      titulo="Encuentra el que va contigo"
+      bajada="Versatilidad, amplitud o estilo deportivo. Explora lo que hace especial a cada ARCFOX."
+    />
+    <GamaModelos class="mt-12" />
+  </Seccion>
+
+  <Seccion>
+    <Encabezado
+      rotulo="Puntos de atención"
+      titulo="Conoce dónde visitarnos"
+      bajada="Consulta los puntos de atención y coordina tu visita."
+    />
+    <div class="mt-8">
+      <Boton href="/concesionarios" variante="secundario">Ver concesionarios</Boton>
+    </div>
+  </Seccion>
+
+  <Seccion campo="tinte">
+    <Encabezado titulo="Resolvemos tus dudas" />
+    <div class="mt-10">
+      <Faq items={FAQ_COTIZACION} grupo="faq-cotizacion" />
+    </div>
+  </Seccion>
+</Base>

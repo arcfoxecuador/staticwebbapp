@@ -37,6 +37,15 @@ const variante = z.object({
   muestra: z.string().optional(),
   archivo: z.string(),
   alt: z.string(),
+  /** Prefijo de la órbita (`t5-blanco`). Con `fotogramas` arma la secuencia
+      sin listar cientos de archivos en el markdown. */
+  orbita: z.string().optional(),
+  fotogramas: z.number().int().positive().optional(),
+});
+
+const angulo = z.object({
+  archivo: z.string(),
+  alt: z.string(),
 });
 
 const modelos = defineCollection({
@@ -48,8 +57,30 @@ const modelos = defineCollection({
     orden: z.number().default(0),
     /** Una línea. Es lo que se lee en la tarjeta antes de decidir entrar. */
     bajada: z.string(),
+    /** La presentación de la ficha, debajo del nombre. Más larga que `bajada`. */
+    descripcion: z.string().optional(),
+    /** Los cuatro rasgos del tablero de portada, en el orden en que se leen. */
+    atributos: z.array(z.string()).default([]),
+    /** Los textos de cada escena de la ficha. Viven con el modelo porque el
+        cliente los escribió por modelo; la página sólo los coloca. */
+    textos: z
+      .object({
+        colores: z.string().optional(),
+        interior: z.string().optional(),
+        interiorTexto: z.string().optional(),
+        tecnologia: z.string().optional(),
+        tecnologiaIntro: z.string().optional(),
+        cotizacion: z.string().optional(),
+        cotizacionTexto: z.string().optional(),
+      })
+      .default({}),
     categoria: z.string().optional(),
     rotulo: z.string().optional(),
+    /* El cliente aprobó la etiqueta de cada ficha con su propia puntuación: el
+       S5 lleva «·» y el T1 no. Sin este campo se arma con `rotulo`. */
+    rotuloFicha: z.string().optional(),
+    /* Lo mismo en el banner de inicio: el T1 se aprobó sin «·». */
+    separadorBanner: z.string().optional(),
     /** Los datos duros de la ficha: pares clave/valor. Es lo que hace que dos
         modelos se puedan comparar de un vistazo. */
     datos: z.array(z.object({ clave: z.string(), valor: z.string() })).default([]),
@@ -57,12 +88,20 @@ const modelos = defineCollection({
       .array(z.object({ valor: z.string(), unidad: z.string().optional(), etiqueta: z.string() }))
       .default([]),
     variantes: z.array(variante).default([]),
+    /** Una órbita fotográfica no se deduce del nombre del archivo: el orden
+        editorial fija el sentido del arrastre y evita prometer un 3D que no existe. */
+    angulos: z.array(angulo).default([]),
     galeria: z.array(fotoLocal).default([]),
     interior: z.array(variante).default([]),
     destacados: z
       .array(
         z.object({
           titulo: z.string(),
+          /* En el tablero de la portada el rótulo va junto a OTRA foto que en
+             la ficha: «Lectura del entorno» nombra asistencias, pero en la
+             portada cae bajo el habitáculo. Este rótulo sólo cambia la
+             portada; la ficha conserva el título que describe sus puntos. */
+          tituloPortada: z.string().optional(),
           puntos: z.array(z.string()),
           archivo: z.string().optional(),
           alt: z.string().optional(),

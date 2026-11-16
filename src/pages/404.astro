@@ -13,6 +13,7 @@
 import Base from '../layouts/Base.astro';
 import Seccion from '../components/bloques/Seccion.astro';
 import Boton from '../components/ui/Boton.astro';
+import Zorro from '../components/ui/Zorro.astro';
 import { NAV } from '../lib/site';
 ---
 
@@ -23,8 +24,14 @@ import { NAV } from '../lib/site';
   noindex
   barraAccion={false}
 >
-  <Seccion aire="amplio">
-    <div class="max-w-[52ch]">
+  <Seccion aire="amplio" contenido={false} class="relative min-h-[85svh] overflow-clip">
+    <Zorro
+      tamano="rastro"
+      reloj
+      lado="derecho"
+      class="absolute top-[18svh] right-8 z-0 max-md:top-auto max-md:bottom-0 max-md:right-0 max-md:w-36"
+    />
+    <div class="medida relative z-10 max-w-[52ch]">
       <p class="eyebrow entra text-marca-clara">Error 404</p>
 
       <h1 class="entra entra-2 mt-4 equilibra text-h1 font-bold text-marca">

@@ -98,7 +98,12 @@ for (const archivo of await htmls(DIST)) {
   for (const img of marcado.matchAll(/<img\b([^>]*)>/gi)) {
     const attrs = img[1];
     if (!/\balt=/.test(attrs)) hallazgo.push(`${nombre}: <img> sin alt`);
-    else if (/\balt="\s*"/.test(attrs)) hallazgo.push(`${nombre}: <img> con alt vacío`);
+    /* alt="" + aria-hidden es el patrón de una capa decorativa (el
+       buffer del giro 360). Un alt inventado en esa capa lo leería
+       el verificador y el visitante no: el plato ya tiene el alt visible. */
+    else if (/\balt="\s*"/.test(attrs) && !/\baria-hidden="true"/.test(attrs)) {
+      hallazgo.push(`${nombre}: <img> con alt vacío`);
+    }
     if (!/\bwidth=/.test(attrs) || !/\bheight=/.test(attrs)) {
       hallazgo.push(`${nombre}: <img> sin width/height — CLS`);
     }
