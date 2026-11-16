@@ -1,5 +1,6 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "migracion", "cms-panel"]
+  // Prototipo Vue ajeno al sitio: si entra al check pide @astrojs/vue y falla.
+  "exclude": ["dist", "migracion", "cms-panel", "arcfox-car-models"]
 }

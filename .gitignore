@@ -18,6 +18,10 @@ fuentes/
 # que lo que quede aquí es un original sin procesar — nunca debe llegar a git.
 imagenes-entrada/
 
+# Órbitas oficiales crudas (~226 MB, WebP+PNG a 1920×1280). El pipeline deja la
+# secuencia en src/assets/orbitas/; el original no viaja en git.
+Image/
+
 # Sistema
 .DS_Store
 .vercel

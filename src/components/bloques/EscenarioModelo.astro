@@ -1,0 +1,515 @@
+---
+/* El escenario imita un plato de estudio, pero conserva la verdad del material:
+   cambia fotografías ordenadas; no dibuja una órbita WebGL donde no hay malla. */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+export type ColorModelo = {
+  etiqueta: string;
+  muestra?: string;
+  /** Primer fotograma: LCP del plato. El resto llega por URL, no por <Image>. */
+  imagen: ImageMetadata;
+  alt: string;
+  urls: string[];
+};
+
+export type ModeloEscenario = {
+  id: string;
+  nombre: string;
+  rotulo?: string;
+  separadorBanner?: string;
+  colores: ColorModelo[];
+  datos: { clave: string; valor: string }[];
+};
+
+interface Props {
+  modelos: ModeloEscenario[];
+}
+
+const { modelos } = Astro.props;
+---
+
+{
+  modelos.length > 0 && (
+    <section id="escenario" data-slot="escenario-modelo" class="escenario-modelo campo-claro bg-fondo">
+      <div class="plano" aria-hidden="true"></div>
+      <div class="medida relative py-16 md:py-24">
+        <div class="selector-modelo sticky top-16 z-20 revela-titular" role="group" aria-label="Cambiar modelo">
+          <button type="button" data-modelo-anterior aria-label="Modelo anterior">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M7.5 2.5 4 6l3.5 3.5" stroke="currentColor" stroke-width="1.3" />
+            </svg>
+          </button>
+          <p data-modelo-nombre aria-live="polite">{modelos[0]?.nombre}</p>
+          <button type="button" data-modelo-siguiente aria-label="Modelo siguiente">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M4.5 2.5 8 6 4.5 9.5" stroke="currentColor" stroke-width="1.3" />
+            </svg>
+          </button>
+        </div>
+
+        {modelos.map((modelo, indiceModelo) => (
+          <article
+            id={modelo.id}
+            aria-label={modelo.nombre}
+            data-modelo-panel={modelo.id}
+            data-modelo-corto={modelo.nombre.replace(/^ARCFOX\s+/i, '')}
+            data-rotulo={modelo.rotulo}
+            data-separador={modelo.separadorBanner}
+            hidden={indiceModelo !== 0}
+          >
+            <div
+              class="plato"
+              tabindex="0"
+              data-giro
+              aria-label={`Gira el ${modelo.nombre} arrastrando o con las flechas del teclado`}
+            >
+              <div class="marco" aria-hidden="true"></div>
+              {/* LA PISTA DE GIRO. La pidió el cliente: «Arrastra para girar», en
+                  gris y debajo del plato, no bastaba para que se entendiera que
+                  el auto gira. La órbita dibuja el gesto alrededor de la base y
+                  el sello dice «360°», que es la palabra que la gente reconoce.
+                  Va antes de los fotogramas para que el auto quede encima de la
+                  órbita; el sello sube con su propio z-index. Se apaga en cuanto
+                  alguien gira el auto: a quien ya giró no le enseña nada.
+                  «Arrastra el auto» vive en el sello y no debajo del plato
+                  desde la revisión de Lucho: pegado a los colores, el aviso y
+                  sus flechas se leían como «arrastra estos cuadros». */}
+              <div class="pista-giro" aria-hidden="true">
+                <svg class="orbita" viewBox="0 0 400 60" preserveAspectRatio="none" fill="none">
+                  <path pathLength="1" d="M60 52 C 10 44, 10 16, 120 8" />
+                  <path pathLength="1" d="M340 8 C 390 16, 390 44, 280 52" />
+                  <path pathLength="1" d="M112 2 L124 8 L112 14" />
+                  <path pathLength="1" d="M288 46 L276 52 L288 58" />
+                </svg>
+                <span class="sello-360">
+                  <svg width="30" height="18" viewBox="0 0 30 18" fill="none">
+                    <ellipse cx="15" cy="9" rx="13" ry="5.5" stroke="currentColor" stroke-width="1.3" stroke-dasharray="3 2.2" />
+                    <path d="M5.2 11.6 2 12.8l1.7-3" stroke="currentColor" stroke-width="1.3" />
+                    <path d="M24.8 6.4 28 5.2l-1.7 3" stroke="currentColor" stroke-width="1.3" />
+                  </svg>
+                  360°
+                  <span class="sello-gesto">Gira el vehículo y descubre cada detalle.</span>
+                </span>
+              </div>
+              {modelo.colores.map((color, indiceColor) => (
+                <div
+                  class:list={['fotogramas', indiceColor === 0 && 'esta-activo']}
+                  data-color={color.etiqueta}
+                  data-orbita={JSON.stringify(color.urls)}
+                  aria-hidden={indiceColor === 0 ? 'false' : 'true'}
+                >
+                  {indiceModelo === 0 && indiceColor === 0 ? (
+                    <Image
+                      src={color.imagen}
+                      alt={color.alt}
+                      widths={[640, 960, 1280]}
+                      sizes="(min-width: 768px) 70vw, 100vw"
+                      loading="eager"
+                      class:list={['fotograma', 'esta-activo']}
+                      data-fotograma
+                    />
+                  ) : (
+                    <img
+                      src={color.urls[0] ?? color.imagen.src}
+                      alt={color.alt}
+                      width={color.imagen.width}
+                      height={color.imagen.height}
+                      loading="lazy"
+                      decoding="async"
+                      class:list={['fotograma', 'esta-activo']}
+                      data-fotograma
+                    />
+                  )}
+                  {/* Segunda capa: el src del <img> visible no se toca hasta
+                      que este frame ya está decodificado. Si se cambia el src
+                      en caliente, el plato queda en blanco un frame. */}
+                  <img
+                    src={color.urls[0] ?? color.imagen.src}
+                    alt=""
+                    width={color.imagen.width}
+                    height={color.imagen.height}
+                    loading="lazy"
+                    decoding="async"
+                    class="fotograma"
+                    data-fotograma
+                    aria-hidden="true"
+                  />
+                </div>
+              ))}
+            </div>
+            {modelo.colores.length > 1 && (
+              <fieldset class="colores">
+                <legend>Elige tu color</legend>
+                {modelo.colores.map((color, indiceColor) => (
+                  <button
+                    type="button"
+                    class:list={['muestra', indiceColor === 0 && 'esta-activo']}
+                    style={color.muestra ? `--muestra:${color.muestra}` : undefined}
+                    data-color-control={color.etiqueta}
+                    aria-label={`Ver ${modelo.nombre} en ${color.etiqueta}`}
+                    aria-pressed={indiceColor === 0 ? 'true' : 'false'}
+                  >
+                    <span>{color.etiqueta}</span>
+                  </button>
+                ))}
+              </fieldset>
+            )}
+
+            <dl class="barra-datos revela-grupo">
+              {modelo.datos.map((dato) => (
+                <div>
+                  <dt>{dato.clave}</dt>
+                  <dd>{dato.valor}</dd>
+                </div>
+              ))}
+            </dl>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+<script>
+  import '../../lib/escenario-modelo';
+</script>
+
+<style>
+  .escenario-modelo {
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+  }
+  .plano {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--color-marca) 8%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-marca) 8%, transparent) 1px, transparent 1px);
+    background-size: min(25vw, 20rem) 100%, 100% 14rem;
+    /* La retícula se abre con la sección: si naciera ya dibujada, el
+       plato parece un fondo estático y no un estudio que se enciende. */
+    animation: abrir-plano linear both;
+    animation-timeline: view();
+    animation-range: cover 0% cover 38%;
+  }
+  @keyframes abrir-plano {
+    from { clip-path: inset(10% 6%); opacity: 0; }
+    to   { clip-path: inset(0); opacity: 1; }
+  }
+  .selector-modelo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 44px;
+    background: color-mix(in srgb, var(--color-fondo) 92%, transparent);
+  }
+  .selector-modelo button {
+    display: inline-grid;
+    width: 44px;
+    min-height: 44px;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: var(--color-marca);
+    cursor: pointer;
+  }
+  .selector-modelo p {
+    display: flex;
+    min-width: min(65vw, 16rem);
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-marca);
+    font-family: var(--font-display);
+    font-size: var(--text-h3);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .plato {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: clamp(22rem, 52vw, 39rem);
+    margin-top: 1rem;
+    cursor: ew-resize;
+    touch-action: pan-y;
+    user-select: none;
+  }
+  /* Marco, no plato: el óvalo de estudio pelea con las losas del
+     mosaico. El auto se lee dentro de una casilla, como el resto. */
+  .marco {
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    width: min(78%, 54rem);
+    aspect-ratio: 16 / 10;
+    border: 1px solid color-mix(in srgb, var(--color-marca) 22%, transparent);
+    transform: translate(-50%, -50%);
+    animation: posar-marco linear both;
+    animation-timeline: view();
+    animation-range: cover 8% cover 42%;
+  }
+  @keyframes posar-marco {
+    from { transform: translate(-50%, -50%) scale(0.92); opacity: 0; }
+    to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+  .marco::after {
+    content: '';
+    position: absolute;
+    inset: 8%;
+    border: 1px solid color-mix(in srgb, var(--color-marca) 10%, transparent);
+  }
+  .fotogramas {
+    position: absolute;
+    inset: 0;
+    display: none;
+    place-items: center;
+  }
+  .fotogramas.esta-activo {
+    display: grid;
+  }
+  .fotograma {
+    /* Caja = plato. Si el <img> hereda width/height del archivo (1920×1080)
+       y sólo limita el ancho, el auto se sale y en móvil se lee el estribo. */
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .fotograma.esta-activo {
+    opacity: 1;
+  }
+  /* La órbita se apoya en la sombra del auto: 24% desde abajo del plato es
+     donde caen las ruedas de los tres modelos con `object-fit: contain`. */
+  .pista-giro {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 400ms var(--ease-out);
+  }
+  .plato[data-girado] .pista-giro {
+    opacity: 0;
+  }
+  .orbita {
+    position: absolute;
+    left: 50%;
+    bottom: 24%;
+    width: 84%;
+    height: 13%;
+    overflow: visible;
+    transform: translateX(-50%);
+    color: color-mix(in srgb, var(--color-marca) 55%, transparent);
+  }
+  .orbita path {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+    /* Se dibuja con la sección, como el marco: llega trazada justo cuando
+       el auto ya está posado. `pathLength="1"` deja el guion en una unidad. */
+    stroke-dasharray: 1;
+    animation: trazar-orbita linear both;
+    animation-timeline: view();
+    animation-range: cover 18% cover 46%;
+  }
+  @keyframes trazar-orbita {
+    from { stroke-dashoffset: 1; }
+    to   { stroke-dashoffset: 0; }
+  }
+  .sello-360 {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    bottom: calc(24% - 1.2rem);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.7rem;
+    transform: translateX(-50%);
+    border: 1px solid color-mix(in srgb, var(--color-marca) 30%, transparent);
+    background: var(--color-fondo);
+    color: var(--color-marca);
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    /* El texto aprobado es más largo que el «Arrastra el auto» que sustituyó:
+       el sello no sale del plato y el rótulo parte en dos líneas si hace falta. */
+    width: max-content;
+    max-width: calc(100% - 1rem);
+  }
+  .sello-gesto {
+    white-space: normal;
+    text-wrap: balance;
+    line-height: 1.25;
+    padding-left: 0.55rem;
+    border-left: 1px solid color-mix(in srgb, var(--color-marca) 20%, transparent);
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  /* Los colores son otro gesto —tocar, no arrastrar— y lo dicen con su
+     propio rótulo y un filete que los separa del plato. */
+  .colores {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem 0.5rem;
+    width: min(100%, 26rem);
+    margin: 1.75rem auto 0;
+    padding: 1.25rem 0 0;
+    border: 0;
+    border-top: 1px solid var(--color-linea);
+  }
+  /* Flotada, la leyenda deja de ser «leyenda» para el fieldset y pasa a
+     ser un ítem flex más: así puede ocupar su fila centrada. */
+  .colores legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+    text-align: center;
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-tinta) 70%, transparent);
+  }
+  .muestra {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    min-height: 58px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  .muestra::before {
+    content: '';
+    width: 22px;
+    height: 22px;
+    border: 1px solid color-mix(in srgb, var(--color-marca) 25%, transparent);
+    background: var(--muestra, var(--color-superficie));
+    outline: 1px solid transparent;
+    outline-offset: 4px;
+  }
+  .muestra.esta-activo::before {
+    outline-color: var(--color-marca);
+  }
+  .muestra span {
+    margin-top: 5px;
+    font-size: var(--text-eyebrow);
+    color: var(--color-tinta);
+  }
+  .barra-datos {
+    display: grid;
+    /* Una columna por dato: T5 lleva tres y S5 cinco, y la fila tiene que
+       llenarse igual en los dos. */
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 1px;
+    margin-top: 3rem;
+    background: color-mix(in srgb, var(--color-marca-clara) 45%, transparent);
+  }
+  .barra-datos > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    min-height: 8.5rem;
+    padding: 1.5rem;
+    text-align: right;
+    background: var(--color-marca);
+    color: white;
+  }
+  .barra-datos dt {
+    font-size: var(--text-eyebrow);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, white 55%, transparent);
+  }
+  .barra-datos dd {
+    margin-top: 0.65rem;
+    font-family: var(--font-display);
+    font-size: var(--text-dato);
+    font-weight: 600;
+    color: white;
+  }
+  /* Todas las losas caben a la vez: si el último dato cierra a
+     `cover 58%`, hay que bajar —y perder potencia— para leerlo. */
+  .barra-datos > *:nth-child(1),
+  .barra-datos > *:nth-child(2),
+  .barra-datos > *:nth-child(3),
+  .barra-datos > *:nth-child(4),
+  .barra-datos > *:nth-child(5) {
+    animation-range: cover 4% cover 20%;
+  }
+  @media (width < 48rem) {
+    .plano {
+      background-size: 50vw 100%, 100% 11rem;
+    }
+    .plato {
+      min-height: 18rem;
+      margin-top: 0;
+    }
+    .marco {
+      top: 50%;
+      width: 92%;
+    }
+    /* En 390 el sello con la instrucción medía más que el plato: se va el
+       dibujo de la elipse —«360°» ya lo dice— y se aprieta el tracking. */
+    .sello-360 {
+      gap: 0.35rem;
+      padding: 0.3rem 0.55rem;
+    }
+    .sello-360 > svg {
+      display: none;
+    }
+    .sello-gesto {
+      padding-left: 0.4rem;
+      letter-spacing: 0.06em;
+    }
+    .barra-datos {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    /* Con un número impar de datos, la última losa ocupa la fila: si no, el
+       hueco enseña el fondo claro de la barra. */
+    .barra-datos > div:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+    .barra-datos > div {
+      min-height: 7rem;
+      padding: 1.15rem 1rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .orbita path {
+      animation: none;
+      stroke-dasharray: none;
+    }
+    .pista-giro {
+      transition: none;
+    }
+    .plano,
+    .marco {
+      animation: none;
+      clip-path: none;
+      opacity: 1;
+      transform: none;
+    }
+    .marco {
+      transform: translate(-50%, -50%);
+    }
+  }
+</style>

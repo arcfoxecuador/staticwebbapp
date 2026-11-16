@@ -1,60 +1,166 @@
 ---
+/* La red ya se presenta como tal: mapa, servicios y fichas de sede. Una ficha
+   sólo se publica cuando su sede tiene dirección confirmada en `site.ts` —lo
+   pidió el cliente—; mientras ninguna la tenga, el mapa y la sección de
+   contacto dicen el texto alternativo aprobado en vez de «[pendiente]». */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/bloques/Hero.astro';
 import Seccion from '../components/bloques/Seccion.astro';
-import Escena from '../components/bloques/Escena.astro';
+import Encabezado from '../components/bloques/Encabezado.astro';
+import Rejilla from '../components/bloques/Rejilla.astro';
+import Tarjeta from '../components/bloques/Tarjeta.astro';
 import Formulario from '../components/bloques/Formulario.astro';
-import { SEDES } from '../lib/site';
-import { grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
-
-import sobre from '../assets/sobre.webp';
+import Faq from '../components/bloques/Faq.astro';
+import MapaAgencias from '../components/bloques/MapaAgencias.astro';
+import { FAQ_CONCESIONARIOS, HORARIO_AGENCIAS, SEDES, anclaCiudad } from '../lib/site';
+import { faq, grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
 
 const titulo = 'Concesionarios';
 const descripcion =
-  'La red de concesionarios ARCFOX en Ecuador se publica a medida que cada sede abre. Mientras tanto, pide contacto y te asignamos el punto más cercano.';
+  'Solicita información para conocer nuestros vehículos, recibir una cotización o coordinar una prueba de manejo.';
 
 const schema = grafo(
   organizacion(),
   sitioWeb(),
   pagina({ path: '/concesionarios', titulo, descripcion }),
   migas([{ nombre: titulo, path: '/concesionarios' }]),
+  faq(FAQ_CONCESIONARIOS),
 );
+
+const confirmadas = SEDES.filter((sede) => sede.calle);
+const SIN_SEDES =
+  'Cuéntanos en qué ciudad estás y te orientaremos sobre las opciones de atención disponibles.';
+
+const SERVICIOS = [
+  { titulo: 'Conoce los modelos', texto: 'Descubre de cerca su diseño, espacio interior y características.' },
+  { titulo: 'Recibe una cotización', texto: 'Consulta precios, versiones, equipamiento y disponibilidad.' },
+  { titulo: 'Solicita una prueba', texto: 'Elige el modelo que te interesa y consulta las opciones para conducirlo.' },
+];
 ---
 
 <Base {titulo} {descripcion} path="/concesionarios" {schema}>
-  <Hero rotulo="Red" titulo="Concesionarios en Ecuador" bajada={descripcion} />
-
-  <Escena
-    imagen={sobre}
-    alt="Un ARCFOX, de camino al concesionario."
-    rotulo="Quito primero"
-    titulo="La red se publica al abrir"
-    bajada="No inventamos una calle. Cuando una sede esté operativa, aparece aquí con dirección y horario."
-    altura="media"
-    anclaje="centro"
+  <Hero
+    rotulo="Cerca de ti"
+    titulo="Conoce ARCFOX en Ecuador"
+    bajada={descripcion}
+    accion={{ texto: 'Contactar a un asesor', href: '#formulario' }}
+    secundaria={{ texto: 'Solicitar test drive', href: '/test-drive' }}
   />
 
-  <Seccion campo="tinte">
-    <ul class="revela-grupo grid gap-6 md:grid-cols-2">
+  <Seccion campo="tinte" contenido={false}>
+    <div class="medida">
+      <h2 class="mb-6 text-h3 font-bold text-marca">Encuentra tu punto de atención</h2>
       {
-        SEDES.map((sede) => (
-          <li class="border border-linea bg-superficie p-7">
-            <p class="eyebrow text-marca-clara">{sede.pais}</p>
-            <h2 class="mt-2 text-h3 font-bold text-marca">{sede.ciudad}</h2>
-            <p class="mt-3 text-small text-tinta/70">
-              Dirección y horarios se publican cuando la sede esté operativa.
-            </p>
-          </li>
-        ))
+        confirmadas.length > 0 ? (
+          <MapaAgencias sedes={confirmadas} />
+        ) : (
+          <div class="mapa-red overflow-clip border border-linea">
+            <span class="mapa-red-lienzo" aria-hidden="true"></span>
+            <span class="mapa-red-pin px-6 text-center">
+              <svg width="28" height="36" viewBox="0 0 28 36" fill="none" aria-hidden="true">
+                <path
+                  d="M14 34s12-12.4 12-20A12 12 0 1 0 2 14c0 7.6 12 20 12 20Z"
+                  fill="currentColor"
+                />
+                <circle cx="14" cy="14" r="4.5" fill="var(--color-fondo)" />
+              </svg>
+              <span class="mt-4 max-w-[40ch] text-lead">{SIN_SEDES}</span>
+            </span>
+          </div>
+        )
       }
-    </ul>
+    </div>
   </Seccion>
 
   <Seccion>
-    <Formulario
-      titulo="¿En qué ciudad estás?"
-      bajada="Te decimos qué punto te corresponde cuando esté abierto."
-      origen="/concesionarios"
+    <Encabezado
+      rotulo="Vive la experiencia"
+      titulo="Da el siguiente paso"
+      bajada="Te ayudamos a conocer el ARCFOX que va contigo."
     />
+    <Rejilla columnas={3} class="mt-12">
+      {SERVICIOS.map((item) => <Tarjeta titulo={item.titulo} bajada={item.texto} brillo={false} />)}
+    </Rejilla>
+  </Seccion>
+
+  <Seccion campo="tinte" id="puntos-de-atencion">
+    <Encabezado rotulo="Contacto" titulo="Encuentra dónde visitarnos" />
+
+    {
+      confirmadas.length > 0 ? (
+        <ul class="revela-grupo mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {confirmadas.map((sede, i) => (
+            <li
+              id={confirmadas.findIndex((s) => s.ciudad === sede.ciudad) === i ? anclaCiudad(sede.ciudad) : undefined}
+              class="scroll-mt-28"
+            >
+              <address class="flex h-full flex-col border border-linea bg-superficie p-7 not-italic">
+                <h3 class="text-h3 font-bold text-marca">{sede.nombre}</h3>
+                <p class="mt-2 text-small text-tinta/70">{[sede.ciudad, sede.region].filter(Boolean).join(', ')}</p>
+                <p class="mt-3 text-small text-tinta/70">{sede.calle}</p>
+                <dl class="mt-3 text-small text-tinta/70">
+                  {HORARIO_AGENCIAS.map((h) => (
+                    <div>
+                      <dt class="inline">{h.dias}:</dt> <dd class="inline">{h.horas}</dd>
+                    </div>
+                  ))}
+                </dl>
+                {sede.telefono && <p class="mt-3 text-small text-tinta/70">{sede.telefono}</p>}
+                <p class="mt-auto flex gap-6 pt-5 text-small">
+                  <a href="#formulario" class="enlace-subrayado text-marca">Contactar</a>
+                </p>
+              </address>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="revela mt-8 max-w-[52ch] text-lead text-tinta/75">{SIN_SEDES}</p>
+      )
+    }
+  </Seccion>
+
+  <Seccion>
+    <div id="formulario" class="scroll-mt-24">
+      <Formulario
+        titulo="¿En qué ciudad estás?"
+        bajada="Déjanos tus datos y el modelo que te interesa. Te orientaremos para dar el siguiente paso."
+        origen="/concesionarios"
+        cotizacion
+        boton="Solicitar información"
+      />
+    </div>
+  </Seccion>
+
+  <Seccion campo="tinte">
+    <Encabezado titulo="Prepara tu visita" />
+    <div class="mt-10">
+      <Faq items={FAQ_CONCESIONARIOS} grupo="faq-concesionarios" />
+    </div>
   </Seccion>
 </Base>
+
+<style>
+  .mapa-red {
+    position: relative;
+    display: grid;
+    min-height: clamp(18rem, 48vw, 28rem);
+    place-items: center;
+    color: var(--color-marca);
+    text-decoration: none;
+    background: var(--color-superficie);
+  }
+  .mapa-red-lienzo {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--color-marca) 10%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-marca) 10%, transparent) 1px, transparent 1px);
+    background-size: min(16vw, 7rem) min(16vw, 7rem);
+  }
+  .mapa-red-pin {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+</style>

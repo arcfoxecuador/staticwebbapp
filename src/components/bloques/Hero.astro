@@ -37,7 +37,7 @@ const oscuro = campo === 'marca';
     {rotulo && <p class="eyebrow entra text-marca-clara">{rotulo}</p>}
 
     {/* UN solo <h1> por página, y es éste. */}
-    <h1 class="entra entra-2 mt-4 max-w-[24ch] equilibra text-h1 font-bold">
+    <h1 class="hero-titulo entra entra-2 mt-4 max-w-[24ch] equilibra text-h1 font-bold">
       {titulo}
     </h1>
 
@@ -59,3 +59,14 @@ const oscuro = campo === 'marca';
     }
   </div>
 </section>
+
+<style>
+  @media (width < 48rem) {
+    /* «Concesionarios» a text-h1 + tracking se come la S en 350 px.
+       Bajar el cuerpo, no recortar la palabra. */
+    .hero-titulo {
+      font-size: clamp(1.85rem, 8.2vw, 2.5rem);
+      letter-spacing: -0.015em;
+    }
+  }
+</style>

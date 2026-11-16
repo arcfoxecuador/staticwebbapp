@@ -1,56 +1,253 @@
 ---
-/* Rejilla asimétrica: celdas de texto y foto que no miden lo mismo.
-   overflow-clip y no hidden: las fotos pueden llevar reveal. */
+/* `tablero` es el look de portada: tres columnas donde la FOTO es la
+   losa larga y el texto es la losa corta. Un 3×2 de casillas iguales
+   aplasta esa jerarquía — la maqueta no reparte la altura a medias.
+   `trenzado` queda para cuando el copy no puede competir en superficie.
+   overflow-clip (no hidden) para que las fotos revelen. */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 
 export type CeldaMosaico = {
   texto?: string;
+  titulo?: string;
+  bajada?: string;
   imagen?: ImageMetadata;
   alt?: string;
   ancho?: 1 | 2;
 };
 
+/** Columnas del tablero que viven a la derecha, fuera de la vista inicial:
+    una casilla de texto (título o cifra) y su foto. */
+export type ColumnaExtra = {
+  titulo?: string;
+  cifra?: string;
+  etiqueta?: string;
+  imagen: ImageMetadata;
+  alt: string;
+  /** Foto generada con IA: queda declarada en el HTML con `data-generada`. */
+  generada?: boolean;
+};
+
 interface Props {
   items: CeldaMosaico[];
-  patron?: 'trenzado' | 'destacado';
+  patron?: 'trenzado' | 'destacado' | 'tablero';
   class?: string;
+  /** Identificador del modelo dueño de esta rejilla en la portada. */
+  modelo?: string;
+  activo?: boolean;
+  /** Sólo `tablero`: columnas que se descubren arrastrando. */
+  columnasExtra?: ColumnaExtra[];
 }
 
-const { items, patron = 'trenzado', class: extra } = Astro.props;
+const {
+  items,
+  patron = 'trenzado',
+  class: extra,
+  modelo,
+  activo = true,
+  columnasExtra = [],
+} = Astro.props;
+
+const FOTO_TRAMO = [
+  'md:col-span-5 md:row-start-1',
+  'md:col-span-4 md:row-start-1',
+  'md:col-span-3 md:row-start-1',
+] as const;
+const TEXTO_TRAMO = [
+  'md:col-span-4 md:row-start-2',
+  'md:col-span-4 md:row-start-2',
+  'md:col-span-4 md:row-start-2',
+] as const;
+
+const columnas = patron === 'trenzado' ? 'md:grid-cols-12' : 'md:grid-cols-3';
+const tablero = patron === 'tablero';
+
+const esFoto = (celda: CeldaMosaico) => Boolean(celda.imagen && celda.alt);
+const esTexto = (celda: CeldaMosaico) => Boolean(!celda.imagen && (celda.texto || celda.titulo));
+
+const fotos = items.filter(esFoto);
+const textos = items.filter(esTexto);
+
+/* Columna 1: titular + foto baja. 2 y 3: foto alta + titular.
+   Así la foto mide de más y el texto no se hincha al aspect de la foto. */
+const grupos = tablero
+  ? (
+      [
+        [textos[0], fotos[2]].filter(Boolean),
+        [fotos[0], textos[1]].filter(Boolean),
+        [fotos[1], textos[2]].filter(Boolean),
+      ] as CeldaMosaico[][]
+    ).filter((grupo) => grupo.length > 0)
+  : [];
 ---
 
 {
-  items.length > 0 && (
+  items.length > 0 && tablero && (
     <div
       data-slot="mosaico"
-      class:list={['revela-grupo grid gap-px bg-marca-clara/20 md:grid-cols-3', extra]}
+      data-modelo-vista={modelo}
+      data-oculta={modelo ? '' : undefined}
+      hidden={Boolean(modelo) && !activo}
+      class:list={['tablero-caja', extra]}
+    >
+    <div class="tira tira-casilla mosaico-tablero grid gap-px" tabindex="0" role="group" aria-label="Rasgos del modelo">
+      {grupos.map((grupo) => (
+        <div class="flex flex-col gap-px" data-foto-arriba={esFoto(grupo[0]) ? '' : undefined}>
+          {grupo.map((celda) => {
+            if (esFoto(celda) && celda.imagen && celda.alt) {
+              return (
+                <div class="celda-foto relative min-h-64 flex-1 overflow-clip md:aspect-[4/5] md:max-h-[58svh] md:min-h-0 md:flex-none">
+                  <Image
+                    src={celda.imagen}
+                    alt={celda.alt}
+                    widths={[480, 800, 1200]}
+                    sizes="(min-width: 768px) 33vw, 100vw"
+                    class="absolute inset-0 h-full w-full object-cover"
+                  />
+                </div>
+              );
+            }
+            if (esTexto(celda)) {
+              return (
+                <div class="celda-texto flex min-h-[9.5rem] flex-col items-end justify-end bg-marca px-6 py-7 text-right text-white md:min-h-[11rem] md:px-8">
+                  <p class="max-w-[14ch] font-display text-subtitulo font-semibold uppercase tracking-[0.08em]">
+                    {celda.titulo ?? celda.texto}
+                  </p>
+                </div>
+              );
+            }
+            return null;
+          })}
+        </div>
+      ))}
+      {/* Las columnas de la derecha alternan: texto arriba, foto arriba. En el
+          DOM el texto va primero; `flex-col-reverse` sube la foto cuando toca. */}
+      {columnasExtra.map((col, i) => (
+        <div
+          class:list={['flex gap-px', i % 2 === 1 ? 'flex-col-reverse' : 'flex-col']}
+          data-foto-arriba={i % 2 === 1 ? '' : undefined}
+        >
+          <div class="celda-texto flex min-h-[9.5rem] flex-col items-end justify-end bg-marca px-6 py-7 text-right text-white md:min-h-[11rem] md:px-8">
+            {col.cifra ? (
+              <Fragment>
+                <p class="tablero-cifra" style={`--letras: ${col.cifra.length}`}>{col.cifra}</p>
+                {col.etiqueta && <p class="tablero-etiqueta">{col.etiqueta}</p>}
+              </Fragment>
+            ) : (
+              <p class="max-w-[14ch] font-display text-subtitulo font-semibold uppercase tracking-[0.08em]">
+                {col.titulo}
+              </p>
+            )}
+          </div>
+          <div
+            class="celda-foto relative min-h-64 flex-1 overflow-clip md:aspect-[4/5] md:max-h-[58svh] md:min-h-0 md:flex-none"
+            data-generada={col.generada ? 'true' : undefined}
+          >
+            <Image
+              src={col.imagen}
+              alt={col.alt}
+              widths={[480, 800, 1200]}
+              sizes="(min-width: 768px) 33vw, 86vw"
+              class="absolute inset-0 h-full w-full object-cover"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+    {/* La línea es la barra de progreso del tablero: vive en la franja oscura de
+        abajo y no dentro de una casilla, porque al llegar al final quedaba
+        encima de una foto clara y dejaba de verse. */}
+    <div class="tablero-linea" aria-hidden="true"><span></span></div>
+    {/* LAS FLECHAS DEL TABLERO. Las pidió el cliente: tres columnas quietas
+        no dicen que hay seis. Dos botones y un contador en la franja oscura,
+        frente a la línea: dicen que hay más, cuántas faltan y dejan avanzar
+        sin arrastrar. Nacen ocultos: sin JS los botones no harían nada, y el
+        tablero sigue moviéndose con la rueda y el dedo. */}
+    <div class="tablero-mando" hidden>
+      <div class="tablero-botones">
+        <button type="button" data-tablero-anterior aria-label="Columna anterior" aria-disabled="true">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M8 1.5 3.5 6 8 10.5" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+        </button>
+        <button type="button" data-tablero-siguiente aria-label="Columna siguiente">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+        </button>
+      </div>
+      <p class="tablero-contador" aria-hidden="true">
+        <span data-tablero-visto>01</span> / <span data-tablero-total>{String(grupos.length + columnasExtra.length).padStart(2, '0')}</span>
+      </p>
+    </div>
+    </div>
+  )
+}
+
+{
+  items.length > 0 && !tablero && (
+    <div
+      data-slot="mosaico"
+      data-modelo-vista={modelo}
+      data-oculta={modelo ? '' : undefined}
+      hidden={Boolean(modelo) && !activo}
+      class:list={['tira tira-casilla grid gap-px bg-marca-clara/20', columnas, extra]}
     >
       {items.map((celda, i) => {
-        const span = celda.ancho === 2 || (patron === 'destacado' && i === 0);
-        if (celda.imagen && celda.alt) {
+        const destacado = patron === 'destacado' && i === 0;
+        const ancho = celda.ancho === 2 || destacado;
+        const foto = esFoto(celda);
+        const indiceFoto = items.slice(0, i).filter(esFoto).length;
+        const indiceTexto = items.slice(0, i).filter(esTexto).length;
+        const tramo =
+          patron === 'trenzado'
+            ? foto
+              ? (FOTO_TRAMO[indiceFoto] ?? 'md:col-span-4 md:row-start-1')
+              : (TEXTO_TRAMO[indiceTexto] ?? 'md:col-span-4 md:row-start-2')
+            : ancho
+              ? 'md:col-span-2'
+              : undefined;
+        const ancha = patron === 'trenzado' ? indiceFoto === 0 : Boolean(ancho);
+
+        if (foto && celda.imagen && celda.alt) {
           return (
-            <div class:list={['overflow-clip', span && 'md:col-span-2']}>
+            <div class:list={['celda-foto overflow-clip', tramo]}>
               <Image
                 src={celda.imagen}
                 alt={celda.alt}
                 widths={[480, 800, 1200]}
-                sizes={span ? '(min-width: 768px) 66vw, 100vw' : '(min-width: 768px) 33vw, 100vw'}
-                class="h-full min-h-64 w-full object-cover md:min-h-80"
+                sizes={
+                  ancha
+                    ? '(min-width: 768px) 42vw, 100vw'
+                    : '(min-width: 768px) 28vw, 100vw'
+                }
+                class:list={[
+                  'revela-imagen h-full min-h-56 w-full object-cover',
+                  patron === 'trenzado'
+                    ? 'md:min-h-[32rem] md:aspect-[4/3]'
+                    : 'md:min-h-[22rem]',
+                ]}
               />
             </div>
           );
         }
-        if (celda.texto) {
+        if (celda.texto || celda.titulo) {
           return (
-            <p
+            <div
               class:list={[
-                'flex min-h-40 items-end bg-marca p-8 font-display font-semibold uppercase tracking-[0.08em] text-white',
-                span ? 'text-h2 md:col-span-2' : 'text-h3',
+                'celda-texto flex flex-col justify-center bg-marca px-5 py-6 text-white md:px-6 md:py-7',
+                tramo,
               ]}
             >
-              {celda.texto}
-            </p>
+              <p class="revela-titular font-display text-small font-semibold uppercase tracking-[0.08em]">
+                {celda.titulo ?? celda.texto}
+              </p>
+              {
+                celda.bajada && (
+                  <p class="revela mt-2 text-small text-white/60">{celda.bajada}</p>
+                )
+              }
+            </div>
           );
         }
         return null;
@@ -58,3 +255,407 @@ const { items, patron = 'trenzado', class: extra } = Astro.props;
     </div>
   )
 }
+
+<style>
+  /* El filete es marca-clara al 55 y no /20: sobre marca el 20% desaparece
+     y el tablero se lee como un bloque único, sin casillas. */
+  .mosaico-tablero {
+    background: color-mix(in srgb, var(--color-marca-clara) 55%, transparent);
+  }
+  .mosaico-tablero > * {
+    background: color-mix(in srgb, var(--color-marca-clara) 55%, transparent);
+  }
+
+  /* En tableta las tres columnas conservan su geometría, pero «inteligente»
+     no cabe con la escala de escritorio. La letra depende del ancho útil. */
+  .mosaico-tablero .celda-texto {
+    container-type: inline-size;
+  }
+  .mosaico-tablero .celda-texto > p {
+    font-size: min(var(--text-subtitulo), calc(100cqi / 11));
+  }
+
+  /* EL TABLERO COMO FILA. Tres columnas a la vista (una en móvil) y el resto a
+     la derecha. Se agarra con el mouse, se desliza con el dedo o la rueda, y
+     con foco responde a las flechas. El snap deja cada parada en el borde de
+     una columna; mientras se arrastra se apaga para que no tire hacia atrás. */
+  .tablero-caja {
+    position: relative;
+    /* Alto de la franja: el botón de 2.25rem y medio rem por lado. */
+    padding-block-end: 3.5rem;
+    /* La línea de tiempo de la entrada móvil vive aquí, FUERA del scroll
+       horizontal. Con `view()` cada casilla medía su entrada contra el propio
+       tablero, que ya la contiene entera, y en móvil nacía terminada. */
+    view-timeline-name: --tablero-entrada;
+    view-timeline-axis: block;
+  }
+  @media (width < 48rem) {
+    .mosaico-tablero .celda-foto,
+    .mosaico-tablero .celda-texto {
+      animation-timeline: --tablero-entrada;
+    }
+  }
+  .mosaico-tablero {
+    /* Referencia de `offsetLeft` para el script. */
+    position: relative;
+    grid-auto-flow: column;
+    grid-auto-columns: 86%;
+    overflow-x: auto;
+    /* `clip` y no `hidden`: ver el comentario de `.riel` en motion.css. */
+    overflow-y: clip;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .mosaico-tablero::-webkit-scrollbar {
+    display: none;
+  }
+  .mosaico-tablero > * {
+    scroll-snap-align: start;
+  }
+  @media (width >= 48rem) {
+    .mosaico-tablero {
+      grid-auto-columns: calc((100% - 2px) / 3);
+    }
+  }
+  @media (pointer: fine) {
+    .tablero-caja:not([data-sin-recorrido]) .mosaico-tablero {
+      cursor: grab;
+    }
+  }
+  .mosaico-tablero.esta-arrastrando {
+    cursor: grabbing;
+    scroll-snap-type: none;
+    user-select: none;
+  }
+  .mosaico-tablero img {
+    -webkit-user-drag: none;
+  }
+
+  /* LA LÍNEA, DE VUELTA. Pista tenue y un tramo encendido que mide lo que se
+     ve del tablero y se corre al avanzar. Alineada con el texto de las losas. */
+  .tablero-linea {
+    position: absolute;
+    right: 1.5rem;
+    /* Centrada con los botones: medio alto de la franja. */
+    bottom: 1.75rem;
+    width: 7rem;
+    height: 1px;
+    background: color-mix(in srgb, var(--color-marca-clara) 55%, transparent);
+  }
+  .tablero-linea > span {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 33%;
+    background: var(--color-marca-clara);
+    /* Sólo `transform`: el ancho del tramo cambia al redimensionar o al cambiar
+       de modelo, no al arrastrar, y animarlo recalcularía la maqueta. */
+    transition: transform 160ms var(--ease-out);
+  }
+  .tablero-caja[data-sin-recorrido] .tablero-linea {
+    display: none;
+  }
+  @media (width >= 48rem) {
+    .tablero-linea {
+      right: 2rem;
+    }
+  }
+
+  /* El mando comparte renglón con la línea, a la izquierda: la franja dice
+     «hay más», «cuánto falta» y deja avanzar. Blanco sobre la franja y no
+     `acento`, que es del CTA; cuadrado y sin sombra, como las losas. */
+  .tablero-mando {
+    position: absolute;
+    left: 1.5rem;
+    bottom: 0.625rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .tablero-mando[hidden],
+  .tablero-caja[data-sin-recorrido] .tablero-mando {
+    display: none;
+  }
+  .tablero-botones {
+    display: flex;
+    gap: 1px;
+  }
+  .tablero-botones button {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--color-marca-clara) 60%, transparent);
+    background: none;
+    color: var(--color-white);
+    cursor: pointer;
+    transition:
+      border-color 160ms var(--ease-out),
+      opacity 160ms var(--ease-out);
+  }
+  .tablero-botones button:hover:not([aria-disabled='true']) {
+    border-color: var(--color-white);
+  }
+  .tablero-botones button:focus-visible {
+    outline: 2px solid var(--color-white);
+    outline-offset: 2px;
+  }
+  /* `aria-disabled` y no `disabled`: un botón deshabilitado suelta el foco y
+     quien llega al final con el teclado se quedaría en ninguna parte. */
+  .tablero-botones button[aria-disabled='true'] {
+    opacity: 0.3;
+    cursor: default;
+  }
+  .tablero-contador {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-eyebrow);
+    line-height: 1;
+    letter-spacing: 0.14em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-white);
+  }
+  @media (width >= 48rem) {
+    .tablero-mando {
+      left: 2rem;
+    }
+  }
+
+  /* LA LOSA DE CIFRA. La cifra no se parte («459–1.352 L» con la L sola en
+     otra línea se leía rota): mide lo que cabe en la casilla según sus letras. */
+  .mosaico-tablero .celda-texto > p.tablero-cifra {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    font-size: min(2.5rem, calc(100cqi / (var(--letras) * 0.92)));
+  }
+  .mosaico-tablero .celda-texto > p.tablero-etiqueta {
+    margin-top: 0.9rem;
+    font-size: var(--text-eyebrow);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-marca-clara);
+  }
+
+  /* LA FOTO SE ABRE HACIA LA LOSA. Al pasar el mouse, la foto toma espacio de
+     la losa negra de su columna: la losa baja de 11rem a 4.5rem y su texto se
+     desvanece. La columna no cambia de alto, así que el resto del tablero no
+     se mueve. Se anima el reparto de filas (`grid-template-rows`), no el alto
+     de cada casilla. Sólo con puntero fino y desde 768 px: en táctil el primer
+     toque ya es otro gesto, y mientras se arrastra no se abre nada. */
+  @media (width >= 48rem) and (hover: hover) and (pointer: fine) {
+    .tablero-caja {
+      container-type: inline-size;
+    }
+    .mosaico-tablero {
+      /* El mismo alto que daban la foto 4:5 (tope 58svh) y la losa de 11rem. */
+      grid-template-rows: calc(11rem + 1px + min((100cqw - 2px) / 3 * 1.25, 58svh));
+    }
+    .mosaico-tablero > * {
+      display: grid;
+      grid-template-rows: 11rem 1fr;
+      transition: grid-template-rows 520ms var(--ease-out);
+    }
+    .mosaico-tablero > [data-foto-arriba] {
+      grid-template-rows: 1fr 11rem;
+    }
+    /* En las columnas nuevas el texto va primero en el DOM; la foto sube. */
+    .mosaico-tablero > [data-foto-arriba] > .celda-foto {
+      order: -1;
+    }
+    .mosaico-tablero .celda-foto {
+      aspect-ratio: auto;
+      max-height: none;
+      min-height: 0;
+    }
+    .mosaico-tablero .celda-texto {
+      min-height: 0;
+      overflow: clip;
+    }
+    .mosaico-tablero .celda-texto > * {
+      transition: opacity 220ms var(--ease-out);
+    }
+    .mosaico-tablero:not(.esta-arrastrando) > :has(> .celda-foto:hover) {
+      grid-template-rows: 4.5rem 1fr;
+    }
+    .mosaico-tablero:not(.esta-arrastrando) > [data-foto-arriba]:has(> .celda-foto:hover) {
+      grid-template-rows: 1fr 4.5rem;
+    }
+    .mosaico-tablero:not(.esta-arrastrando) > :has(> .celda-foto:hover) > .celda-texto > * {
+      opacity: 0;
+    }
+  }
+
+  /* Al cambiar de modelo el mosaico ya está en pantalla: view() no vuelve a
+     disparar. El reloj recorre el mismo gesto que `.tira`, una vez. `.prende`
+     cae en la caja del tablero; las columnas son hijas del tablero. */
+  .prende .mosaico-tablero > * {
+    animation: entrar-casilla 720ms var(--ease-out) both;
+  }
+  .prende .mosaico-tablero > *:nth-child(2) { animation-delay: 80ms; }
+  .prende .mosaico-tablero > *:nth-child(3) { animation-delay: 160ms; }
+  .prende .celda-foto,
+  .prende .celda-texto {
+    animation: entrar-casilla 720ms var(--ease-out) both;
+  }
+  .prende .mosaico-tablero > *:nth-child(1) .celda-foto,
+  .prende .mosaico-tablero > *:nth-child(1) .celda-texto { animation-delay: 40ms; }
+  .prende .mosaico-tablero > *:nth-child(2) .celda-foto,
+  .prende .mosaico-tablero > *:nth-child(2) .celda-texto { animation-delay: 120ms; }
+  .prende .mosaico-tablero > *:nth-child(3) .celda-foto,
+  .prende .mosaico-tablero > *:nth-child(3) .celda-texto { animation-delay: 200ms; }
+  .prende .revela-imagen {
+    animation: revelar-imagen 980ms var(--ease-out) both;
+  }
+  .prende .revela-titular {
+    animation: revelar-titular 720ms var(--ease-out) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .prende .mosaico-tablero > *,
+    .prende .celda-foto,
+    .prende .celda-texto,
+    .prende .revela-imagen,
+    .prende .revela-titular {
+      animation: none;
+      opacity: 1;
+      clip-path: none;
+    }
+    .mosaico-tablero > *,
+    .mosaico-tablero .celda-texto > *,
+    .tablero-linea > span,
+    .tablero-botones button {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  /* EL TABLERO SE ARRASTRA. El dedo, la rueda y las flechas ya mueven un
+     contenedor con scroll; el mouse no: arrastrar encima sólo selecciona. Aquí
+     se suman el arrastre, el acomodo en la columna más cercana al soltar y la
+     línea que dice qué tramo del tablero se está viendo. Sin JS el tablero
+     sigue desplazándose con la rueda y el dedo. */
+  const comportamiento = (): ScrollBehavior =>
+    matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+
+  document.querySelectorAll<HTMLElement>('.mosaico-tablero').forEach((tablero) => {
+    const caja = tablero.closest<HTMLElement>('.tablero-caja');
+    const linea = caja?.querySelector<HTMLElement>('.tablero-linea');
+    const tramo = linea?.firstElementChild as HTMLElement | null;
+    const recorrido = () => tablero.scrollWidth - tablero.clientWidth;
+
+    const pintar = () => {
+      const total = recorrido();
+      caja?.toggleAttribute('data-sin-recorrido', total <= 1);
+      if (!linea || !tramo || total <= 1) return;
+      const ancho = linea.clientWidth * (tablero.clientWidth / tablero.scrollWidth);
+      tramo.style.width = `${ancho}px`;
+      tramo.style.transform = `translateX(${(linea.clientWidth - ancho) * (tablero.scrollLeft / total)}px)`;
+    };
+
+    // Paradas en el borde de cada columna. `offsetLeft` y no el rectángulo en
+    // pantalla: la animación de entrada escala las casillas mientras corre.
+    const cercana = () => {
+      const tope = recorrido();
+      const actual = tablero.scrollLeft;
+      return Array.from(tablero.children, (col) => Math.min(tope, (col as HTMLElement).offsetLeft)).reduce(
+        (mejor, p) => (Math.abs(p - actual) < Math.abs(mejor - actual) ? p : mejor),
+        0,
+      );
+    };
+
+    let inicioX = 0;
+    let inicioScroll = 0;
+    let apretado = false;
+    let movio = false;
+    tablero.addEventListener('pointerdown', (evento) => {
+      if (evento.pointerType !== 'mouse' || evento.button !== 0 || caja?.hasAttribute('data-sin-recorrido')) return;
+      apretado = true;
+      movio = false;
+      inicioX = evento.clientX;
+      inicioScroll = tablero.scrollLeft;
+    });
+    tablero.addEventListener('pointermove', (evento) => {
+      if (!apretado) return;
+      // Soltó fuera antes de que el tablero capturara el puntero: no llegó
+      // `pointerup`, pero el botón ya no está apretado. Sin esto, al volver a
+      // pasar el mouse el tablero se movía solo.
+      if ((evento.buttons & 1) === 0) {
+        soltar();
+        return;
+      }
+      const dx = evento.clientX - inicioX;
+      // Cuatro píxeles de tolerancia: un clic con pulso tembloroso sigue siendo clic.
+      if (!movio && Math.abs(dx) < 4) return;
+      if (!movio) {
+        movio = true;
+        tablero.setPointerCapture(evento.pointerId);
+        tablero.classList.add('esta-arrastrando');
+      }
+      tablero.scrollLeft = inicioScroll - dx;
+    });
+    const soltar = () => {
+      if (!apretado) return;
+      apretado = false;
+      if (!movio) return;
+      const destino = cercana();
+      tablero.classList.remove('esta-arrastrando');
+      tablero.scrollTo({ left: destino, behavior: comportamiento() });
+    };
+    tablero.addEventListener('pointerup', soltar);
+    tablero.addEventListener('pointercancel', soltar);
+    tablero.addEventListener('lostpointercapture', soltar);
+    // La foto no se «agarra»: el navegador la arrastraría como archivo.
+    tablero.addEventListener('dragstart', (evento) => evento.preventDefault());
+
+    tablero.addEventListener('scroll', pintar, { passive: true });
+    // Los tableros de los modelos inactivos nacen ocultos (0 px): al mostrarse
+    // cambian de tamaño y el observador repinta la línea.
+    new ResizeObserver(pintar).observe(tablero);
+    pintar();
+
+    // EL MANDO. El contador cuenta paradas, no columnas: siempre arranca en
+    // 01 y cada clic en › suma uno. Así lo pidió Lucho: contando columnas
+    // vistas, el escritorio arrancaba en 03 / 06 y parecía que ya se había
+    // avanzado. Con tres columnas a la vista y seis en total son cuatro
+    // paradas; en móvil, una a la vista, seis. Las paradas son las del snap.
+    const mando = caja?.querySelector<HTMLElement>('.tablero-mando');
+    const anterior = mando?.querySelector<HTMLButtonElement>('[data-tablero-anterior]');
+    const siguiente = mando?.querySelector<HTMLButtonElement>('[data-tablero-siguiente]');
+    const visto = mando?.querySelector<HTMLElement>('[data-tablero-visto]');
+    const total = mando?.querySelector<HTMLElement>('[data-tablero-total]');
+    if (mando && anterior && siguiente && visto && total) {
+      const paradas = () => {
+        const tope = recorrido();
+        return [...new Set(Array.from(tablero.children, (col) => Math.min(tope, (col as HTMLElement).offsetLeft)))];
+      };
+      const contar = () => {
+        const lista = paradas();
+        // La parada en curso es la última que ya quedó atrás; los dos píxeles
+        // absorben el redondeo del scroll en pantallas con zoom.
+        const actual = lista.filter((p) => p <= tablero.scrollLeft + 2).length || 1;
+        visto.textContent = String(actual).padStart(2, '0');
+        total.textContent = String(lista.length).padStart(2, '0');
+        anterior.setAttribute('aria-disabled', String(tablero.scrollLeft <= 1));
+        siguiente.setAttribute('aria-disabled', String(tablero.scrollLeft >= recorrido() - 1));
+      };
+      const ir = (sentido: 1 | -1) => {
+        const actual = tablero.scrollLeft;
+        const lista = paradas();
+        const destino =
+          sentido > 0 ? lista.find((p) => p > actual + 2) : lista.reverse().find((p) => p < actual - 2);
+        if (destino !== undefined) tablero.scrollTo({ left: destino, behavior: comportamiento() });
+      };
+      anterior.addEventListener('click', () => ir(-1));
+      siguiente.addEventListener('click', () => ir(1));
+      tablero.addEventListener('scroll', contar, { passive: true });
+      new ResizeObserver(contar).observe(tablero);
+      mando.hidden = false;
+      contar();
+    }
+  });
+</script>

@@ -1,177 +1,403 @@
 ---
-/* Portada en capítulos a sangre: héroe, habitáculo, gama, otra cabina,
-   mosaico de interiores, pilares y cierre. Las tarjetas de catálogo
-   aplanaban el scroll; aquí cada tramo cambia de escala. */
+/* La portada es un recorrido de producto, no un índice de marca: un auto abre,
+   el escenario permite explorarlo y el resto del scroll demuestra la experiencia.
+   Cambiar de modelo pinta hero, plato, mosaico, cierre y cabecera a la vez. */
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import HeroImagen from '../components/bloques/HeroImagen.astro';
-import Seccion from '../components/bloques/Seccion.astro';
-import Encabezado from '../components/bloques/Encabezado.astro';
-import Mosaico from '../components/bloques/Mosaico.astro';
-import Escena from '../components/bloques/Escena.astro';
-import Destacados from '../components/bloques/Destacados.astro';
-import Conmutador from '../components/bloques/Conmutador.astro';
+import EscenarioModelo from '../components/bloques/EscenarioModelo.astro';
+import Mosaico, { type ColumnaExtra } from '../components/bloques/Mosaico.astro';
 import Cierre from '../components/bloques/Cierre.astro';
 import Formulario from '../components/bloques/Formulario.astro';
-import Faq from '../components/bloques/Faq.astro';
+import Zorro from '../components/ui/Zorro.astro';
 
 import hero from '../assets/hero.webp';
-import t5Habitaculo from '../assets/t5-habitaculo.webp';
-import t5Tablero from '../assets/t5-tablero.webp';
-import t5Cabina from '../assets/t5-cabina.webp';
-import t5Techo from '../assets/t5-techo.webp';
-import t5Rueda from '../assets/t5-rueda.webp';
-import s5Habitaculo from '../assets/s5-habitaculo.webp';
-import s5Tablero from '../assets/s5-tablero.webp';
-import s5Traseras from '../assets/s5-traseras.webp';
-import cotizar from '../assets/cotizar.webp';
-import t5Gris from '../assets/t5-45-gris.webp';
-import t1Kv from '../assets/t1-kv.webp';
-import s5Perfil from '../assets/s5-perfil.webp';
+import t5Cuarto from '../assets/t5-45-gris.webp';
+import t1Kv2 from '../assets/t1-kv2.webp';
+import s5Cuarto from '../assets/s5-45.webp';
+import s5Bajo from '../assets/s5-bajo.webp';
+import cotizar from '../assets/t5-340.webp';
 
 import { coleccion } from '../lib/contenido';
-import { CTA, FAQ, ORG, PILARES, PORTADA } from '../lib/site';
-import { faq, grafo, listaDeServicios, organizacion, pagina, sitioWeb } from '../lib/schema';
+import { imagenPorArchivo } from '../lib/imagenes';
+import { resolverOrbita } from '../lib/orbitas';
+import { ORG, PILARES, PORTADA } from '../lib/site';
+import { grafo, listaDeServicios, organizacion, pagina, sitioWeb } from '../lib/schema';
 
-const modelos = (await coleccion('modelos', ({ data }) => data.publico)).sort(
+const entradas = (await coleccion('modelos', ({ data }) => data.publico)).sort(
   (a, b) => a.data.orden - b.data.orden,
 );
 
-const descripcion = ORG.descripcion;
+const resolverFotogramas = (items: { archivo: string; alt: string }[]) =>
+  items
+    .map((item) => {
+      const imagen = imagenPorArchivo(item.archivo, item.alt);
+      return imagen ? { imagen, alt: item.alt, archivo: item.archivo } : undefined;
+    })
+    .filter((item): item is { imagen: ImageMetadata; alt: string; archivo: string } => Boolean(item));
 
+const heroPorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
+  /* hero.webp es el T1 en el pabellón: en 390 el auto queda en un rincón
+     y el morro se pierde. El tres cuartos del T5 pone la trompa en el
+     encuadre. */
+  t5: { imagen: t5Cuarto, alt: 'ARCFOX T5 gris, vista de tres cuartos delanteros.' },
+  /* t1-kv es la misma escena de pabellón que hero.webp: a sangre se leen
+     como el mismo auto. kv2 es la toma de dos T1 frente a la ciudad. */
+  t1: { imagen: t1Kv2, alt: 'Dos ARCFOX T1 en el escenario de marca junto al agua.' },
+  s5: { imagen: s5Cuarto, alt: 'ARCFOX S5, sedán deportivo 100% eléctrico.' },
+};
+
+const cierrePorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
+  t5: { imagen: cotizar, alt: 'ARCFOX T5, vista de tres cuartos para cotizar.' },
+  t1: { imagen: t1Kv2, alt: 'ARCFOX T1, toma de marca para cotizar.' },
+  s5: { imagen: s5Bajo, alt: 'ARCFOX S5, vista baja para cotizar.' },
+};
+
+/* El zorro es el emblema y no cambia. El auto de esta losa SÍ: si se
+   quedara el T5 al elegir T1, la isla mentiría. Toma frontal o tres
+   cuartos para que la placa se lea junto al animal. */
+const sobrePorId: Record<string, { imagen: ImageMetadata; alt: string }> = {
+  t5: { imagen: t5Cuarto, alt: 'ARCFOX T5 gris, trompa junto al emblema de la marca.' },
+  /* kv2 pone la placa del T1 a un tamaño de lectura; kv es el pabellón
+     entero y en 390 el auto se perdía detrás del zorro. */
+  t1: { imagen: t1Kv2, alt: 'ARCFOX T1 celeste, trompa junto al emblema de la marca.' },
+  s5: { imagen: s5Cuarto, alt: 'ARCFOX S5, trompa junto al emblema de la marca.' },
+};
+
+/* LAS COLUMNAS DE LA DERECHA DEL TABLERO. Tres por modelo: la cuarta función
+   con su foto y dos cifras de la ficha. Las fotos no repiten las tres primeras
+   columnas. La cifra se busca por su nombre en datos, cotas o especificaciones:
+   si cambia en la ficha, cambia aquí — y el nombre ES la etiqueta que se pinta,
+   así que coincide con el texto aprobado. Cada foto lleva reserva real: las
+   generadas del T1 se usan cuando existen y, mientras no, sale la de reserva. */
+type FotoTablero = { archivo: string; alt: string; generada?: boolean };
+/* `etiqueta` pinta el nombre aprobado cuando la ficha llama distinto a la cifra. */
+type ColumnaTablero = ({ atributo: number } | { dato: string; etiqueta?: string }) & { fotos: FotoTablero[] };
+
+const tableroExtraPorId: Record<string, ColumnaTablero[]> = {
+  t5: [
+    { atributo: 3, fotos: [{ archivo: 't5-llanta', alt: 'Llanta y pinza de freno del T5.' }] },
+    { dato: 'Potencia', fotos: [{ archivo: 't5-faro', alt: 'Faro delantero del T5.' }] },
+    { dato: 'Velocidad máxima', fotos: [{ archivo: 't5-material', alt: 'Habitáculo del T5 bajo el techo panorámico.' }] },
+  ],
+  t1: [
+    { atributo: 3, fotos: [{ archivo: 't1-carretera', alt: 'T1 en marcha por una carretera junto al mar.' }] },
+    {
+      dato: 'Maletero',
+      etiqueta: 'Capacidad del maletero',
+      fotos: [
+        { archivo: 't1-maletero-plegado', alt: 'Maletero del T1 con los asientos traseros abatidos.', generada: true },
+        { archivo: 't1-kv2', alt: 'Dos ARCFOX T1 en el escenario de marca junto al agua.' },
+      ],
+    },
+    {
+      dato: 'Largo',
+      fotos: [
+        { archivo: 't1-perfil', alt: 'T1 de perfil en el pabellón de marca.', generada: true },
+        { archivo: 't1-kv', alt: 'T1 celeste en el pabellón de marca.' },
+      ],
+    },
+  ],
+  s5: [
+    { atributo: 3, fotos: [{ archivo: 's5-puerta', alt: 'Volante y tablero del S5 vistos desde la puerta sin marco.' }] },
+    { dato: 'Autonomía', fotos: [{ archivo: 's5-aleta', alt: 'Aleta trasera y pilotos del S5.' }] },
+    { dato: 'Carga rápida 30–80%', etiqueta: 'Carga rápida', fotos: [{ archivo: 's5-llanta', alt: 'Llanta del S5 con la pinza de freno verde.' }] },
+  ],
+};
+
+const colorDesdeFotos = (
+  etiqueta: string,
+  muestra: string | undefined,
+  fotos: { imagen: ImageMetadata; alt: string }[],
+) => {
+  const primera = fotos[0];
+  if (!primera) return undefined;
+  return {
+    etiqueta,
+    muestra,
+    imagen: primera.imagen,
+    alt: primera.alt,
+    urls: fotos.map((foto) => foto.imagen.src),
+  };
+};
+
+const modelos = entradas.map((entrada) => {
+  const angulos = resolverFotogramas(entrada.data.angulos);
+  const variantes = entrada.data.variantes
+    .map((variante, indice) => {
+      if (variante.orbita && variante.fotogramas) {
+        const orbita = resolverOrbita(variante.orbita, variante.fotogramas);
+        if (orbita) {
+          return {
+            etiqueta: variante.etiqueta,
+            muestra: variante.muestra,
+            imagen: orbita.imagen,
+            alt: variante.alt,
+            urls: orbita.urls,
+          };
+        }
+      }
+      const propia = resolverFotogramas([{ archivo: variante.archivo, alt: variante.alt }]);
+      return colorDesdeFotos(
+        variante.etiqueta,
+        variante.muestra,
+        indice === 0 && angulos.length ? angulos : propia,
+      );
+    })
+    .filter((color): color is NonNullable<typeof color> => Boolean(color));
+  const sinVariante = colorDesdeFotos('Disponible', undefined, angulos);
+  const colores = variantes.length ? variantes : sinVariante ? [sinVariante] : [];
+  /* Sólo los indicadores aprobados para cada modelo, que no son los mismos en
+     número: si las cotas viajaran aquí, el T5 enseñaría «Largo» como indicador. */
+  const datos = entrada.data.datos;
+
+  /* Habitáculo + un detalle de galería (rueda, faro) + otra toma de
+     interior. Tres interiores seguidos leen como catálogo de asientos
+     y no como el tablero de la maqueta. */
+  const interiores = resolverFotogramas(
+    entrada.data.interior.map((item) => ({ archivo: item.archivo, alt: item.alt })),
+  );
+  const usados = new Set(interiores.map((foto) => foto.archivo));
+  const detalles = resolverFotogramas(entrada.data.galeria).filter((foto) => {
+    if (usados.has(foto.archivo)) return false;
+    usados.add(foto.archivo);
+    return true;
+  });
+  const fotosMosaico = [
+    interiores[0],
+    detalles[0],
+    interiores[2] ?? interiores[1] ?? detalles[1],
+  ].filter((foto): foto is NonNullable<typeof foto> => Boolean(foto));
+
+  /* Los atributos aprobados son sólo titulares: la casilla no lleva bajada.
+     PILARES queda como reserva para un modelo que aún no tenga los suyos. */
+  const textos = entrada.data.atributos.length
+    ? entrada.data.atributos.slice(0, 3).map((titulo) => ({ titulo }))
+    : PILARES.slice(0, 3).map((pilar) => ({ titulo: pilar.titulo, bajada: pilar.texto }));
+
+  return {
+    id: entrada.id,
+    nombre: entrada.data.nombre,
+    rotulo: entrada.data.rotulo,
+    separadorBanner: entrada.data.separadorBanner,
+    colores,
+    datos,
+    mosaico: [
+      textos[0],
+      fotosMosaico[0] ? { imagen: fotosMosaico[0].imagen, alt: fotosMosaico[0].alt } : undefined,
+      fotosMosaico[1] ? { imagen: fotosMosaico[1].imagen, alt: fotosMosaico[1].alt } : undefined,
+      fotosMosaico[2] ? { imagen: fotosMosaico[2].imagen, alt: fotosMosaico[2].alt } : undefined,
+      textos[1],
+      textos[2],
+    ].filter((item): item is NonNullable<typeof item> => Boolean(item)),
+    tableroExtra: (() => {
+      const cifras = new Map<string, string>([
+        ...datos.map((dato) => [dato.clave, dato.valor] as const),
+        ...entrada.data.cotas.map((cota) => [cota.etiqueta, [cota.valor, cota.unidad].filter(Boolean).join(" ")] as const),
+        ...(entrada.data.especificaciones ?? []).flatMap((grupo) =>
+          grupo.items.map((item) => [item.clave, item.valor] as const),
+        ),
+      ]);
+      return (tableroExtraPorId[entrada.id] ?? []).flatMap((columna): ColumnaExtra[] => {
+        const foto = columna.fotos
+          .map((f) => ({ ...f, imagen: imagenPorArchivo(f.archivo, f.alt) }))
+          .find((f) => f.imagen);
+        if (!foto?.imagen) return [];
+        const base = { imagen: foto.imagen, alt: foto.alt, generada: foto.generada };
+        if ('atributo' in columna) {
+          const atributo = entrada.data.atributos[columna.atributo];
+          return atributo ? [{ ...base, titulo: atributo }] : [];
+        }
+        const valor = cifras.get(columna.dato);
+        return valor ? [{ ...base, cifra: valor, etiqueta: columna.etiqueta ?? columna.dato }] : [];
+      });
+    })(),
+  };
+}).filter((modelo) => modelo.colores.length > 0);
+
+const descripcion = ORG.descripcion;
 const schema = grafo(
   organizacion(),
   sitioWeb(),
   pagina({ path: '/', titulo: `${ORG.nombreCorto} · ${ORG.tagline}`, descripcion }),
-  ...(modelos.length ? [listaDeServicios(modelos.map((s) => ({ slug: s.id, nombre: s.data.nombre })))] : []),
-  ...(FAQ.length ? [faq(FAQ)] : []),
+  ...(entradas.length ? [listaDeServicios(entradas.map((s) => ({ slug: s.id, nombre: s.data.nombre })))] : []),
 );
 ---
 
-<Base
-  titulo={`${ORG.nombreCorto} · ${ORG.tagline}`}
-  {descripcion}
-  path="/"
-  {schema}
-  cabeceraFlotante
->
+<Base titulo={`${ORG.nombreCorto} · ${ORG.tagline}`} {descripcion} path="/" {schema} cabeceraFlotante>
   <HeroImagen
     titulo={PORTADA.titular}
     insignia="100% eléctrico"
-    accion={{ texto: CTA.texto, href: CTA.href }}
-    secundaria={{ texto: 'Ver modelos', href: '/modelos' }}
-    imagen={hero}
-    alt="SUV eléctrico en un muelle al anochecer, vista de tres cuartos."
+    imagen={t5Cuarto}
+    alt="ARCFOX T5 gris, vista de tres cuartos delanteros."
+    fondos={modelos.map((modelo) => ({
+      id: modelo.id,
+      imagen: heroPorId[modelo.id]?.imagen ?? hero,
+      alt: heroPorId[modelo.id]?.alt ?? modelo.nombre,
+    }))}
     generada={false}
-    siguiente={{ href: '#sientate', etiqueta: 'Siéntate' }}
+    siguiente={{ href: '#escenario', etiqueta: 'Explora el modelo' }}
   />
 
-  <Escena
-    id="sientate"
-    imagen={t5Habitaculo}
-    alt="Puesto de mando del T5: volante, pantallas y techo panorámico."
-    titulo="Siéntate"
-    bajada="El primer gesto no es el de un catálogo. Es el del conductor."
-    altura="completa"
-    anclaje="pie"
-  />
+  <EscenarioModelo {modelos} />
 
-  {
-    modelos.length > 0 && (
-      <Seccion campo="tinte" contenido={false} aire="apretado">
-        <Conmutador
-          titulo="Elige tu modelo"
-          items={[
-            {
-              etiqueta: 'T5',
-              bajada: 'SUV crossover',
-              href: '/modelos/t5',
-              transicion: 'modelo-t5',
-              imagen: t5Gris,
-              alt: 'T5 en gris, perfil a 45 grados.',
-            },
-            {
-              etiqueta: 'T1',
-              bajada: 'SUV familiar',
-              href: '/modelos/t1',
-              transicion: 'modelo-t1',
-              imagen: t1Kv,
-              alt: 'T1, SUV familiar.',
-            },
-            {
-              etiqueta: 'S5',
-              bajada: 'SUV fastback',
-              href: '/modelos/s5',
-              transicion: 'modelo-s5',
-              imagen: s5Perfil,
-              alt: 'S5 de perfil.',
-            },
-          ]}
-          forma="modelo"
-          nombre="elige-modelo"
-          lleno
+  <section class="campo-oscuro overflow-clip bg-marca" aria-label="Rasgos del modelo">
+    {
+      modelos.map((modelo, indice) => (
+        <Mosaico
+          modelo={modelo.id}
+          activo={indice === 0}
+          items={modelo.mosaico}
+          columnasExtra={modelo.tableroExtra}
+          patron="tablero"
         />
-      </Seccion>
-    )
-  }
+      ))
+    }
+  </section>
 
-  <Escena
-    imagen={s5Habitaculo}
-    alt="Cabina envolvente del S5, vista desde el asiento del conductor."
-    titulo="Dentro del S5"
-    bajada="Tablero, volante y la línea del techo. Así se siente el fastback."
-    altura="completa"
-    anclaje="pie"
-  />
-
-  <Seccion aire="apretado" contenido={false}>
-    <Mosaico
-      patron="destacado"
-      items={[
-        { imagen: t5Tablero, alt: 'Tablero y pantalla del T5.', ancho: 2 },
-        { imagen: t5Cabina, alt: 'Plazas traseras del T5, techo panorámico.' },
-        { imagen: s5Tablero, alt: 'Tablero del S5.' },
-        { imagen: t5Techo, alt: 'Techo panorámico del T5.' },
-        { imagen: s5Traseras, alt: 'Plazas traseras del S5.' },
-      ]}
-    />
-  </Seccion>
-
-  {
-    PILARES.length > 0 && (
-      <Seccion contenido={false} aire="apretado">
-        <div class="medida">
-          <Encabezado
-            titulo="Tres razones para sentarse"
-            bajada="No se entienden en una ficha. Se entienden al entrar."
+  <section id="sobre" class="sobre-portada campo-oscuro relative isolate overflow-clip bg-marca">
+    <div class="relative min-h-[72svh] overflow-clip">
+      {
+        modelos.map((modelo, indice) => (
+          <Image
+            src={sobrePorId[modelo.id]?.imagen ?? t5Cuarto}
+            alt={sobrePorId[modelo.id]?.alt ?? modelo.nombre}
+            widths={[800, 1440, 1920]}
+            sizes="100vw"
+            loading="lazy"
+            data-modelo-vista={modelo.id}
+            data-activo={indice === 0 ? '' : undefined}
+            class="sobre-fondo absolute inset-0 h-full w-full object-cover"
           />
-        </div>
-        <Destacados
-          class="mt-12"
-          forma="bandas"
-          etiqueta="Por qué ARCFOX"
-          items={PILARES.map((p, i) => ({
-            titulo: p.titulo,
-            puntos: [p.texto],
-            imagen: [t5Habitaculo, t5Rueda, t5Techo][i],
-            alt: p.titulo,
-          }))}
-        />
-      </Seccion>
-    )
-  }
+        ))
+      }
+      {/* Recorte generado: el material local no trae un zorro de campaña.
+          La llegada la decide `.llega-zorro`, no esta caja. El animal
+          no se conmuta: es la marca, no el modelo. */}
+      <Zorro class="sobre-zorro absolute bottom-0 left-0 z-0" />
+      <a
+        href="/nosotros"
+        class="losa-entra group absolute inset-x-0 bottom-0 z-10 flex min-h-[10.5rem] flex-col items-end justify-end bg-marca px-6 py-8 text-right text-white md:inset-x-auto md:right-0 md:w-[min(24rem,38vw)] md:px-8"
+      >
+        <span class="text-eyebrow uppercase tracking-[0.18em]">Sobre ARCFOX</span>
+        <span class="sobre-titular mt-3 font-display text-subtitulo font-semibold uppercase">
+          Conoce nuestra esencia
+        </span>
+        {/* El subrayado del enlace, no un indicador: con un tercio lleno se leía
+            como una barra de scroll a medias. En reposo la pista entera y tenue;
+            al pasar o con el foco del teclado se llena de izquierda a derecha. */}
+        <span class="relative mt-8 block h-px w-full max-w-[18ch] bg-marca-clara/55" aria-hidden="true">
+          <span class="absolute inset-0 origin-left scale-x-0 bg-marca-clara transition-transform duration-500 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none"></span>
+        </span>
+      </a>
+    </div>
+  </section>
 
-  {
-    FAQ.length > 0 && (
-      <Seccion campo="tinte">
-        <div class="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
-          <Encabezado titulo="Lo que solemos responder" />
-          <Faq />
-        </div>
-      </Seccion>
-    )
-  }
-
-  <Cierre id="cotizalo" imagen={cotizar} alt="T5, fondo de la ficha de cotización.">
-    <Formulario titulo="Cotízalo" bajada="Te contactamos con el concesionario más cercano." origen="/" compacto />
+  <Cierre
+    id="cotizalo"
+    tablero
+    imagen={cotizar}
+    alt="ARCFOX T5, vista de tres cuartos para cotizar."
+    fondos={modelos.map((modelo) => ({
+      id: modelo.id,
+      imagen: cierrePorId[modelo.id]?.imagen ?? cotizar,
+      alt: cierrePorId[modelo.id]?.alt ?? modelo.nombre,
+    }))}
+  >
+    {/* La isla pinta el select al cambiar de modelo. `/cotizalo` sigue
+        siendo la URL del menú; aquí el visitante no tiene que salir. */}
+    <Formulario
+      titulo="Tu próximo ARCFOX"
+      bajada="Elige tu modelo y déjanos tus datos. Te ayudamos a conocer sus características, disponibilidad y precio en Ecuador."
+      origen="/"
+      cotizacion
+      boton="Solicitar cotización"
+      compacto
+    />
   </Cierre>
 </Base>
+
+<style>
+  /* El zorro es fijo. El auto se conmuta con data-activo: si el recorte
+     apuntara al vacío de la toma (15 % a la izquierda), en 390 sólo se
+     leía suelo y el emblema quedaba tapado por la losa. */
+  .sobre-fondo {
+    transition: opacity 480ms var(--ease-out);
+  }
+  .sobre-fondo:not([data-activo]) {
+    opacity: 0;
+  }
+  .sobre-fondo[data-activo] {
+    opacity: 1;
+  }
+
+  .sobre-portada :global(.sobre-zorro) {
+    width: clamp(7rem, 18vw, 16rem);
+    max-width: 24svh;
+  }
+
+  .sobre-titular {
+    max-width: 14ch;
+    letter-spacing: 0.08em;
+  }
+
+  @media (width >= 48rem) {
+    .sobre-fondo {
+      object-position: 78% 55%;
+    }
+  }
+
+  @media (width < 48rem) {
+    .sobre-portada > div {
+      min-height: 88svh;
+    }
+    /* A sangre el 3/4 llena la izquierda y el zorro se sentaba encima
+       del techo. El auto es una losa a la derecha: trompa y placa,
+       el animal se queda. `top: auto` + bottom lo encogía contra la losa. */
+    .sobre-fondo {
+      inset: auto;
+      top: 8%;
+      right: 0;
+      width: 76%;
+      height: 68%;
+      mask-image: linear-gradient(to right, transparent, var(--color-marca) 14%);
+    }
+    .sobre-fondo[data-modelo-vista='t5'] {
+      object-position: 16% 50%;
+    }
+    /* kv2 trae el wordmark de la toma arriba: un Y bajo lo colaba
+       en el recorte. */
+    .sobre-fondo[data-modelo-vista='t1'] {
+      object-position: 30% 90%;
+    }
+    .sobre-fondo[data-modelo-vista='s5'] {
+      object-position: 72% 52%;
+    }
+    /* Encima de la losa, no detrás: si comparte el borde inferior,
+       las patas desaparecen detrás de «Conoce la marca». */
+    .sobre-portada :global(.sobre-zorro) {
+      bottom: 12.25rem;
+      left: 0.25rem;
+      width: 9.25rem;
+      max-width: 32svh;
+      z-index: 1;
+    }
+    /* 0.08 em en 390 come la A de MARCA y pega CONOCE LA. */
+    .sobre-titular {
+      max-width: none;
+      letter-spacing: 0.04em;
+      font-size: clamp(1.35rem, 6.4vw, 1.85rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sobre-fondo {
+      transition: none;
+    }
+  }
+
+  .sobre-portada a {
+    text-decoration: none;
+  }
+</style>

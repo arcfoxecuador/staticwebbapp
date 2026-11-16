@@ -47,9 +47,9 @@ const tira = forma === 'tira';
           <div class:list={[tira && 'bg-current/4 px-4 py-5 text-center']}>
             <dd class:list={['revela-cifra font-bold tabular-nums', tira ? 'text-h3' : 'text-stat', color]}>
               {m.valor}
-              {m.unidad && <span class="ms-1 text-small font-medium text-current/55">{m.unidad}</span>}
+              {m.unidad && <span class:list={['ms-1 text-small font-medium', tira ? 'text-current/80' : 'text-current/55']}>{m.unidad}</span>}
             </dd>
-            <dt class:list={[tira ? 'mt-1 text-eyebrow uppercase tracking-[0.14em] text-current/50' : 'mt-2 text-small text-current/70']}>
+            <dt class:list={[tira ? 'mt-1.5 text-small font-semibold uppercase tracking-[0.08em] text-current/80' : 'mt-2 text-small text-current/70']}>
               {m.etiqueta}
             </dt>
             {!tira && m.fuente && <dd class="mt-1 text-small text-current/45">{m.fuente}</dd>}

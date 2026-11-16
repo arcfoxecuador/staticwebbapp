@@ -29,6 +29,8 @@ interface Props {
   secundaria?: { texto: string; href: string };
   imagen: ImageMetadata;
   alt: string;
+  /** Un fondo por modelo. El primero es el LCP; los demás esperan al cambio. */
+  fondos?: { id: string; imagen: ImageMetadata; alt: string }[];
   generada?: boolean;
   /** Ancla del siguiente capítulo. Sin ella no hay invitación a bajar. */
   siguiente?: { href: string; etiqueta: string };
@@ -43,12 +45,12 @@ const {
   secundaria,
   imagen,
   alt,
+  fondos = [],
   generada = true,
   siguiente,
 } = Astro.props;
 
-/* La primera palabra carga; el resto acompaña. Un solo h1, dos cuerpos:
-   es el cartel, no un párrafo en versales. */
+const capas = fondos.length > 0 ? fondos : [{ id: 'unico', imagen, alt }];
 const palabras = titulo.trim().split(/\s+/);
 const cabeza = palabras[0] ?? titulo;
 const cola = palabras.slice(1).join(' ');
@@ -57,18 +59,45 @@ const cola = palabras.slice(1).join(' ');
 <section
   data-slot="hero-imagen"
   data-generada={generada ? 'true' : undefined}
-  class="campo-oscuro relative isolate flex min-h-svh items-end overflow-clip bg-marca"
+  class="campo-oscuro relative isolate flex min-h-svh items-center overflow-clip bg-marca"
 >
   <div class="deriva-hero absolute inset-0 -z-10">
-    <Image
-      src={imagen}
-      {alt}
-      widths={[640, 1024, 1440, 1920]}
-      sizes="100vw"
-      loading="eager"
-      fetchpriority="high"
-      class="entra-imagen h-full w-full object-cover object-[58%_60%]"
-    />
+    {/* El relleno usa la misma toma: prolonga el cielo (T5) o el piso (T1) sin
+        estirar el auto. Comparte el estado del modelo: sólo se ve con el suyo.
+        El S5 cubre el hero entero y no lo necesita. Mismo srcset que la capa
+        nítida, así que el navegador no descarga la foto dos veces. */}
+    {capas.filter((capa) => capa.id === 't5' || capa.id === 't1').map((capa) => (
+      <div aria-hidden="true">
+      <Image
+        src={capa.imagen}
+        alt={capa.alt}
+        widths={[640, 1024, 1440, 1920]}
+        sizes="100vw"
+        loading={capas[0]?.id === capa.id ? 'eager' : 'lazy'}
+        data-modelo-vista={capa.id}
+        data-activo={capas[0]?.id === capa.id ? '' : undefined}
+        class="hero-relleno"
+      />
+      </div>
+    ))}
+    {
+      capas.map((capa, indice) => (
+        <Image
+          src={capa.imagen}
+          alt={capa.alt}
+          widths={[640, 1024, 1440, 1920]}
+          sizes="100vw"
+          loading={indice === 0 ? 'eager' : 'lazy'}
+          fetchpriority={indice === 0 ? 'high' : 'low'}
+          data-modelo-vista={capa.id}
+          data-activo={indice === 0 ? '' : undefined}
+          class:list={[
+            'hero-fondo h-full w-full object-cover',
+            indice === 0 ? 'entra-imagen relative' : 'absolute inset-0',
+          ]}
+        />
+      ))
+    }
   </div>
 
   <div
@@ -82,13 +111,15 @@ const cola = palabras.slice(1).join(' ');
   >
   </div>
 
-  <div class="medida relative w-full pb-16 pt-32 max-lg:pb-[calc(85px+2.25rem)] md:pb-20">
+  <div class="hero-contenido medida relative w-full pb-16 pt-32 md:pb-20">
     {rotulo && <p class="eyebrow entra text-white/70">{rotulo}</p>}
 
     {
       insignia && (
         <p class="hero-insignia entra text-eyebrow uppercase tracking-[0.22em] text-white/80">
-          {insignia}
+          {/* Un solo hijo del flex en columna: separados, el rótulo y la insignia
+              caían en dos líneas y la etiqueta aprobada se partía en el «·». */}
+          <span><span data-modelo-rotulo></span>{insignia}</span>
         </p>
       )
     }
@@ -135,6 +166,137 @@ const cola = palabras.slice(1).join(' ');
 </section>
 
 <style>
+  .hero-relleno {
+    display: none;
+  }
+
+  /* LA PLACA EN EL HUECO DE «POR». De las tres filas del titular sólo «POR»
+     deja libre su derecha, y ahí tiene que caer la placa de cada auto. Cada
+     foto se escala por ancho (el alto sale de su proporción) y su `top` pone
+     el centro de la placa `--fila-por` por debajo del centro del hero, que es
+     donde cae el centro de «POR» (medido: 85–92 px entre 1024 y 3440).
+
+     El factor de cada modelo es centro-de-placa ÷ proporción de la foto:
+       T5 0.591 ÷ 1.415 = 0.4177 · T1 0.733 ÷ 1.778 = 0.4123 · S5 0.544 ÷ 1.333 = 0.408
+     Si cambia una foto, cambia su factor. `cqw` mide la capa y no la ventana:
+     con barra de scroll clásica, 100vw se pasa unos 16 px. */
+  @media (width >= 64rem) {
+    .deriva-hero {
+      container-type: size;
+    }
+    .hero-fondo {
+      --fila-por: 86px;
+    }
+    /* T5: la placa va a la izquierda de la toma; la foto cede ese lado al
+       titular y el relleno lo prolonga. */
+    .hero-fondo[data-modelo-vista='t5'] {
+      --hero-corte: max(14cqw, calc(50cqw - 520px));
+      width: calc(100% - var(--hero-corte));
+      margin-left: var(--hero-corte);
+      height: auto;
+      top: calc(50% + var(--fila-por) - 0.4177 * (100cqw - var(--hero-corte)));
+      mask-image:
+        linear-gradient(to right, transparent, var(--color-marca) 14vw),
+        linear-gradient(to bottom, transparent, var(--color-marca) 8%, var(--color-marca) 92%, transparent);
+      mask-composite: intersect;
+    }
+    /* T1: la placa va baja en la toma. Al subirla a su fila la foto ya no
+       llega al pie, y el relleno cubre ese tramo bajo el fundido. */
+    .hero-fondo[data-modelo-vista='t1'] {
+      height: auto;
+      bottom: auto;
+      top: calc(50% + var(--fila-por) - 0.4123 * 100cqw);
+      mask-image: linear-gradient(to bottom, var(--color-marca) 85%, transparent);
+    }
+    /* S5: la placa ya queda a la derecha de «POR»; basta con bajarla a su
+       fila. La foto 4:3 sigue cubriendo el hero entero. */
+    .hero-fondo[data-modelo-vista='s5'] {
+      height: auto;
+      bottom: auto;
+      top: calc(50% + var(--fila-por) - 0.408 * 100cqw);
+    }
+    .hero-relleno {
+      display: block;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform-origin: 0 60%;
+      transform: scale(2.4);
+      filter: blur(36px);
+      transition: opacity 480ms var(--ease-out);
+    }
+    /* Al T1 le falta el piso, no la izquierda: la misma toma a sangre, sin el
+       zoom sobre la franja izquierda que usa el T5. */
+    .hero-relleno[data-modelo-vista='t1'] {
+      transform-origin: 50% 60%;
+      transform: scale(1.1);
+    }
+    .hero-relleno:not([data-activo]) {
+      opacity: 0;
+    }
+  }
+
+  /* En ultrapanorámicas la medida centrada corre «POR» hasta la placa del T1:
+     la foto cede la izquierda como la del T5 (el corte es 0 hasta 2800 px). */
+  @media (width >= 2800px) {
+    .hero-fondo[data-modelo-vista='t1'] {
+      --hero-corte: calc(50cqw - 1400px);
+      width: calc(100% - var(--hero-corte));
+      margin-left: var(--hero-corte);
+      top: calc(50% + var(--fila-por) - 0.4123 * (100cqw - var(--hero-corte)));
+      mask-image:
+        linear-gradient(to right, transparent, var(--color-marca) 14vw),
+        linear-gradient(to bottom, var(--color-marca) 85%, transparent);
+      mask-composite: intersect;
+    }
+  }
+
+  .hero-fondo:not([data-activo]) {
+    opacity: 0;
+  }
+  .hero-fondo[data-activo] {
+    opacity: 1;
+  }
+  .hero-fondo {
+    object-position: 58% 60%;
+    transition: opacity 480ms var(--ease-out);
+  }
+
+  /* En 390 el 16:9 se escala al alto: object-position Y no recorta.
+     Un X corto del T1 enseñaba el flanco y escondía «ARCFOX T1».
+     Subir el alto de la foto (más que el hero) vuelve a haber recorte
+     vertical y se puede poner la placa bajo NATURALEZA, no detrás. */
+  @media (width < 48rem) {
+    section {
+      align-items: flex-start;
+    }
+    .hero-fondo[data-modelo-vista='t5'] {
+      position: absolute;
+      inset: auto 0 0;
+      height: 128%;
+      object-position: 20% 72%;
+    }
+    /* kv2: la placa del T1 izquierdo ~32 % X. El 150 % metía el
+       zoom en la rueda; el T5 (128 %) es el encuadre que sí deja
+       «ARCFOX T1» bajo NATURALEZA. */
+    .hero-fondo[data-modelo-vista='t1'] {
+      position: absolute;
+      inset: auto 0 0;
+      height: 128%;
+      object-position: 40% 66%;
+    }
+    /* 42 % cortaba «αS5» en el filo derecho. */
+    .hero-fondo[data-modelo-vista='s5'] {
+      object-position: 48% 62%;
+    }
+  }
+
+  .hero-insignia [data-modelo-rotulo]:not(:empty)::after {
+    content: attr(data-separador);
+  }
+
   .hero-insignia {
     display: inline-flex;
     flex-direction: column;
@@ -180,6 +342,12 @@ const cola = palabras.slice(1).join(' ');
   }
 
   @media (width < 64rem) {
+    /* La barra de acción (85 px) vive aquí: el padding de utilidad
+       `max-lg:pb` ganaba a esta hoja y no se podía ajustar por modelo. */
+    .hero-contenido {
+      padding-bottom: calc(85px + 2.25rem);
+    }
+
     /* DISTINTOS a 3.5rem + tracking no cabe en 350px de columna: se come
        la O. El cartel sigue siendo el más grande de la página, pero entero. */
     h1 .entra-titular-hero:first-of-type {
@@ -202,6 +370,21 @@ const cola = palabras.slice(1).join(' ');
 
     .hero-acciones [data-slot='boton']:first-child {
       display: none;
+    }
+  }
+
+  @media (width < 48rem) {
+    /* El titular ya no está centrado: el hueco de abajo es para la placa
+       y la barra, no para tres líneas más de Eurostile. */
+    .hero-contenido {
+      padding-top: 6.75rem;
+      padding-bottom: calc(85px + 1.5rem);
+    }
+
+    /* En móvil el 6 % de arranque de `.deriva-hero` se come el morro
+       que el object-position acaba de recuperar. */
+    .deriva-hero {
+      animation: none;
     }
   }
 

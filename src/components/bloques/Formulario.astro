@@ -1,5 +1,5 @@
 ---
-/* EL FORMULARIO DE CONTACTO. Cuatro campos y ni uno más.
+/* EL FORMULARIO DE CONTACTO. Los campos que necesita la cotización y ni uno más.
 
    Funciona SIN JavaScript: es un `<form method="post">` de verdad contra el
    endpoint configurado, y sin JS el navegador hace el envío nativo y aterriza en
@@ -22,7 +22,7 @@
    humano no. Ninguna de las dos cosas pide nada al visitante, que es la razón
    por la que no hay un captcha aquí: el captcha lo paga quien sí es humano. */
 import Boton from '../ui/Boton.astro';
-import { FORMULARIO, ORG } from '../../lib/site';
+import { AVISO_DATOS, FORMULARIO, FORMULARIO_COTIZACION, LEGAL, ORG } from '../../lib/site';
 
 interface Props {
   titulo?: string;
@@ -32,9 +32,29 @@ interface Props {
   origen?: string;
   /** Sin la columna de correo/teléfono: el look de Cotízalo es sólo la ficha. */
   compacto?: boolean;
+  /** Qué aviso de datos lleva al pie. Test drive pide datos sensibles y legal
+      redactó uno propio; el resto usa el general. */
+  aviso?: 'general' | 'pruebaManejo';
+  /** Texto del botón de envío. Cada página lo nombra por lo que pide. */
+  boton?: string;
+  /** El acuse tras enviar. Test drive tiene el suyo; el resto, el compartido. */
+  confirmacion?: string;
+  /** Pinta el formulario de cotización de AYASA en vez del nuestro. Ver
+      `FORMULARIO_COTIZACION` en site.ts. */
+  cotizacion?: boolean;
 }
 
-const { titulo = 'Cotízalo', bajada, origen = Astro.url.pathname, compacto = false } = Astro.props;
+const {
+  titulo = 'Cotízalo',
+  bajada,
+  origen = Astro.url.pathname,
+  compacto = false,
+  aviso = 'general',
+  boton = 'Solicitar cotización',
+  confirmacion = FORMULARIO.confirmacion,
+  cotizacion = false,
+} = Astro.props;
+const textoAviso = AVISO_DATOS[aviso];
 
 /* Sin webhook todavía el POST nativo cae al correo. Es peor que un CRM, y
    mejor que un formulario que no se pinta: el look aprobado cierra con esta
@@ -42,14 +62,14 @@ const { titulo = 'Cotízalo', bajada, origen = Astro.url.pathname, compacto = fa
 const destino = FORMULARIO.endpoint || `mailto:${ORG.email}`;
 
 const modelos = [
-  { valor: 't5', etiqueta: 'ARCFOX T5' },
   { valor: 't1', etiqueta: 'ARCFOX T1' },
+  { valor: 't5', etiqueta: 'ARCFOX T5' },
   { valor: 's5', etiqueta: 'ARCFOX S5' },
 ];
 ---
 
 {
-  destino ? (
+  cotizacion || destino ? (
     <div
       data-slot="formulario"
       class:list={[compacto ? 'grid gap-8' : 'grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20']}
@@ -75,18 +95,22 @@ const modelos = [
               <div>
                 <dt class="text-tinta/55">Correo</dt>
                 <dd class="mt-1">
-                  <a href={`mailto:${ORG.email}`} class="enlace-subrayado text-marca">
+                  <a href={`mailto:${ORG.email}`} class="enlace-subrayado inline-flex min-h-11 items-center text-marca">
                     {ORG.email}
                   </a>
                 </dd>
               </div>
-              {ORG.telefono && (
+              {(ORG.telefono || ORG.telefonoLegible) && (
                 <div>
                   <dt class="text-tinta/55">Teléfono</dt>
                   <dd class="mt-1">
-                    <a href={`tel:${ORG.telefono}`} class="enlace-subrayado text-marca">
-                      {ORG.telefonoLegible}
-                    </a>
+                    {ORG.telefono ? (
+                      <a href={`tel:${ORG.telefono}`} class="enlace-subrayado inline-flex min-h-11 items-center text-marca">
+                        {ORG.telefonoLegible}
+                      </a>
+                    ) : (
+                      <span class="text-marca">{ORG.telefonoLegible}</span>
+                    )}
                   </dd>
                 </div>
               )}
@@ -95,12 +119,37 @@ const modelos = [
         }
       </div>
 
+      {cotizacion ? (
+        <div class="revela cotizacion-externa">
+          {/* `loading="lazy"`: el portal pesa y pone sus propias cookies; que
+              no cargue hasta que el visitante llegue al bloque. */}
+          <iframe
+            src={FORMULARIO_COTIZACION.url}
+            title={FORMULARIO_COTIZACION.titulo}
+            loading="lazy"
+            class="block w-full border border-linea bg-superficie"
+          ></iframe>
+          <p class:list={['mt-3 text-small', compacto ? 'text-white/75' : 'text-tinta/70']}>
+            ¿No ves el formulario?{' '}
+            <a
+              href={FORMULARIO_COTIZACION.url}
+              target="_blank"
+              rel="noopener"
+              class:list={['enlace-subrayado', compacto ? 'text-white' : 'text-marca']}
+            >
+              Ábrelo en una pestaña nueva
+            </a>
+          </p>
+        </div>
+      ) : (
       <form
-        class="revela campo-claro rounded-[var(--radius-lg)] border border-linea bg-superficie p-6 md:p-9"
+        class="revela campo-claro border border-linea bg-superficie p-6 md:p-9"
         method="post"
         action={destino}
         data-gracias={FORMULARIO.gracias}
         data-correo={ORG.email}
+        data-confirmacion={confirmacion}
+        data-error={FORMULARIO.error}
       >
         <input type="hidden" name="origen" value={origen} />
         {/* El sello de tiempo lo escribe el script al cargar. Sin JS se queda
@@ -121,7 +170,7 @@ const modelos = [
 
         <div class="flex flex-col gap-5">
           <label class="flex flex-col gap-2">
-            <span class="text-small font-medium text-marca">Nombre</span>
+            <span class="text-small font-medium text-marca">Nombre y apellido</span>
             <input
               type="text"
               name="nombre"
@@ -133,7 +182,7 @@ const modelos = [
           </label>
 
           <label class="flex flex-col gap-2">
-            <span class="text-small font-medium text-marca">Teléfono</span>
+            <span class="text-small font-medium text-marca">Celular</span>
             <input
               type="tel"
               name="telefono"
@@ -146,7 +195,7 @@ const modelos = [
           </label>
 
           <label class="flex flex-col gap-2">
-            <span class="text-small font-medium text-marca">Email</span>
+            <span class="text-small font-medium text-marca">Correo electrónico</span>
             <input
               type="email"
               name="email"
@@ -171,6 +220,16 @@ const modelos = [
           </label>
 
           <label class="flex flex-col gap-2">
+            <span class="text-small font-medium text-marca">Mensaje</span>
+            <textarea
+              name="mensaje"
+              rows="3"
+              class="campo"
+              placeholder="Cuéntanos cómo podemos ayudarte."
+            ></textarea>
+          </label>
+
+          <label class="flex flex-col gap-2">
             <span class="text-small font-medium text-marca">¿Qué modelo te interesa?</span>
             <select name="modelo" required class="campo">
               <option value="" disabled selected>Elige un modelo</option>
@@ -179,21 +238,56 @@ const modelos = [
           </label>
         </div>
 
+        {/* El aviso va AL PIE y ENTERO, a la vista, como en la imagen que
+            adjuntó legal: plegado tras un «ver más» o metido en una caja con
+            scroll, la aceptación deja de ser informada. */}
+        <section
+          class="aviso-datos mt-7 border border-linea bg-fondo p-4 text-small text-tinta/75"
+          aria-labelledby={`aviso-${origen}`}
+        >
+          <h3 id={`aviso-${origen}`} class="font-medium text-marca">{AVISO_DATOS.titulo}</h3>
+          <p class="mt-2">{textoAviso.responsables}</p>
+          <p class="mt-2">
+            {textoAviso.finalidades} <strong class="font-semibold text-tinta">{AVISO_DATOS.masInformacion}</strong>
+          </p>
+          <p class="mt-2">
+            {AVISO_DATOS.derechos}{' '}
+            <a href={`mailto:${AVISO_DATOS.correo}`} class="enlace-subrayado text-marca">{AVISO_DATOS.correo}</a>
+          </p>
+          <h4 class="mt-3 font-medium text-marca">{AVISO_DATOS.tituloConsentimiento}</h4>
+          <p class="mt-2">{textoAviso.consentimiento}</p>
+        </section>
+
+        {/* SIN `checked`, nunca: la aceptación la da el titular con su clic.
+            `required` hace que el navegador no envíe sin ella, con o sin JS. */}
+        <label class="mt-4 flex items-start gap-3 text-small text-tinta">
+          <input type="checkbox" name="acepta_datos" value="si" required class="casilla" />
+          <span>
+            {AVISO_DATOS.casilla}{' '}
+            {LEGAL.privacidad ? (
+              <a href={LEGAL.privacidad} class="enlace-subrayado text-marca">{AVISO_DATOS.casillaEnlace}</a>
+            ) : (
+              AVISO_DATOS.casillaEnlace
+            )}
+          </span>
+        </label>
+
         <div class="mt-7 flex flex-col gap-4">
-          <Boton tipo="submit" tamano="lg" class="w-full justify-center">Enviar →</Boton>
+          <Boton tipo="submit" tamano="lg" class="w-full justify-center">{boton}</Boton>
           {/* `aria-live="polite"` y no `assertive`: el acuse no es una alarma. Y
               vive FUERA del bloque que se oculta al enviar, porque una región
               viva que aparece de la nada a veces no se anuncia. */}
           <p class="acuse text-small" role="status" aria-live="polite"></p>
         </div>
       </form>
+      )}
     </div>
   ) : null
 }
 
 <style>
-  /* Los campos se estilan aquí y no con utilidades repetidas en seis sitios: son
-     seis controles con exactamente el mismo aspecto, y la variante que se olvida
+  /* Los campos se estilan aquí y no con utilidades repetidas: son controles con
+     exactamente el mismo aspecto, y la variante que se olvida
      de una utilidad es el defecto clásico de un formulario. */
   .campo {
     width: 100%;
@@ -206,7 +300,7 @@ const modelos = [
     color: var(--color-tinta);
     background: var(--color-fondo);
     border: 1px solid var(--color-linea);
-    border-radius: var(--radius-md);
+    border-radius: 0;
     transition: border-color 180ms var(--ease-out);
   }
   .campo::placeholder {
@@ -230,6 +324,37 @@ const modelos = [
     width: 1px;
     height: 1px;
     overflow: clip;
+  }
+
+  /* 20px y no el cuadradito de 13px por defecto: es la única casilla del
+     formulario y la que más cuesta acertar con el dedo. */
+  .casilla {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.1rem;
+    accent-color: var(--color-marca);
+  }
+
+  /* Alto medido con el formulario de AYASA desplegado (todas las preguntas
+     condicionales abiertas): 2.050 px en marcos anchos y hasta 2.450 en los
+     intermedios, donde sus columnas se apilan. Si algún día crece, el marco
+     hace scroll por dentro en vez de cortarlo. */
+  .cotizacion-externa {
+    container-type: inline-size;
+  }
+  .cotizacion-externa iframe {
+    height: 2500px;
+  }
+  @container (max-width: 560px) {
+    .cotizacion-externa iframe {
+      height: 2300px;
+    }
+  }
+  @container (min-width: 900px) {
+    .cotizacion-externa iframe {
+      height: 2150px;
+    }
   }
 
   .acuse:empty {
@@ -283,17 +408,14 @@ const modelos = [
 
         form.reset();
         if (acuse) {
-          acuse.textContent = 'Recibido. Te respondemos dentro de un día hábil.';
+          acuse.textContent = form.dataset.confirmacion ?? '';
           acuse.dataset.estado = 'ok';
         }
       } catch {
         /* El mensaje de error DA UNA SALIDA. «Ha ocurrido un error» deja al
            visitante sin nada que hacer con la información. */
         if (acuse) {
-          acuse.innerHTML =
-            'No se pudo enviar. Escríbenos directamente a <a class="enlace-subrayado" href="mailto:' +
-            (form.dataset.correo ?? '') +
-            '">correo</a> o inténtalo de nuevo.';
+          acuse.textContent = form.dataset.error ?? '';
           acuse.dataset.estado = 'error';
         }
       } finally {

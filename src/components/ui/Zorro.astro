@@ -1,0 +1,74 @@
+---
+/* El emblema fotográfico. Vive en un componente porque el mismo recorte se
+   sienta en la portada, en Nosotros, en el 404 y en el pie: tres imports
+   sueltos son tres tamaños que divergen. El wordmark de `Marca` es otra
+   pieza —sello vectorial— y no se mezcla con esta. */
+import { Image } from 'astro:assets';
+import zorro from '../../assets/zorro.webp';
+
+interface Props {
+  /** escena: Sobre / Nosotros. rastro: 404. marca: pie. */
+  tamano?: 'escena' | 'rastro' | 'marca';
+  /** Por tiempo. El 404 ya está en viewport: `view()` no tiene qué medir. */
+  reloj?: boolean;
+  /** El bloque ya nombró la marca: repetir el alt es ruido para el lector. */
+  decorativo?: boolean;
+  /** A la derecha se espeja: el animal mira a la derecha, y ahí tiene que
+      mirar hacia el copy, no hacia el margen. */
+  lado?: 'izquierdo' | 'derecho';
+  class?: string;
+}
+
+const {
+  tamano = 'escena',
+  reloj = false,
+  decorativo = false,
+  lado = 'izquierdo',
+  class: extra,
+} = Astro.props;
+
+const medida = {
+  escena: {
+    caja: 'w-[clamp(13rem,31vw,28rem)]',
+    widths: [320, 480, 640] as number[],
+    sizes: '(max-width: 767px) 13rem, min(31vw, 28rem)',
+  },
+  rastro: {
+    caja: 'w-[clamp(9rem,26vw,18rem)]',
+    widths: [240, 400] as number[],
+    sizes: '(max-width: 767px) 9rem, min(26vw, 18rem)',
+  },
+  marca: {
+    caja: 'w-[clamp(5.5rem,12vw,9rem)]',
+    widths: [160, 240] as number[],
+    sizes: '9rem',
+  },
+}[tamano];
+---
+
+<div
+  class:list={[
+    'pointer-events-none select-none',
+    lado === 'derecho' && 'zorro-espejo',
+    medida.caja,
+    extra,
+  ]}
+  aria-hidden={decorativo ? 'true' : undefined}
+>
+  <Image
+    src={zorro}
+    alt="Zorro ártico como emblema visual de ARCFOX."
+    widths={medida.widths}
+    sizes={medida.sizes}
+    class:list={['h-auto w-full object-contain', reloj ? 'entra-zorro' : 'llega-zorro']}
+  />
+</div>
+
+<style>
+  /* El espejo va en el marco, no en la foto: si el `scaleX(-1)` se
+     compusiera con el translate de `.llega-zorro`, la llegada se iría
+     al lado contrario del que se escribe. */
+  .zorro-espejo {
+    transform: scaleX(-1);
+  }
+</style>
