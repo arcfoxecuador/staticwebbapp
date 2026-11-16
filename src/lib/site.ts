@@ -952,6 +952,10 @@ export const PROTOCOLO = {
    QUÉ se carga y BAJO QUÉ condición. Nada se inyecta antes del consentimiento
    → ver components/seo/Analitica.astro. */
 export const ANALITICA = {
+  /* Google Tag Manager de ARCFOX (correo de MaElisa, 16-nov-2026: «en el
+     <head> (apenas inicia) de todas las páginas»). No es un secreto: acaba en
+     el HTML. `||` y no `??`: una variable de Actions sin definir llega vacía. */
+  gtm: import.meta.env.PUBLIC_GTM_ID || 'GTM-P7W7KZBM',
   ga4: import.meta.env.PUBLIC_GA4_ID ?? '',
   clarity: import.meta.env.PUBLIC_CLARITY_ID ?? '',
   /** Rutas donde NO se graba sesión nunca, pase lo que pase con el consentimiento.
