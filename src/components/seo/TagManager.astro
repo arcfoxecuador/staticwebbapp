@@ -1,0 +1,61 @@
+---
+/* ── GOOGLE TAG MANAGER, LO PRIMERO DEL <head> ─────────────────────────────
+   Lo pidió el cliente (16-nov-2026) «en el <head> (apenas inicia) de todas las
+   páginas», landing incluida. Base.astro y Teaser.astro lo montan antes que
+   cualquier otra etiqueta; todas las páginas pasan por uno de los dos.
+
+   CON MODO DE CONSENTIMIENTO. El contenedor carga siempre, pero arranca con
+   todo en `denied`: las etiquetas de Google que respetan el consentimiento no
+   dejan cookies hasta que el visitante pulsa «Aceptar» en el banner. Así se
+   cumple el pedido sin romper la regla de `Analitica.astro` (nada de cookies
+   antes de decidir). Las etiquetas que no son de Google (Meta, TikTok…) hay que
+   configurarlas en GTM con «Requerir consentimiento adicional»
+   (`analytics_storage` / `ad_storage`): eso ya no lo controla este código.
+
+   Además del fragmento del correo va el `gtm.start` del snippet oficial de
+   GTM: sin ese evento no se disparan los activadores de «Todas las páginas».
+
+   El `<script>` NO va dentro de ninguna condición: ver la trampa de Astro en la
+   cabecera de `Analitica.astro`. La condición la aplica el layout. */
+import { ANALITICA } from '../../lib/site';
+
+const { gtm } = ANALITICA;
+const src = `https://www.googletagmanager.com/gtm.js?id=${gtm}`;
+---
+
+<script is:inline>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+  (function () {
+    var TODO = function (valor) {
+      return {
+        ad_storage: valor,
+        ad_user_data: valor,
+        ad_personalization: valor,
+        analytics_storage: valor,
+      };
+    };
+    gtag('consent', 'default', Object.assign(TODO('denied'), { wait_for_update: 500 }));
+    var aceptado = false;
+    try {
+      aceptado = localStorage.getItem('consentimiento') === 'aceptado';
+    } catch (e) {
+      /* Sin almacenamiento (modo privado estricto): se queda en `denied`. */
+    }
+    if (aceptado) gtag('consent', 'update', TODO('granted'));
+    else
+      document.addEventListener(
+        'consentimiento:aceptado',
+        function () {
+          gtag('consent', 'update', TODO('granted'));
+          dataLayer.push({ event: 'consentimiento_aceptado' });
+        },
+        { once: true },
+      );
+  })();
+  gtag('js', new Date());
+  dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+</script>
+<script is:inline async src={src}></script>

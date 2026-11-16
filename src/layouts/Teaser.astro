@@ -15,6 +15,7 @@ import '../styles/global.css';
 
 import BaseHead from '../components/seo/BaseHead.astro';
 import Analitica from '../components/seo/Analitica.astro';
+import TagManager from '../components/seo/TagManager.astro';
 import BannerCookies from '../components/seo/BannerCookies.astro';
 import { ANALITICA, RUTAS_NO_INDEXABLES, TEASER } from '../lib/site';
 import { IDIOMA } from '../lib/schema';
@@ -44,12 +45,15 @@ const noindex = RUTAS_NO_INDEXABLES.some((ruta) => path.startsWith(ruta));
 /* Sin ningún identificador configurado no se monta ni el script ni el banner:
    un aviso de cookies en un sitio que no pone cookies obliga al visitante a
    decidir sobre algo que no existe. Misma regla que en Base. */
-const hayAnalitica = Boolean(ANALITICA.ga4 || ANALITICA.clarity);
+const hayAnalitica = Boolean(ANALITICA.gtm || ANALITICA.ga4 || ANALITICA.clarity);
 ---
 
 <!doctype html>
 <html lang={IDIOMA}>
   <head>
+    {/* El charset va antes que GTM: tiene que caer en los primeros 1024 bytes. */}
+    <meta charset="utf-8" />
+    {ANALITICA.gtm && <TagManager />}
     <BaseHead {titulo} {descripcion} {path} {schema} {noindex} {imagen} portada={false} />
   </head>
   <body>
