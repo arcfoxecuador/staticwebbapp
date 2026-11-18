@@ -120,7 +120,11 @@ const modelos = [
       </div>
 
       {cotizacion ? (
-        <div class="revela cotizacion-externa">
+        <div
+          class="revela cotizacion-externa"
+          data-origen={FORMULARIO_COTIZACION.origen}
+          data-gracias={FORMULARIO.gracias}
+        >
           {/* `loading="lazy"`: el portal pesa y pone sus propias cookies; que
               no cargue hasta que el visitante llegue al bloque. */}
           <iframe
@@ -423,4 +427,21 @@ const modelos = [
       }
     });
   });
+
+  /* La cotización de AYASA avisa del envío con un postMessage y deja la
+     navegación a esta página (ver `FORMULARIO_COTIZACION` en site.ts). Se acepta
+     sólo si viene de SU origen y de uno de NUESTROS iframes, y se va siempre a
+     nuestra `/gracias`: la URL del mensaje no se usa nunca. */
+  const marcos = [...document.querySelectorAll<HTMLElement>('.cotizacion-externa[data-origen]')];
+  if (marcos.length) {
+    window.addEventListener('message', (evento) => {
+      const marco = marcos.find(
+        (m) => m.querySelector('iframe')?.contentWindow === evento.source,
+      );
+      if (!marco || evento.origin !== marco.dataset.origen) return;
+      const datos = evento.data as { type?: unknown } | null;
+      if (datos?.type !== 'redirect') return;
+      window.location.assign(marco.dataset.gracias ?? '/gracias');
+    });
+  }
 </script>

@@ -900,9 +900,19 @@ export const FORMULARIO = {
 
    OJO: el portal sólo se deja incrustar en los dominios de su cabecera
    `frame-ancestors`. Si el del sitio no está en esa lista, el navegador pinta
-   el marco vacío; por eso el bloque lleva siempre el enlace para abrirlo aparte. */
+   el marco vacío; por eso el bloque lleva siempre el enlace para abrirlo aparte.
+
+   LA PÁGINA DE GRACIAS LA PONEMOS NOSOTROS. Al terminar, su `validator.js` no
+   navega: manda a la página que lo contiene un `postMessage({ type: 'redirect',
+   url })` y espera que ELLA cambie de página. `origen` es contra lo que se
+   comprueba ese mensaje; la URL que trae se ignora y siempre se va a
+   `FORMULARIO.gracias`, para que un mensaje ajeno no pueda llevar al visitante
+   a otro sitio. Ojo: ellos lo dirigen sólo a `https://arcfox.com.ec` — desde
+   `www.` el navegador no lo entrega. */
+const URL_COTIZACION = 'https://ayas-formweb-prd.powerappsportals.com/tools/arcfox/form-quote-general/';
 export const FORMULARIO_COTIZACION = {
-  url: 'https://ayas-formweb-prd.powerappsportals.com/tools/arcfox/form-quote-general/',
+  url: URL_COTIZACION,
+  origen: new URL(URL_COTIZACION).origin,
   titulo: 'Formulario de cotización de ARCFOX',
 } as const;
 
