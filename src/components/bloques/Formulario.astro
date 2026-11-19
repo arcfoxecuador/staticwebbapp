@@ -39,6 +39,9 @@ interface Props {
   boton?: string;
   /** El acuse tras enviar. Test drive tiene el suyo; el resto, el compartido. */
   confirmacion?: string;
+  /** La página a la que se va tras un envío correcto. Cada formulario tiene la
+      suya porque la conversión se marca por URL. */
+  gracias?: string;
   /** Pinta el formulario de cotización de AYASA en vez del nuestro. Ver
       `FORMULARIO_COTIZACION` en site.ts. */
   cotizacion?: boolean;
@@ -53,6 +56,7 @@ const {
   boton = 'Solicitar cotización',
   confirmacion = FORMULARIO.confirmacion,
   cotizacion = false,
+  gracias = FORMULARIO.gracias,
 } = Astro.props;
 const textoAviso = AVISO_DATOS[aviso];
 
@@ -150,7 +154,7 @@ const modelos = [
         class="revela campo-claro border border-linea bg-superficie p-6 md:p-9"
         method="post"
         action={destino}
-        data-gracias={FORMULARIO.gracias}
+        data-gracias={gracias}
         data-correo={ORG.email}
         data-confirmacion={confirmacion}
         data-error={FORMULARIO.error}
@@ -415,6 +419,9 @@ const modelos = [
           acuse.textContent = form.dataset.confirmacion ?? '';
           acuse.dataset.estado = 'ok';
         }
+        /* A la página de gracias de ESTE formulario: la conversión se marca por
+           URL. El acuse de arriba queda por si la navegación tarda. */
+        if (form.dataset.gracias) window.location.assign(form.dataset.gracias);
       } catch {
         /* El mensaje de error DA UNA SALIDA. «Ha ocurrido un error» deja al
            visitante sin nada que hacer con la información. */
