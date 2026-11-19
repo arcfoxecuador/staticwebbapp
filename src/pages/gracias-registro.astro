@@ -1,0 +1,63 @@
+---
+/* EL CIERRE DEL PROTOCOLO, CON URL PROPIA. Hasta el 19-nov-2026 el «gracias» se
+   pintaba dentro de la misma puerta; quien mide la campaña necesita una URL que
+   marcar como registro hecho, y por eso existe esta página. Llega aquí
+   `ProtocoloComando` sólo cuando la hoja CONFIRMÓ el registro.
+
+   Usa `Teaser` y no `Base` por la misma razón que la puerta: en followdafox no
+   hay catálogo al que enlazar. `dist-landing.mjs` la conserva al podar. El
+   `noindex` sale solo: la ruta empieza por `/gracias`. */
+import Teaser from '../layouts/Teaser.astro';
+import Marca from '../components/ui/Marca.astro';
+import { GRACIAS_PROTOCOLO, ORG } from '../lib/site';
+---
+
+<Teaser titulo={GRACIAS_PROTOCOLO.titular} descripcion={GRACIAS_PROTOCOLO.texto} path={GRACIAS_PROTOCOLO.url}>
+  <section
+    class="gracias-registro campo-oscuro relative isolate flex min-h-svh flex-col items-center justify-center gap-6 overflow-clip bg-marca px-5 py-10 text-center text-white"
+  >
+    <div class="entra">
+      <Marca tono="blanco" soloSello enlace={false} />
+    </div>
+    <h1 class="gracias-titular entra entra-2 equilibra font-display font-semibold uppercase tracking-[0.06em]">
+      {GRACIAS_PROTOCOLO.titular}
+    </h1>
+    <p class="entra entra-3 max-w-[38ch] text-lead text-white/85">{GRACIAS_PROTOCOLO.texto}</p>
+    {
+      ORG.redes[0] && (
+        <a
+          class="entra entra-4 enlace-subrayado inline-flex min-h-11 items-center text-small text-white"
+          href={ORG.redes[0]}
+          target="_blank"
+          rel="noopener"
+        >
+          {GRACIAS_PROTOCOLO.redes}
+        </a>
+      )
+    }
+  </section>
+</Teaser>
+
+<style>
+  /* El mismo campo frío→cálido de la puerta, en reposo y sin la luz animada: es
+     una página de llegada, no la escena. Los tokens son los de campaña, que
+     `global.css` reserva a este recorrido. */
+  .gracias-registro {
+    background: linear-gradient(
+      112deg,
+      color-mix(in oklab, var(--color-campana-fria) 54%, var(--color-marca)) 0%,
+      color-mix(in oklab, var(--color-campana-fria) 18%, var(--color-marca)) 43%,
+      color-mix(in oklab, var(--color-campana-calida) 72%, var(--color-marca)) 78%,
+      color-mix(in oklab, var(--color-campana-calida) 46%, var(--color-marca)) 100%
+    );
+  }
+
+  /* La escala del cierre que se pintaba dentro de la puerta, no `text-h1`: el
+     titular es largo y en 390px el h1 del sitio se salía por los dos lados. */
+  .gracias-titular {
+    max-width: 100%;
+    font-size: clamp(1.5rem, 1.1rem + 2vw, 2.25rem);
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+</style>

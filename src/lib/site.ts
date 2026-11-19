@@ -881,6 +881,9 @@ export const FORMULARIO = {
   /** A dónde va el visitante si el navegador hace el POST nativo (sin JS). Tiene
       que estar en RUTAS_NO_INDEXABLES: es una página de utilidad. */
   gracias: '/gracias',
+  /** La de test drive, aparte de la de cotización para que cada conversión se
+      marque por separado. Empieza por `/gracias`: no se indexa. */
+  graciasPrueba: '/gracias-test-drive',
   /** El nombre del campo trampa. No se rellena nunca por un humano —está oculto
       y sin foco—, así que si llega con contenido es un bot. */
   trampa: '_ref',
@@ -938,12 +941,16 @@ export const FORMULARIO_COTIZACION = {
    `ProtocoloComando.astro`: un formulario que dice «registrado» sin que nada se
    haya guardado es la peor de las tres opciones posibles. */
 /* La pantalla de «gracias» que cierra el protocolo (pedido del cliente,
-   11-nov-2026: «un thank you page que cierre la conversación»). Vive DENTRO
-   de la página y no en una URL aparte porque followdafox y la puerta se
-   despliegan podados a una sola página: un `/gracias` no existiría ahí.
-   Sólo se pinta si el envío LLEGÓ; sin endpoint o sin red no se agradece un
+   11-nov-2026: «un thank you page que cierre la conversación»). Desde el
+   19-nov-2026 tiene URL PROPIA, `url`: quien mide la campaña marca la
+   conversión por la URL, y un agradecimiento pintado dentro de la misma página
+   no se puede marcar. `dist-landing.mjs` la conserva en los despliegues de una
+   sola página. Empieza por `/gracias` a propósito: así la cubre la entrada de
+   `RUTAS_NO_INDEXABLES` sin tocarla.
+   Sólo se navega si el envío LLEGÓ; sin endpoint o sin red no se agradece un
    registro que no ha ocurrido. Texto del cliente (12-nov-2026). */
 export const GRACIAS_PROTOCOLO = {
+  url: '/gracias-registro',
   titular: 'Gracias por registrarte',
   texto: 'Te estaremos enviando más información.',
   redes: 'Síguenos en Instagram',

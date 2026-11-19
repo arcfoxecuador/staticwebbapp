@@ -122,6 +122,7 @@ const protocolo = [
     <form
       class="comando-panel"
       data-endpoint={PROTOCOLO.endpoint}
+      data-url-gracias={GRACIAS_PROTOCOLO.url}
       data-token={PROTOCOLO.token}
       data-instagram={ORG.redes[0]}
     >
@@ -503,6 +504,9 @@ const protocolo = [
         gracias.hidden = false;
         nuevo.hidden = false;
         graciasTitular.focus({ preventScroll: true });
+        /* Y a su URL propia, que es la que se marca como conversión. El
+           agradecimiento de arriba cubre el instante que tarda en cargar. */
+        if (formulario.dataset.urlGracias) window.location.assign(formulario.dataset.urlGracias);
         return;
       }
 

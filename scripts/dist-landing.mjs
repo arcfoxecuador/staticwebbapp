@@ -27,6 +27,10 @@ import { join, relative, dirname, normalize } from 'node:path';
 const DIST = 'dist';
 const ASTRO = join(DIST, '_astro');
 const INDEX = join(DIST, 'index.html');
+/* La página de gracias del protocolo SOBREVIVE a la poda: la puerta navega a
+   ella al confirmar un registro, y es la URL que se marca como conversión. El
+   nombre sale de `GRACIAS_PROTOCOLO.url` en site.ts — si cambia allí, aquí. */
+const GRACIAS = join(DIST, 'gracias-registro.html');
 
 const SOLO_LANDING = process.env.SOLO_LANDING === '1';
 const SOLO_LANZAMIENTO = process.env.SOLO_LANZAMIENTO === '1';
@@ -80,7 +84,7 @@ function borrarHtmlSobrante(dir) {
       if (entrada.name === '_astro') continue;
       borrarHtmlSobrante(ruta);
       if (readdirSync(ruta).length === 0) rmdirSync(ruta);
-    } else if (entrada.name.endsWith('.html') && ruta !== INDEX) {
+    } else if (entrada.name.endsWith('.html') && ruta !== INDEX && ruta !== GRACIAS) {
       unlinkSync(ruta);
     }
   }
@@ -150,8 +154,11 @@ function extraerDelHtml(html) {
   }
 }
 
-const html = readFileSync(INDEX, 'utf8');
-extraerDelHtml(html);
+if (!existsSync(GRACIAS)) {
+  console.error(`[dist-landing] Falta ${GRACIAS}: la puerta navega ahí al registrar a alguien.`);
+  process.exit(1);
+}
+for (const pagina of [INDEX, GRACIAS]) extraerDelHtml(readFileSync(pagina, 'utf8'));
 
 while (cssPendientes.length > 0) {
   const rel = cssPendientes.pop();
