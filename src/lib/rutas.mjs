@@ -33,6 +33,13 @@ export const SITE = (process.env.SITE_URL || 'https://arcfox.com.ec').replace(/\
 const SOLO_LANDING = process.env.SOLO_LANDING === '1';
 const SOLO_LANZAMIENTO = process.env.SOLO_LANZAMIENTO === '1';
 
+/* EL CONTENEDOR DE GOOGLE TAG MANAGER, UNO POR DOMINIO (correo de la agencia,
+   23-nov-2026). Lo decide el mismo interruptor que poda `dist/`: el build de la
+   landing (followdafox.ec) mide en su contenedor y la web (arcfox.com.ec) en el
+   suyo. Va aquí y no en una variable de entorno porque así no hay un panel más
+   que rellenar: el workflow de cada destino ya fija `SOLO_*`, y con eso basta. */
+export const GTM = SOLO_LANDING || SOLO_LANZAMIENTO ? 'GTM-P7W7KZBM' : 'GTM-TVF2577X';
+
 export const RUTAS_NO_INDEXABLES =
   SOLO_LANDING || SOLO_LANZAMIENTO
     ? ['/gracias']
