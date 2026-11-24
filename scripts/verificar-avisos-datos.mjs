@@ -50,9 +50,8 @@ const CASILLA = 'Declaro que he leído y acepto el tratamiento de mis datos pers
 
 
 const URL_COTIZACION = 'https://ayas-formweb-prd.powerappsportals.com/tools/arcfox/form-quote-general/';
-/* El id es el del origen «Test Drive» en la lista `sources` del propio
-   formulario de AYASA; su `ui_manager.js` lo lee de `utm_source_crm`. */
-const URL_PRUEBA = `${URL_COTIZACION}?utm_source_crm=306ac3c7-6081-f111-ab0e-000d3a9c4d24&amp;utm_origin_type_crm=test-drive`;
+/* El formulario de test drive propio de AYASA; `b=arcfox` elige la marca. */
+const URL_PRUEBA = 'https://ayas-formweb-prd.powerappsportals.com/tools/general/test-drive/?b=arcfox';
 
 function comprobarCotizacion(ruta, url = URL_COTIZACION, gracias = '/gracias') {
   const html = leer(ruta);
@@ -74,7 +73,7 @@ function comprobarCotizacion(ruta, url = URL_COTIZACION, gracias = '/gracias') {
   );
 }
 
-test('test-drive.html: el test drive es el formulario de AYASA con origen Test Drive', () =>
+test('test-drive.html: el test drive es el formulario de test drive de AYASA', () =>
   comprobarCotizacion('test-drive.html', URL_PRUEBA, '/gracias-test-drive'));
 
 for (const ruta of ['index.html', 'cotizalo.html', 'concesionarios.html']) {

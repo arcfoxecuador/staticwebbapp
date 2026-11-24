@@ -160,9 +160,10 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
   dominio está en su `frame-ancestors`**: arcfox.com.ec y www.arcfox.com.ec lo
   están (23-nov-2026); en `localhost` y en cualquier preview el marco sale vacío
   y queda el enlace «Ábrelo en una pestaña nueva». **Test drive también es el de
-  AYASA** desde el 23-nov-2026 (`FORMULARIO_PRUEBA`): el mismo formulario con el
-  origen «Test Drive» de su CRM en `utm_source_crm`, y al terminar va a
-  `/gracias-test-drive`. El formulario propio (`PUBLIC_FORMULARIO_ENDPOINT`) ya
+  AYASA** (`FORMULARIO_PRUEBA`): su formulario de test drive,
+  `/tools/general/test-drive/?b=arcfox` (24-nov-2026), con fecha de la prueba.
+  No manda el `postMessage` de redirección: muestra su propio «Gracias» y
+  `/gracias-test-drive` no se alcanza desde él. El formulario propio (`PUBLIC_FORMULARIO_ENDPOINT`) ya
   no lo usa ninguna página.
 - **Analítica**: `PUBLIC_GA4_ID` / `PUBLIC_CLARITY_ID` — *pendiente*. Sin ninguno no
   se monta ni el script ni el banner de cookies.
