@@ -1,8 +1,16 @@
 /* ── EL VERIFICADOR DE GOOGLE TAG MANAGER ──────────────────────────────────
-   Lee `dist/` y comprueba el pedido del cliente (16-nov-2026): el contenedor
-   GTM-P7W7KZBM al principio del <head> de TODAS las páginas, landing incluida,
-   y siempre detrás del consentimiento por defecto en `denied`, para que nada
-   deje cookies antes de que el visitante acepte.
+   Lee `dist/` y comprueba el pedido del cliente: el contenedor de GTM al
+   principio del <head> de TODAS las páginas, y siempre detrás del
+   consentimiento por defecto en `denied`, para que nada deje cookies antes de
+   que el visitante acepte.
+
+   UN CONTENEDOR POR DOMINIO (correo de la agencia, 23-nov-2026): la web
+   (arcfox.com.ec) usa GTM-TVF2577X y la landing (followdafox.ec, build con
+   `SOLO_LANDING` o `SOLO_LANZAMIENTO`) GTM-P7W7KZBM. Del 16 al 23-nov la web
+   cargó el de la landing y la agencia veía las visitas de arcfox.com.ec en el
+   contenedor equivocado. La tabla se repite aquí a propósito, en vez de
+   importarla de `rutas.mjs`: un verificador que lee el valor del mismo sitio
+   que el código no puede pillar que ese valor esté mal.
 
    Va dentro de `npm run verificar`, DESPUÉS de `astro build`. Sin dependencias. */
 import test from 'node:test';
@@ -11,7 +19,11 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const DIST = 'dist';
-const ID = 'GTM-P7W7KZBM';
+const WEB = 'GTM-TVF2577X';
+const LANDING = 'GTM-P7W7KZBM';
+const esLanding = process.env.SOLO_LANDING === '1' || process.env.SOLO_LANZAMIENTO === '1';
+const ID = esLanding ? LANDING : WEB;
+const OTRO = esLanding ? WEB : LANDING;
 
 function paginas(dir) {
   return readdirSync(dir).flatMap((nombre) => {
@@ -43,6 +55,7 @@ for (const ruta of todas) {
     assert.equal(html.split('charset=').length - 1, 1, `${nombre}: charset duplicado`);
     assert.match(head, /'gtm\.start'/, `${nombre}: falta el evento gtm.start`);
     assert.equal(head.split(`gtm.js?id=${ID}`).length - 1, 1, `${nombre}: GTM cargado más de una vez`);
+    assert.ok(!html.includes(OTRO), `${nombre}: carga ${OTRO}, que es el contenedor del otro dominio`);
     assert.match(html, /id="aviso-cookies"/, `${nombre}: con GTM tiene que estar el banner de cookies`);
   });
 }
