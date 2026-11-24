@@ -10,7 +10,7 @@ import GamaModelos from '../components/bloques/GamaModelos.astro';
 import Formulario from '../components/bloques/Formulario.astro';
 import Faq from '../components/bloques/Faq.astro';
 import Figura from '../components/ui/Figura.astro';
-import { FAQ_TEST_DRIVE, FORMULARIO, PASOS } from '../lib/site';
+import { FAQ_TEST_DRIVE, FORMULARIO, FORMULARIO_PRUEBA, PASOS } from '../lib/site';
 import { faq, grafo, migas, organizacion, pagina, sitioWeb } from '../lib/schema';
 import type { Imagen } from '../lib/imagenes';
 
@@ -85,9 +85,8 @@ const EXPERIENCIA = [
         titulo="Solicita tu test drive"
         bajada="Completa tus datos para coordinar una prueba de manejo, sujeta a disponibilidad del modelo y del punto de atención."
         origen="/test-drive"
-        aviso="pruebaManejo"
-        boton="Solicitar test drive"
-        confirmacion={FORMULARIO.confirmacionPrueba}
+        cotizacion
+        externo={FORMULARIO_PRUEBA}
         gracias={FORMULARIO.graciasPrueba}
       />
     </div>

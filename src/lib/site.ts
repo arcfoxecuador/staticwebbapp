@@ -920,6 +920,21 @@ export const FORMULARIO_COTIZACION = {
   titulo: 'Formulario de cotización de ARCFOX',
 } as const;
 
+/* TEST DRIVE TAMBIÉN VA POR AYASA (pedido del cliente; el 23-nov-2026 Foton
+   reportó que nuestro formulario «no funciona»: no tenía destino y caía a
+   `mailto:`). AYASA no tiene una URL de test drive: es el MISMO formulario, y
+   su `ui_manager.js` toma el origen del lead de `utm_source_crm`, que tiene que
+   ser el id de una de las fuentes que el formulario declara. «Test Drive» es
+   `306ac3c7-…`; con un id que no está en su lista el lead entra como
+   «Directo» sin avisar. `utm_origin_type_crm` acaba en la descripción del lead
+   («TEST DRIVE») para que el asesor lo vea sin abrir nada más. */
+const URL_PRUEBA = `${URL_COTIZACION}?utm_source_crm=306ac3c7-6081-f111-ab0e-000d3a9c4d24&utm_origin_type_crm=test-drive`;
+export const FORMULARIO_PRUEBA = {
+  url: URL_PRUEBA,
+  origen: new URL(URL_PRUEBA).origin,
+  titulo: 'Formulario de test drive de ARCFOX',
+} as const;
+
 // ── Protocolo de la puerta de lanzamiento ───────────────────────────────────
 
 /* EL DESTINO DE LOS REGISTROS DE `/lanzamiento` y `/landing`. Misma decisión que
