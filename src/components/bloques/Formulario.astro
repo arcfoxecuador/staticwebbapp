@@ -32,6 +32,11 @@ interface Props {
   origen?: string;
   /** Sin la columna de correo/teléfono: el look de Cotízalo es sólo la ficha. */
   compacto?: boolean;
+  /** El texto arriba y el formulario a todo el ancho debajo, en vez de dos
+      columnas. Para el test drive de AYASA: su calendario de horarios necesita
+      ancho, y en la columna derecha (≈600 px) los botones de hora quedan
+      estrechos y el texto toca el borde. */
+  apilado?: boolean;
   /** Qué aviso de datos lleva al pie. Test drive pide datos sensibles y legal
       redactó uno propio; el resto usa el general. */
   aviso?: 'general' | 'pruebaManejo';
@@ -55,6 +60,7 @@ const {
   bajada,
   origen = Astro.url.pathname,
   compacto = false,
+  apilado = false,
   aviso = 'general',
   boton = 'Solicitar cotización',
   confirmacion = FORMULARIO.confirmacion,
@@ -80,7 +86,9 @@ const modelos = [
   cotizacion || destino ? (
     <div
       data-slot="formulario"
-      class:list={[compacto ? 'grid gap-8' : 'grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20']}
+      class:list={[
+        compacto ? 'grid gap-8' : apilado ? 'grid gap-12' : 'grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20',
+      ]}
     >
       <div>
         <h2
@@ -129,7 +137,7 @@ const modelos = [
 
       {cotizacion ? (
         <div
-          class="revela cotizacion-externa"
+          class:list={['revela cotizacion-externa', apilado && 'cotizacion-externa--apilada']}
           data-origen={externo.origen}
           data-gracias={gracias}
         >
@@ -366,6 +374,14 @@ const modelos = [
   @container (min-width: 900px) {
     .cotizacion-externa iframe {
       height: 2150px;
+    }
+  }
+
+  /* El test drive de AYASA a todo el ancho mide ≈1.880 px (medido a 1.280 de
+     ventana el 24-nov-2026); con 2.150 quedaba un hueco en blanco bajo «Enviar». */
+  @container (min-width: 900px) {
+    .cotizacion-externa--apilada iframe {
+      height: 1950px;
     }
   }
 
