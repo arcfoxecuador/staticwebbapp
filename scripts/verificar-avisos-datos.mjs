@@ -15,7 +15,11 @@
    de Privacidad y su casilla. Ahí ya no se exige nuestro aviso —sería un segundo
    consentimiento que nadie registra—; se exige que el iframe sea el de AYASA,
    que no quede también nuestro formulario y que haya salida si el marco no carga.
-   Test drive sigue con nuestro formulario y con toda la comprobación de arriba.
+
+   Desde el 23-nov-2026 TEST DRIVE también: nuestro formulario no tenía destino
+   y el cliente lo reportó como roto. Es el mismo formulario de AYASA con el
+   origen «Test Drive» de su CRM en la URL, y al terminar va a
+   `/gracias-test-drive`, no a `/gracias`, para que la conversión se distinga.
 
    Va dentro de `npm run verificar`, DESPUÉS de `astro build`. Sin dependencias. */
 import test from 'node:test';
@@ -31,14 +35,6 @@ function leer(ruta) {
   return readFileSync(completa, 'utf8');
 }
 
-/** El formulario de contacto es el que lleva `data-gracias`; así no se confunde
-    con el del protocolo de lanzamiento, que no lo lleva. */
-function formulario(html, ruta) {
-  const form = html.match(/<form\b[^>]*\bdata-gracias\b[^>]*>[\s\S]*?<\/form>/i);
-  assert.ok(form, `${ruta} no tiene formulario de contacto`);
-  return form[0];
-}
-
 const obligatorio = (tag) => /\srequired(?=[\s>=\/])/.test(tag);
 const textoPlano = (html) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 
@@ -52,68 +48,34 @@ const FRASES_COMUNES = [
 const FRASE_SENSIBLES = 'Los datos personales sensibles (copia de cédula y licencia) serán utilizados para validar la identidad del cliente';
 const CASILLA = 'Declaro que he leído y acepto el tratamiento de mis datos personales, así como el Aviso de Privacidad';
 
-function comprobarAviso(ruta) {
-  const form = formulario(leer(ruta), ruta);
-  const texto = textoPlano(form);
-  for (const frase of FRASES_COMUNES) {
-    assert.ok(texto.includes(frase), `${ruta}: el aviso de datos no dice literalmente «${frase.slice(0, 60)}…»`);
-  }
-
-  const esPrueba = ruta === 'test-drive.html';
-  assert.equal(
-    texto.includes(FRASE_SENSIBLES),
-    esPrueba,
-    esPrueba ? `${ruta}: test drive necesita el aviso de datos sensibles` : `${ruta}: el aviso de datos sensibles es sólo para test drive`,
-  );
-  assert.equal(
-    texto.includes('identificativos, de contacto y sensibles'),
-    esPrueba,
-    `${ruta}: la declaración de consentimiento no corresponde al formulario`,
-  );
-
-  /* Como en la imagen que adjuntó legal: el aviso entero a la vista, sin caja
-     con scroll que lo esconda, y la remisión al Aviso de Privacidad en negrita
-     como en su correo. */
-  assert.match(
-    form,
-    /<strong\b[^>]*>\s*Más información en nuestro Aviso de Privacidad colocado en la Página Web\.\s*<\/strong>/,
-    `${ruta}: «Más información en nuestro Aviso de Privacidad…» va en negrita, como en el correo de legal`,
-  );
-  const css = readdirSync(join(DIST, '_astro'))
-    .filter((archivo) => archivo.endsWith('.css'))
-    .map((archivo) => readFileSync(join(DIST, '_astro', archivo), 'utf8'))
-    .join('\n');
-  assert.ok(!/\.aviso-datos[^{]*\{[^}]*overflow/.test(css), `${ruta}: el aviso no puede ir en una caja con scroll`);
-
-  const casilla = form.match(/<input\b[^>]*\btype="checkbox"[^>]*>/i)?.[0];
-  assert.ok(casilla, `${ruta}: falta la casilla de aceptación`);
-  assert.ok(obligatorio(casilla), `${ruta}: la casilla de aceptación debería ser obligatoria`);
-  assert.ok(!/\schecked(?=[\s>=\/])/.test(casilla), `${ruta}: la casilla no puede venir premarcada`);
-  assert.ok(texto.includes(CASILLA), `${ruta}: el texto de la casilla no es el literal de legal`);
-  assert.match(
-    form,
-    /<a\b[^>]*href="\/privacidad"[^>]*>\s*Aviso de Privacidad\s*<\/a>/,
-    `${ruta}: «Aviso de Privacidad» de la casilla debería enlazar a /privacidad`,
-  );
-}
-
-test('test-drive.html: lleva el aviso de datos y la casilla sin marcar', () => comprobarAviso('test-drive.html'));
 
 const URL_COTIZACION = 'https://ayas-formweb-prd.powerappsportals.com/tools/arcfox/form-quote-general/';
+/* El id es el del origen «Test Drive» en la lista `sources` del propio
+   formulario de AYASA; su `ui_manager.js` lo lee de `utm_source_crm`. */
+const URL_PRUEBA = `${URL_COTIZACION}?utm_source_crm=306ac3c7-6081-f111-ab0e-000d3a9c4d24&amp;utm_origin_type_crm=test-drive`;
 
-function comprobarCotizacion(ruta) {
+function comprobarCotizacion(ruta, url = URL_COTIZACION, gracias = '/gracias') {
   const html = leer(ruta);
   const marcos = html.match(/<iframe\b[^>]*>/gi) ?? [];
-  const marco = marcos.find((tag) => tag.includes(`src="${URL_COTIZACION}"`));
-  assert.ok(marco, `${ruta}: falta el iframe del formulario de cotización de AYASA`);
+  const marco = marcos.find((tag) => tag.includes(`src="${url}"`));
+  assert.ok(marco, `${ruta}: falta el iframe del formulario de AYASA (${url})`);
+  assert.ok(marcos.length === 1, `${ruta}: tiene que haber un solo iframe de AYASA`);
+  assert.match(
+    html,
+    new RegExp(`class="[^"]*cotizacion-externa[^"]*"[^>]*data-gracias="${gracias}"`),
+    `${ruta}: al terminar tiene que ir a ${gracias}`,
+  );
   assert.match(marco, /\stitle="[^"]+"/, `${ruta}: el iframe necesita title para los lectores de pantalla`);
   assert.ok(!/<form\b[^>]*\bdata-gracias\b/i.test(html), `${ruta}: sobra nuestro formulario junto al de AYASA`);
   assert.match(
     html,
-    new RegExp(`<a\\b[^>]*href="${URL_COTIZACION.replace(/[.?]/g, '\\$&')}"[^>]*target="_blank"[^>]*rel="noopener"`),
+    new RegExp(`<a\\b[^>]*href="${url.replace(/[.?]/g, '\\$&')}"[^>]*target="_blank"[^>]*rel="noopener"`),
     `${ruta}: falta el enlace para abrir el formulario aparte si el marco no carga`,
   );
 }
+
+test('test-drive.html: el test drive es el formulario de AYASA con origen Test Drive', () =>
+  comprobarCotizacion('test-drive.html', URL_PRUEBA, '/gracias-test-drive'));
 
 for (const ruta of ['index.html', 'cotizalo.html', 'concesionarios.html']) {
   test(`${ruta}: la cotización es el formulario de AYASA`, () => comprobarCotizacion(ruta));

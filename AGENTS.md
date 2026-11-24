@@ -157,10 +157,13 @@ scripts/                  cinco verificadores · pipeline de imágenes · og · 
 - **Formulario**: la cotización (portada, `/cotizalo`, `/concesionarios` y cada
   ficha) es el formulario de AYASA en un iframe (`FORMULARIO_COTIZACION` de
   `site.ts`, 10-nov-2026), con su propio Aviso de Privacidad. **Sólo se ve si el
-  dominio está en su `frame-ancestors`**: hoy la lista no incluye arcfox.com.ec,
-  así que el marco sale vacío y queda el enlace «Ábrelo en una pestaña nueva».
-  Test drive sigue con el formulario propio y `PUBLIC_FORMULARIO_ENDPOINT`
-  (*pendiente*; sin él el POST cae a `mailto:`).
+  dominio está en su `frame-ancestors`**: arcfox.com.ec y www.arcfox.com.ec lo
+  están (23-nov-2026); en `localhost` y en cualquier preview el marco sale vacío
+  y queda el enlace «Ábrelo en una pestaña nueva». **Test drive también es el de
+  AYASA** desde el 23-nov-2026 (`FORMULARIO_PRUEBA`): el mismo formulario con el
+  origen «Test Drive» de su CRM en `utm_source_crm`, y al terminar va a
+  `/gracias-test-drive`. El formulario propio (`PUBLIC_FORMULARIO_ENDPOINT`) ya
+  no lo usa ninguna página.
 - **Analítica**: `PUBLIC_GA4_ID` / `PUBLIC_CLARITY_ID` — *pendiente*. Sin ninguno no
   se monta ni el script ni el banner de cookies.
 - **Asistente**: `ASISTENTE.activo` en `false` en el sitio. El chat de la teaser
